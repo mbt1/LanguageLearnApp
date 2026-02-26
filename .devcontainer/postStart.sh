@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+rm -rf /workspace/LanguageLearnApp/.devcontainer
+cp -r /workspace/.devcontainer /workspace/LanguageLearnApp/.devcontainer
+
 echo "Verifying dev container tools..."
 echo ""
 

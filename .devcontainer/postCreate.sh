@@ -1,7 +1,12 @@
 #!/bin/sh
 set -e
 
-cd /workspaces/LanguageLearnApp
+git config --global --add safe.directory /workspace
+for dir in /workspace/*/; do
+    git config --global --add safe.directory "$dir"
+done
+
+cd /workspace
 
 if [ -d server ]; then
     cd server && uv sync

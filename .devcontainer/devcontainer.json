@@ -2,7 +2,7 @@
   "name": "LanguageLearn",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
-  "workspaceFolder": "/workspaces/LanguageLearnApp",
+  "workspaceFolder": "/workspace",
 
   "postCreateCommand": ".devcontainer/postCreate.sh",
   "postStartCommand": ".devcontainer/postStart.sh",
@@ -17,7 +17,7 @@
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
         "ms-vscode.powershell",
-        "anthropics.claude-code",
+        "anthropic.claude-code",
         "github.copilot",
         "openai.chatgpt"
       ],

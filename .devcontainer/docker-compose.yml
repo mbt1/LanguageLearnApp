@@ -1,10 +1,12 @@
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
     environment:
       DATABASE_URL: postgresql://languagelearn:languagelearn@db:5432/languagelearn
+    volumes:
+      - ..:/workspace:cached
     depends_on:
       db:
         condition: service_healthy

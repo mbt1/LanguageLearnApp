@@ -38,3 +38,5 @@ RUN ARCH=$(dpkg --print-architecture) \
     && wget -qO /usr/local/bin/pgroll \
        "https://github.com/xataio/pgroll/releases/download/v${PGROLL_VERSION}/pgroll.linux.${ARCH}" \
     && chmod +x /usr/local/bin/pgroll
+
+WORKDIR /workspace
