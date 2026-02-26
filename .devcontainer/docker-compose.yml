@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    volumes:
-      - ..:/workspaces/LanguageLearnApp:cached
     environment:
       DATABASE_URL: postgresql://languagelearn:languagelearn@db:5432/languagelearn
     depends_on:
