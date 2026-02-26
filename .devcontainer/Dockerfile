@@ -2,6 +2,9 @@ FROM mcr.microsoft.com/devcontainers/python:1-3.12-bookworm
 
 ARG PGROLL_VERSION=0.16.1
 
+# ---- Remove stale Yarn repo from base image (broken GPG key) ----
+RUN rm -f /etc/apt/sources.list.d/yarn.list
+
 # ---- Add third-party apt repositories ----
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && wget -q "https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb" \

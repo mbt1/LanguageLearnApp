@@ -5,6 +5,7 @@
   "workspaceFolder": "/workspaces/LanguageLearnApp",
 
   "postCreateCommand": ".devcontainer/postCreate.sh",
+  "postStartCommand": ".devcontainer/postStart.sh",
 
   "customizations": {
     "vscode": {
