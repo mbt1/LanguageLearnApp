@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspaces/LanguageLearnApp:cached
+    environment:
+      DATABASE_URL: postgresql://languagelearn:languagelearn@db:5432/languagelearn
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sleep infinity
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: languagelearn
+      POSTGRES_PASSWORD: languagelearn
+      POSTGRES_DB: languagelearn
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U languagelearn"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
