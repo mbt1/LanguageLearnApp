@@ -1,8 +1,7 @@
 #!/bin/sh
+# Post-start verification for LanguageLearnApp.
+# Works standalone (app repo only) or when called from a parent workspace.
 set -e
-
-rm -rf /workspace/LanguageLearnApp/.devcontainer
-cp -r /workspace/.devcontainer /workspace/LanguageLearnApp/.devcontainer
 
 echo "Verifying dev container tools..."
 echo ""

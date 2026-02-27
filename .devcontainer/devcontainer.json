@@ -4,8 +4,8 @@
   "service": "app",
   "workspaceFolder": "/workspace",
 
-  "postCreateCommand": ".devcontainer/postCreate.sh",
-  "postStartCommand": ".devcontainer/postStart.sh",
+  "postCreateCommand": "scripts/postCreate.sh",
+  "postStartCommand": "scripts/postStart.sh",
 
   "customizations": {
     "vscode": {
