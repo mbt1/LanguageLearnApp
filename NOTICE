@@ -1,0 +1,28 @@
+LanguageLearn
+Copyright 2026 LanguageLearn Contributors
+
+This product includes software developed by the LanguageLearn project
+(https://github.com/your-org/LanguageLearnApp).
+
+---
+
+Third-party dependencies are listed below. Each is subject to its own license.
+
+Server (Python):
+  FastAPI          - MIT License       https://github.com/fastapi/fastapi
+  psycopg          - LGPL-3.0          https://github.com/psycopg/psycopg
+  fsrs             - MIT License       https://github.com/open-spaced-repetition/py-fsrs
+  webauthn         - BSD-3-Clause      https://github.com/duo-labs/py_webauthn
+  Pydantic         - MIT License       https://github.com/pydantic/pydantic
+  Uvicorn          - BSD-3-Clause      https://github.com/encode/uvicorn
+
+Client (JavaScript/TypeScript):
+  React            - MIT License       https://github.com/facebook/react
+  Vite             - MIT License       https://github.com/vitejs/vite
+  Tailwind CSS     - MIT License       https://github.com/tailwindlabs/tailwindcss
+  shadcn/ui        - MIT License       https://github.com/shadcn-ui/ui
+  Radix UI         - MIT License       https://github.com/radix-ui/primitives
+  TanStack Query   - MIT License       https://github.com/TanStack/query
+  Lucide React     - ISC License       https://github.com/lucide-icons/lucide
+
+See each package's repository for full license text.

@@ -7,6 +7,7 @@ services:
       DATABASE_URL: postgresql://languagelearn:languagelearn@db:5432/languagelearn
     volumes:
       - ..:/workspace:cached
+      - ${HOME}/.claude:/home/vscode/.claude:cached
     depends_on:
       db:
         condition: service_healthy
