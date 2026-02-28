@@ -1,16 +1,28 @@
 #!/usr/bin/env pwsh
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 LanguageLearn Contributors
+#
 # Run database migrations using pgroll.
 # Requires DATABASE_URL to be set (or uses the devcontainer default).
 
 param(
-    [string]$MigrationFile,
     [switch]$Rollback,
     [switch]$Status
 )
 
 $ErrorActionPreference = 'Stop'
 
-$dbUrl = $env:DATABASE_URL ?? "postgresql://languagelearn:languagelearn@db:5432/languagelearn"
+$appRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+# pgroll uses lib/pq which defaults to sslmode=require; our dev Postgres has no SSL.
+$baseUrl = $env:DATABASE_URL ?? "postgresql://languagelearn:languagelearn@db:5432/languagelearn"
+if ($baseUrl -match 'sslmode=') {
+    $dbUrl = $baseUrl
+} elseif ($baseUrl -match '\?') {
+    $dbUrl = "${baseUrl}&sslmode=disable"
+} else {
+    $dbUrl = "${baseUrl}?sslmode=disable"
+}
+$migrationsDir = Join-Path $appRoot "server/migrations"
 
 if ($Status) {
     Write-Host "Migration status:" -ForegroundColor Cyan
@@ -24,15 +36,16 @@ if ($Rollback) {
     exit 0
 }
 
-if (-not $MigrationFile) {
-    Write-Host "Usage:" -ForegroundColor Cyan
-    Write-Host "  pwsh scripts/db-migrate.ps1 -MigrationFile server/migrations/001_init.json"
-    Write-Host "  pwsh scripts/db-migrate.ps1 -Rollback"
-    Write-Host "  pwsh scripts/db-migrate.ps1 -Status"
-    exit 1
+# Default: initialize pgroll (idempotent) and apply all outstanding migrations
+Write-Host "Initializing pgroll..." -ForegroundColor Cyan
+pgroll init --postgres-url $dbUrl 2>&1 | Out-Null
+
+$jsonFiles = Get-ChildItem -Path $migrationsDir -Filter "*.json" -ErrorAction SilentlyContinue
+if ($jsonFiles.Count -eq 0) {
+    Write-Host "No migration files found in $migrationsDir" -ForegroundColor Yellow
+    exit 0
 }
 
-Write-Host "Applying migration: $MigrationFile" -ForegroundColor Cyan
-pgroll start $MigrationFile --postgres-url $dbUrl
-pgroll complete --postgres-url $dbUrl
-Write-Host "Migration complete." -ForegroundColor Green
+Write-Host "Applying $($jsonFiles.Count) migration(s) from $migrationsDir..." -ForegroundColor Cyan
+pgroll migrate $migrationsDir --complete --postgres-url $dbUrl
+Write-Host "All migrations applied." -ForegroundColor Green

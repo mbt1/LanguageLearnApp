@@ -16,3 +16,7 @@ fi
 if [ -f scripts/install-client.sh ]; then
     sh scripts/install-client.sh
 fi
+
+if [ -f scripts/db-setup.sh ]; then
+    sh scripts/db-setup.sh
+fi

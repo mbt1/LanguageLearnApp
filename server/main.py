@@ -1,11 +1,19 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 LanguageLearn Contributors
 
-from fastapi import FastAPI
+from typing import Annotated
 
-app = FastAPI(title="LanguageLearn API", version="0.1.0")
+from fastapi import Depends, FastAPI
+from psycopg import AsyncConnection
+
+from db.pool import get_conn, lifespan
+
+app = FastAPI(title="LanguageLearn API", version="0.1.0", lifespan=lifespan)
 
 
 @app.get("/v1/health")
-def health() -> dict[str, str]:
+async def health(
+    conn: Annotated[AsyncConnection, Depends(get_conn)],
+) -> dict[str, str]:
+    await conn.execute("SELECT 1")
     return {"status": "ok"}
