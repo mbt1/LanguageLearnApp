@@ -1,0 +1,269 @@
+operations:
+  # ── Users ──────────────────────────────────────────────
+  - create_table:
+      name: users
+      columns:
+        - name: id
+          type: uuid
+          pk: true
+          default: gen_random_uuid()
+        - name: email
+          type: text
+          unique: true
+        - name: display_name
+          type: text
+          nullable: true
+        - name: password_hash
+          type: text
+          nullable: true
+        - name: created_at
+          type: timestamptz
+          default: now()
+        - name: updated_at
+          type: timestamptz
+          default: now()
+
+  # ── User passkeys (WebAuthn) ───────────────────────────
+  - create_table:
+      name: user_passkeys
+      columns:
+        - name: id
+          type: uuid
+          pk: true
+          default: gen_random_uuid()
+        - name: user_id
+          type: uuid
+          references:
+            table: users
+            column: id
+            name: user_passkeys_user_id_fkey
+            on_delete: CASCADE
+        - name: credential_id
+          type: bytea
+          unique: true
+        - name: public_key
+          type: bytea
+        - name: sign_count
+          type: integer
+          default: "0"
+        - name: name
+          type: text
+          nullable: true
+        - name: created_at
+          type: timestamptz
+          default: now()
+
+  # ── Courses ────────────────────────────────────────────
+  - create_table:
+      name: courses
+      columns:
+        - name: id
+          type: uuid
+          pk: true
+          default: gen_random_uuid()
+        - name: slug
+          type: text
+          unique: true
+        - name: title
+          type: text
+        - name: source_language
+          type: text
+        - name: target_language
+          type: text
+        - name: created_at
+          type: timestamptz
+          default: now()
+
+  # ── Concepts ───────────────────────────────────────────
+  - create_table:
+      name: concepts
+      columns:
+        - name: id
+          type: uuid
+          pk: true
+          default: gen_random_uuid()
+        - name: course_id
+          type: uuid
+          references:
+            table: courses
+            column: id
+            name: concepts_course_id_fkey
+            on_delete: CASCADE
+        - name: concept_type
+          type: concept_type
+        - name: cefr_level
+          type: cefr_level
+        - name: sequence
+          type: integer
+        - name: prompt
+          type: text
+        - name: target
+          type: text
+        - name: explanation
+          type: text
+          nullable: true
+        - name: created_at
+          type: timestamptz
+          default: now()
+      constraints:
+        - name: concepts_course_level_seq_key
+          type: unique
+          columns: [course_id, cefr_level, sequence]
+
+  # ── Concept prerequisites ──────────────────────────────
+  - create_table:
+      name: concept_prerequisites
+      columns:
+        - name: concept_id
+          type: uuid
+          references:
+            table: concepts
+            column: id
+            name: concept_prerequisites_concept_id_fkey
+            on_delete: CASCADE
+        - name: prerequisite_id
+          type: uuid
+          references:
+            table: concepts
+            column: id
+            name: concept_prerequisites_prerequisite_id_fkey
+            on_delete: CASCADE
+        - name: source
+          type: dependency_source
+          default: "'manual'"
+      constraints:
+        - name: concept_prerequisites_pkey
+          type: primary_key
+          columns: [concept_id, prerequisite_id]
+        - name: concept_prerequisites_no_self_ref
+          type: check
+          check: concept_id <> prerequisite_id
+
+  # ── Exercises ──────────────────────────────────────────
+  - create_table:
+      name: exercises
+      columns:
+        - name: id
+          type: uuid
+          pk: true
+          default: gen_random_uuid()
+        - name: concept_id
+          type: uuid
+          references:
+            table: concepts
+            column: id
+            name: exercises_concept_id_fkey
+            on_delete: CASCADE
+        - name: exercise_type
+          type: exercise_type
+        - name: prompt
+          type: text
+        - name: correct_answer
+          type: text
+        - name: distractors
+          type: text[]
+          nullable: true
+        - name: sentence_template
+          type: text
+          nullable: true
+        - name: created_at
+          type: timestamptz
+          default: now()
+      constraints:
+        - name: exercises_concept_type_key
+          type: unique
+          columns: [concept_id, exercise_type]
+
+  # ── User concept progress ──────────────────────────────
+  - create_table:
+      name: user_concept_progress
+      columns:
+        - name: user_id
+          type: uuid
+          references:
+            table: users
+            column: id
+            name: ucp_user_id_fkey
+            on_delete: CASCADE
+        - name: concept_id
+          type: uuid
+          references:
+            table: concepts
+            column: id
+            name: ucp_concept_id_fkey
+            on_delete: CASCADE
+        - name: current_exercise_difficulty
+          type: exercise_type
+          default: "'multiple_choice'"
+        - name: consecutive_correct
+          type: integer
+          default: "0"
+        - name: fsrs_state
+          type: fsrs_state
+          nullable: true
+        - name: fsrs_step
+          type: integer
+          nullable: true
+        - name: fsrs_stability
+          type: double precision
+          nullable: true
+        - name: fsrs_difficulty
+          type: double precision
+          nullable: true
+        - name: fsrs_due
+          type: timestamptz
+          nullable: true
+        - name: fsrs_last_review
+          type: timestamptz
+          nullable: true
+        - name: is_mastered
+          type: boolean
+          default: "false"
+        - name: created_at
+          type: timestamptz
+          default: now()
+        - name: updated_at
+          type: timestamptz
+          default: now()
+      constraints:
+        - name: user_concept_progress_pkey
+          type: primary_key
+          columns: [user_id, concept_id]
+
+  # ── Review history ─────────────────────────────────────
+  - create_table:
+      name: review_history
+      columns:
+        - name: id
+          type: uuid
+          pk: true
+          default: gen_random_uuid()
+        - name: user_id
+          type: uuid
+          references:
+            table: users
+            column: id
+            name: review_history_user_id_fkey
+            on_delete: CASCADE
+        - name: concept_id
+          type: uuid
+          references:
+            table: concepts
+            column: id
+            name: review_history_concept_id_fkey
+            on_delete: CASCADE
+        - name: exercise_type
+          type: exercise_type
+        - name: rating
+          type: fsrs_rating
+        - name: response
+          type: text
+          nullable: true
+        - name: correct
+          type: boolean
+        - name: review_duration_ms
+          type: integer
+          nullable: true
+        - name: reviewed_at
+          type: timestamptz
+          default: now()

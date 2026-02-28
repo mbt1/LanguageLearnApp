@@ -1,0 +1,25 @@
+operations:
+  - sql:
+      up: |
+        CREATE TYPE cefr_level AS ENUM ('A1', 'A2', 'B1', 'B2', 'C1', 'C2');
+        CREATE TYPE concept_type AS ENUM ('vocabulary', 'grammar');
+        CREATE TYPE exercise_type AS ENUM ('multiple_choice', 'cloze', 'reverse_typing', 'typing');
+        CREATE TYPE fsrs_state AS ENUM ('learning', 'review', 'relearning');
+        CREATE TYPE fsrs_rating AS ENUM ('again', 'hard', 'good', 'easy');
+        CREATE TYPE dependency_source AS ENUM ('manual', 'auto');
+
+        CREATE OR REPLACE FUNCTION set_updated_at()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            NEW.updated_at = now();
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+      down: |
+        DROP FUNCTION IF EXISTS set_updated_at;
+        DROP TYPE IF EXISTS dependency_source;
+        DROP TYPE IF EXISTS fsrs_rating;
+        DROP TYPE IF EXISTS fsrs_state;
+        DROP TYPE IF EXISTS exercise_type;
+        DROP TYPE IF EXISTS concept_type;
+        DROP TYPE IF EXISTS cefr_level;

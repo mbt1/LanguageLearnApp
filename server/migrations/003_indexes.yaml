@@ -1,0 +1,36 @@
+operations:
+  - create_index:
+      name: idx_user_passkeys_user
+      table: user_passkeys
+      columns:
+        - column: user_id
+
+  - create_index:
+      name: idx_concepts_course_level
+      table: concepts
+      columns:
+        - column: course_id
+        - column: cefr_level
+        - column: sequence
+
+  - create_index:
+      name: idx_ucp_user_due
+      table: user_concept_progress
+      columns:
+        - column: user_id
+        - column: fsrs_due
+
+  - create_index:
+      name: idx_ucp_user_mastery
+      table: user_concept_progress
+      columns:
+        - column: user_id
+        - column: is_mastered
+
+  - create_index:
+      name: idx_review_history_user_concept
+      table: review_history
+      columns:
+        - column: user_id
+        - column: concept_id
+        - column: reviewed_at

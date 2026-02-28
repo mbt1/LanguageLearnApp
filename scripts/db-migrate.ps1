@@ -40,12 +40,12 @@ if ($Rollback) {
 Write-Host "Initializing pgroll..." -ForegroundColor Cyan
 pgroll init --postgres-url $dbUrl 2>&1 | Out-Null
 
-$jsonFiles = Get-ChildItem -Path $migrationsDir -Filter "*.json" -ErrorAction SilentlyContinue
-if ($jsonFiles.Count -eq 0) {
+$migrationFiles = Get-ChildItem -Path $migrationsDir -Include "*.json", "*.yaml", "*.yml" -ErrorAction SilentlyContinue
+if ($migrationFiles.Count -eq 0) {
     Write-Host "No migration files found in $migrationsDir" -ForegroundColor Yellow
     exit 0
 }
 
-Write-Host "Applying $($jsonFiles.Count) migration(s) from $migrationsDir..." -ForegroundColor Cyan
+Write-Host "Applying $($migrationFiles.Count) migration(s) from $migrationsDir..." -ForegroundColor Cyan
 pgroll migrate $migrationsDir --complete --postgres-url $dbUrl
 Write-Host "All migrations applied." -ForegroundColor Green
