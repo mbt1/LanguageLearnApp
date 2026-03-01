@@ -4,6 +4,12 @@
   "service": "app",
   "workspaceFolder": "/workspace",
 
+  "forwardPorts": [5173, 8000],
+  "portsAttributes": {
+    "5173": { "label": "Client (Vite)" },
+    "8000": { "label": "Server (FastAPI)" }
+  },
+
   "postCreateCommand": "scripts/postCreate.sh",
   "postStartCommand": "scripts/postStart.sh",
 

@@ -5,6 +5,9 @@
     "e2e": "playwright test",
     "e2e:report": "playwright show-report"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "msw"]
+  },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "typescript": "~5.9.3"
