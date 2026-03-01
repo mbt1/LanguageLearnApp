@@ -2,33 +2,25 @@
 // Copyright 2026 LanguageLearn Contributors
 
 import { apiRequest, setAccessToken } from './client'
+import type {
+  LoginResponse,
+  PasskeyAuthenticationVerifyResponse,
+  PasskeyListItem,
+  RefreshResponse,
+  RegisterResponse,
+  VerifyEmailResponse,
+} from './types'
 
 /* ── Types ─────────────────────────────────────────────────── */
 
+/** Client-side user representation (extracted from JWT or response). */
 export interface AuthUser {
   user_id: string
   email: string
   email_verified: boolean
 }
 
-interface RegisterResponse extends AuthUser {
-  access_token: string
-  message: string
-}
-
-interface LoginResponse extends AuthUser {
-  access_token: string
-}
-
-interface RefreshResponse {
-  access_token: string
-}
-
-export interface PasskeyListItem {
-  id: string
-  name: string
-  created_at: string
-}
+export type { PasskeyListItem }
 
 /* ── Email/password ────────────────────────────────────────── */
 
@@ -42,7 +34,8 @@ export async function register(
     body: JSON.stringify({ email, password, display_name: displayName }),
   })
   setAccessToken(data.access_token)
-  return { user_id: data.user_id, email: data.email, email_verified: data.email_verified }
+  // Newly registered users are always unverified
+  return { user_id: data.user_id, email: data.email, email_verified: false }
 }
 
 export async function login(email: string, password: string): Promise<AuthUser> {
@@ -83,8 +76,10 @@ export async function refreshToken(): Promise<AuthUser | null> {
 
 /* ── Email verification ────────────────────────────────────── */
 
-export async function verifyEmail(token: string): Promise<{ message: string }> {
-  return apiRequest<{ message: string }>(`/v1/auth/verify-email?token=${encodeURIComponent(token)}`)
+export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
+  return apiRequest<VerifyEmailResponse>(
+    `/v1/auth/verify-email?token=${encodeURIComponent(token)}`,
+  )
 }
 
 export async function resendVerification(): Promise<void> {
@@ -119,10 +114,13 @@ export async function verifyPasskeyAuthentication(
   email: string,
   credential: string,
 ): Promise<AuthUser> {
-  const data = await apiRequest<LoginResponse>('/v1/auth/passkeys/authenticate/verify', {
-    method: 'POST',
-    body: JSON.stringify({ email, credential }),
-  })
+  const data = await apiRequest<PasskeyAuthenticationVerifyResponse>(
+    '/v1/auth/passkeys/authenticate/verify',
+    {
+      method: 'POST',
+      body: JSON.stringify({ email, credential }),
+    },
+  )
   setAccessToken(data.access_token)
   return { user_id: data.user_id, email: data.email, email_verified: data.email_verified }
 }

@@ -1,0 +1,799 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LanguageLearn API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register",
+        "description": "Register a new user with email and password.",
+        "operationId": "register_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "description": "Login with email and password.",
+        "operationId": "login_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh",
+        "description": "Refresh access token using refresh token cookie.",
+        "operationId": "refresh_v1_auth_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout",
+        "description": "Logout: revoke refresh token and clear cookie.",
+        "operationId": "logout_v1_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/v1/auth/verify-email": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Verify Email",
+        "description": "Verify email address using token from verification link.",
+        "operationId": "verify_email_v1_auth_verify_email_get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyEmailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/resend-verification": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Resend Verification",
+        "description": "Resend email verification link.",
+        "operationId": "resend_verification_v1_auth_resend_verification_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/auth/passkeys/register/options": {
+      "post": {
+        "tags": [
+          "passkeys"
+        ],
+        "summary": "Passkey Registration Options",
+        "description": "Generate WebAuthn registration options for authenticated user.",
+        "operationId": "passkey_registration_options_v1_auth_passkeys_register_options_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRegistrationOptionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/auth/passkeys/register/verify": {
+      "post": {
+        "tags": [
+          "passkeys"
+        ],
+        "summary": "Passkey Registration Verify",
+        "description": "Verify WebAuthn registration response and store credential.",
+        "operationId": "passkey_registration_verify_v1_auth_passkeys_register_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyRegistrationVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRegistrationVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/auth/passkeys/authenticate/options": {
+      "post": {
+        "tags": [
+          "passkeys"
+        ],
+        "summary": "Passkey Authentication Options",
+        "description": "Generate WebAuthn authentication options for a user (public endpoint).",
+        "operationId": "passkey_authentication_options_v1_auth_passkeys_authenticate_options_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyAuthenticationOptionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyAuthenticationOptionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/passkeys/authenticate/verify": {
+      "post": {
+        "tags": [
+          "passkeys"
+        ],
+        "summary": "Passkey Authentication Verify",
+        "description": "Verify WebAuthn authentication response and issue tokens.",
+        "operationId": "passkey_authentication_verify_v1_auth_passkeys_authenticate_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyAuthenticationVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyAuthenticationVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/passkeys/": {
+      "get": {
+        "tags": [
+          "passkeys"
+        ],
+        "summary": "List Passkeys",
+        "description": "List user's registered passkeys.",
+        "operationId": "list_passkeys_v1_auth_passkeys__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PasskeyListItem"
+                  },
+                  "type": "array",
+                  "title": "Response List Passkeys V1 Auth Passkeys  Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/auth/passkeys/{passkey_id}": {
+      "delete": {
+        "tags": [
+          "passkeys"
+        ],
+        "summary": "Remove Passkey",
+        "description": "Remove a passkey (must belong to current user).",
+        "operationId": "remove_passkey_v1_auth_passkeys__passkey_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "passkey_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Passkey Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "LoginResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "email_verified",
+          "access_token"
+        ],
+        "title": "LoginResponse"
+      },
+      "PasskeyAuthenticationOptionsRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "PasskeyAuthenticationOptionsRequest"
+      },
+      "PasskeyAuthenticationOptionsResponse": {
+        "properties": {
+          "options": {
+            "type": "string",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "options"
+        ],
+        "title": "PasskeyAuthenticationOptionsResponse"
+      },
+      "PasskeyAuthenticationVerifyRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "credential": {
+            "type": "string",
+            "title": "Credential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "credential"
+        ],
+        "title": "PasskeyAuthenticationVerifyRequest"
+      },
+      "PasskeyAuthenticationVerifyResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "email_verified",
+          "access_token"
+        ],
+        "title": "PasskeyAuthenticationVerifyResponse"
+      },
+      "PasskeyListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at"
+        ],
+        "title": "PasskeyListItem"
+      },
+      "PasskeyRegistrationOptionsResponse": {
+        "properties": {
+          "options": {
+            "type": "string",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "options"
+        ],
+        "title": "PasskeyRegistrationOptionsResponse"
+      },
+      "PasskeyRegistrationVerifyRequest": {
+        "properties": {
+          "credential": {
+            "type": "string",
+            "title": "Credential"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credential"
+        ],
+        "title": "PasskeyRegistrationVerifyRequest"
+      },
+      "PasskeyRegistrationVerifyResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "PasskeyRegistrationVerifyResponse"
+      },
+      "RefreshResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "title": "RefreshResponse"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Password"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest"
+      },
+      "RegisterResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "access_token",
+          "message"
+        ],
+        "title": "RegisterResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerifyEmailResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "VerifyEmailResponse"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

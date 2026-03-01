@@ -20,6 +20,8 @@ dev = [
     "pytest-cov>=6.0",
     "pytest-asyncio>=0.25",
     "httpx>=0.28",
+    "openapi-spec-validator>=0.7",
+    "jsonschema>=4.0",
 ]
 
 [tool.ruff]
@@ -42,6 +44,7 @@ ignore = [
 "db/queries/**" = ["PLR0913", "S101"]   # query functions map to table columns; assert for INSERT RETURNING
 "auth/**" = ["PLR0913"]                  # auth functions have many config params
 "routes/**" = ["PLR0913"]                # route handlers have many dependencies
+"export_openapi.py" = ["T201"]           # print is intentional in CLI script
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -49,7 +52,7 @@ asyncio_mode = "auto"
 addopts = "--cov=. --cov-report=term-missing --cov-fail-under=80"
 
 [tool.coverage.run]
-omit = ["tests/*", ".venv/*"]
+omit = ["tests/*", ".venv/*", "export_openapi.py"]
 
 [tool.pyright]
 pythonVersion = "3.12"

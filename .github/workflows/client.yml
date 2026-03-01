@@ -35,11 +35,22 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-          cache-dependency-path: client/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install dependencies
+      - name: Install root dependencies
+        run: pnpm install
+
+      - name: Install client dependencies
         run: pnpm install
         working-directory: client
+
+      - name: Verify generated types are up to date
+        run: |
+          npx openapi-typescript api/v1/openapi.json -o /tmp/types.gen.d.ts
+          diff client/src/api/types.gen.d.ts /tmp/types.gen.d.ts || {
+            echo "ERROR: Generated types are out of date. Run: pwsh scripts/generate-types.ps1"
+            exit 1
+          }
 
       - name: Check boundary (client must not import server)
         run: |
