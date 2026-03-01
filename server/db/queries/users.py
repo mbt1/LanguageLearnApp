@@ -28,7 +28,7 @@ async def create_user(
             {"email": email, "display_name": display_name, "password_hash": password_hash},
         )
         row = await cur.fetchone()
-    assert row is not None  # noqa: S101
+    assert row is not None
     return row
 
 

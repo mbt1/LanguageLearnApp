@@ -1,0 +1,64 @@
+operations:
+  # ── Email verification tokens ────────────────────────
+  - create_table:
+      name: email_verification_tokens
+      columns:
+        - name: id
+          type: uuid
+          pk: true
+          default: gen_random_uuid()
+        - name: user_id
+          type: uuid
+          references:
+            table: users
+            column: id
+            name: fk_evt_user
+            on_delete: CASCADE
+        - name: token
+          type: text
+          unique: true
+        - name: expires_at
+          type: timestamptz
+        - name: created_at
+          type: timestamptz
+          default: now()
+
+  # ── Refresh tokens ──────────────────────────────────
+  - create_table:
+      name: refresh_tokens
+      columns:
+        - name: id
+          type: uuid
+          pk: true
+          default: gen_random_uuid()
+        - name: user_id
+          type: uuid
+          references:
+            table: users
+            column: id
+            name: fk_rt_user
+            on_delete: CASCADE
+        - name: token_hash
+          type: text
+          unique: true
+        - name: expires_at
+          type: timestamptz
+        - name: revoked
+          type: boolean
+          default: "false"
+        - name: created_at
+          type: timestamptz
+          default: now()
+
+  # ── Indexes (unique columns already have implicit indexes) ──
+  - create_index:
+      name: idx_evt_user
+      table: email_verification_tokens
+      columns:
+        - column: user_id
+
+  - create_index:
+      name: idx_rt_user
+      table: refresh_tokens
+      columns:
+        - column: user_id

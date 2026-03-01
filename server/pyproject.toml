@@ -8,6 +8,8 @@ dependencies = [
     "psycopg[binary,pool]>=3.2",
     "fsrs>=6.0",
     "webauthn>=2.0",
+    "pyjwt[crypto]>=2.9",
+    "bcrypt>=4.2",
 ]
 
 [dependency-groups]
@@ -31,11 +33,15 @@ ignore = [
     "ANN",     # type annotations — pyright handles this
     "COM812",  # trailing comma — conflicts with formatter
     "ISC001",  # single-line implicit string concat — conflicts with formatter
+    "TC002",   # type-checking block — breaks runtime for FastAPI Depends() annotations
+    "TC003",   # type-checking block — breaks runtime for FastAPI Depends() annotations
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S105", "S106", "PLR2004", "PLC0415", "ERA001"]
-"db/queries/**" = ["PLR0913"]     # query functions map to table columns
+"tests/**" = ["S101", "S105", "S106", "PLR2004", "PLC0415", "ERA001", "PT018"]
+"db/queries/**" = ["PLR0913", "S101"]   # query functions map to table columns; assert for INSERT RETURNING
+"auth/**" = ["PLR0913"]                  # auth functions have many config params
+"routes/**" = ["PLR0913"]                # route handlers have many dependencies
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -43,7 +43,7 @@ async def create_concept(
             },
         )
         row = await cur.fetchone()
-    assert row is not None  # noqa: S101
+    assert row is not None
     return row
 
 
@@ -108,7 +108,7 @@ async def add_prerequisite(
             },
         )
         row = await cur.fetchone()
-    assert row is not None  # noqa: S101
+    assert row is not None
     return row
 
 

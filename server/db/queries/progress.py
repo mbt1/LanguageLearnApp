@@ -85,7 +85,7 @@ async def upsert_progress(
             },
         )
         row = await cur.fetchone()
-    assert row is not None  # noqa: S101
+    assert row is not None
     return row
 
 
