@@ -112,3 +112,142 @@ async def list_due_reviews(
             {"user_id": user_id, "now": now, "limit": limit},
         )
         return await cur.fetchall()
+
+
+async def get_prerequisite_difficulties(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+    concept_id: UUID,
+) -> list[dict[str, Any]]:
+    """Fetch effective exercise difficulties for all prerequisites of a concept.
+
+    Unstarted prerequisites default to 'multiple_choice' via COALESCE.
+    """
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT
+                cp.prerequisite_id AS concept_id,
+                COALESCE(
+                    ucp.current_exercise_difficulty, 'multiple_choice'
+                ) AS current_exercise_difficulty
+            FROM concept_prerequisites cp
+            LEFT JOIN user_concept_progress ucp
+                ON ucp.concept_id = cp.prerequisite_id
+                AND ucp.user_id = %(user_id)s
+            WHERE cp.concept_id = %(concept_id)s
+            """,
+            {"user_id": user_id, "concept_id": concept_id},
+        )
+        return await cur.fetchall()
+
+
+async def get_prerequisite_difficulties_batch(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+    concept_ids: list[UUID],
+) -> dict[UUID, list[str]]:
+    """Batch fetch prerequisite difficulties for multiple concepts.
+
+    Returns a mapping from concept_id to list of prerequisite difficulty strings.
+    """
+    if not concept_ids:
+        return {}
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT
+                cp.concept_id,
+                COALESCE(
+                    ucp.current_exercise_difficulty, 'multiple_choice'
+                ) AS current_exercise_difficulty
+            FROM concept_prerequisites cp
+            LEFT JOIN user_concept_progress ucp
+                ON ucp.concept_id = cp.prerequisite_id
+                AND ucp.user_id = %(user_id)s
+            WHERE cp.concept_id = ANY(%(concept_ids)s)
+            """,
+            {"user_id": user_id, "concept_ids": concept_ids},
+        )
+        rows = await cur.fetchall()
+
+    result: dict[UUID, list[str]] = {}
+    for row in rows:
+        cid = row["concept_id"]
+        result.setdefault(cid, []).append(row["current_exercise_difficulty"])
+    return result
+
+
+async def list_new_concepts(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+    course_id: UUID,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    """Fetch concepts the user has not yet started, ordered by cefr_level + sequence."""
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT c.*
+            FROM concepts c
+            LEFT JOIN user_concept_progress ucp
+                ON ucp.concept_id = c.id AND ucp.user_id = %(user_id)s
+            WHERE c.course_id = %(course_id)s
+              AND ucp.concept_id IS NULL
+            ORDER BY c.cefr_level, c.sequence
+            LIMIT %(limit)s
+            """,
+            {"user_id": user_id, "course_id": course_id, "limit": limit},
+        )
+        return await cur.fetchall()
+
+
+async def list_all_active_progress(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+    course_id: UUID,
+) -> list[dict[str, Any]]:
+    """Fetch all progress rows with a scheduled due date (for throttling calculation)."""
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT ucp.*
+            FROM user_concept_progress ucp
+            JOIN concepts c ON c.id = ucp.concept_id
+            WHERE ucp.user_id = %(user_id)s
+              AND c.course_id = %(course_id)s
+              AND ucp.fsrs_due IS NOT NULL
+            """,
+            {"user_id": user_id, "course_id": course_id},
+        )
+        return await cur.fetchall()
+
+
+async def get_progress_summary(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+    course_id: UUID,
+) -> list[dict[str, Any]]:
+    """Return mastery counts per CEFR level for a user in a course."""
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT
+                c.cefr_level,
+                COUNT(*) AS total_concepts,
+                COUNT(ucp.concept_id) FILTER (WHERE ucp.is_mastered = true) AS mastered_concepts
+            FROM concepts c
+            LEFT JOIN user_concept_progress ucp
+                ON ucp.concept_id = c.id AND ucp.user_id = %(user_id)s
+            WHERE c.course_id = %(course_id)s
+            GROUP BY c.cefr_level
+            ORDER BY c.cefr_level
+            """,
+            {"user_id": user_id, "course_id": course_id},
+        )
+        return await cur.fetchall()

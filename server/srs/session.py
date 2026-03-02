@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: Apache-2.0
+"""Study session builder — pure Python, no DB imports."""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+from uuid import UUID
+
+from content.schemas import CefrLevel, ConceptType, ExerciseType
+from srs.prerequisite_cap import compute_capped_difficulty
+
+# Throttle new concepts linearly from 80% load (max load = session_size).
+_THROTTLE_START_RATIO = 0.8
+
+
+@dataclass(frozen=True, slots=True)
+class SessionItem:
+    concept_id: UUID
+    exercise_type: ExerciseType
+    is_review: bool
+    prompt: str
+    target: str
+    concept_type: ConceptType
+    cefr_level: CefrLevel
+    distractors: list[str] | None = field(default=None)
+    sentence_template: str | None = field(default=None)
+    explanation: str | None = field(default=None)
+
+
+def _capped_exercise_type(
+    current_difficulty: str,
+    concept_id: UUID,
+    prereq_difficulties: dict[UUID, list[str]],
+) -> ExerciseType:
+    """Apply prerequisite cap to a difficulty string, return ExerciseType."""
+    prereq_strs = prereq_difficulties.get(concept_id, [])
+    prereq_types = [ExerciseType(s) for s in prereq_strs]
+    return compute_capped_difficulty(ExerciseType(current_difficulty), prereq_types)
+
+
+def _throttle_new_count(active_count: int, session_size: int, slots_remaining: int) -> int:
+    """Compute how many new concepts to add given current load."""
+    if session_size == 0:
+        return 0
+    load_ratio = active_count / session_size
+    if load_ratio >= 1.0:
+        return 0
+    if load_ratio <= _THROTTLE_START_RATIO:
+        return slots_remaining
+    # Linear reduction from full slots at 80% load to 0 at 100% load
+    scale = 1.0 - (load_ratio - _THROTTLE_START_RATIO) / (1.0 - _THROTTLE_START_RATIO)
+    return max(0, int(slots_remaining * scale))
+
+
+def build_session(
+    due_reviews: list[dict[str, Any]],
+    new_concepts: list[dict[str, Any]],
+    prereq_difficulties: dict[UUID, list[str]],
+    all_active_progress: list[dict[str, Any]],
+    session_size: int,
+) -> list[SessionItem]:
+    """Build an ordered study session.
+
+    Phase 1: Due reviews (priority), ordered by fsrs_due ascending.
+    Phase 2: New concepts with predictive throttling.
+    """
+    items: list[SessionItem] = []
+
+    # ── Phase 1: due reviews ──────────────────────────────
+    sorted_reviews = sorted(due_reviews, key=lambda r: r["fsrs_due"])
+    for row in sorted_reviews[:session_size]:
+        cid = row["concept_id"]
+        ex_type = _capped_exercise_type(
+            row["current_exercise_difficulty"], cid, prereq_difficulties,
+        )
+        items.append(SessionItem(
+            concept_id=cid,
+            exercise_type=ex_type,
+            is_review=True,
+            prompt=row["prompt"],
+            target=row["target"],
+            concept_type=ConceptType(row["concept_type"]),
+            cefr_level=CefrLevel(row["cefr_level"]),
+        ))
+
+    # ── Phase 2: new concepts with throttling ─────────────
+    slots_remaining = session_size - len(items)
+    if slots_remaining > 0 and new_concepts:
+        active_count = len(all_active_progress)
+        allowed = _throttle_new_count(active_count, session_size, slots_remaining)
+        items.extend(
+            SessionItem(
+                concept_id=concept["id"],
+                exercise_type=ExerciseType.multiple_choice,
+                is_review=False,
+                prompt=concept["prompt"],
+                target=concept["target"],
+                concept_type=ConceptType(concept["concept_type"]),
+                cefr_level=CefrLevel(concept["cefr_level"]),
+            )
+            for concept in new_concepts[:allowed]
+        )
+
+    return items

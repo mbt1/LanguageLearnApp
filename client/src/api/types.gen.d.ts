@@ -329,6 +329,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/study/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Study Session */
+        post: operations["create_study_session_v1_study_session_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/study/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Review */
+        post: operations["submit_review_v1_study_review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/progress/{course_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Course Progress */
+        get: operations["get_course_progress_v1_progress__course_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/health": {
         parameters: {
             query?: never;
@@ -355,6 +406,16 @@ export interface components {
          * @enum {string}
          */
         CefrLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+        /** CefrProgressItem */
+        CefrProgressItem: {
+            cefr_level: components["schemas"]["CefrLevel"];
+            /** Total Concepts */
+            total_concepts: number;
+            /** Mastered Concepts */
+            mastered_concepts: number;
+            /** Mastery Percentage */
+            mastery_percentage: number;
+        };
         /** ConceptDetail */
         ConceptDetail: {
             /**
@@ -463,6 +524,16 @@ export interface components {
             concepts_created: number;
             /** Exercises Created */
             exercises_created: number;
+        };
+        /** CourseProgressResponse */
+        CourseProgressResponse: {
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Levels */
+            levels: components["schemas"]["CefrProgressItem"][];
         };
         /** CourseResponse */
         CourseResponse: {
@@ -660,6 +731,87 @@ export interface components {
             access_token: string;
             /** Message */
             message: string;
+        };
+        /** ReviewRequest */
+        ReviewRequest: {
+            /**
+             * Concept Id
+             * Format: uuid
+             */
+            concept_id: string;
+            /** Rating */
+            rating: string;
+            exercise_type: components["schemas"]["ExerciseType"];
+            /** Response */
+            response?: string | null;
+            /** Correct */
+            correct: boolean;
+            /** Review Duration Ms */
+            review_duration_ms?: number | null;
+        };
+        /** ReviewResponse */
+        ReviewResponse: {
+            /**
+             * Concept Id
+             * Format: uuid
+             */
+            concept_id: string;
+            new_exercise_difficulty: components["schemas"]["ExerciseType"];
+            /** Consecutive Correct */
+            consecutive_correct: number;
+            /** Is Mastered */
+            is_mastered: boolean;
+            /** Fsrs Due */
+            fsrs_due: string | null;
+            /** Difficulty Advanced */
+            difficulty_advanced: boolean;
+            /** Mastery Changed */
+            mastery_changed: boolean;
+        };
+        /** StudySessionItem */
+        StudySessionItem: {
+            /**
+             * Concept Id
+             * Format: uuid
+             */
+            concept_id: string;
+            exercise_type: components["schemas"]["ExerciseType"];
+            /** Is Review */
+            is_review: boolean;
+            /** Prompt */
+            prompt: string;
+            /** Target */
+            target: string;
+            concept_type: components["schemas"]["ConceptType"];
+            cefr_level: components["schemas"]["CefrLevel"];
+            /** Distractors */
+            distractors?: string[] | null;
+            /** Sentence Template */
+            sentence_template?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+        };
+        /** StudySessionRequest */
+        StudySessionRequest: {
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /**
+             * Session Size
+             * @default 20
+             */
+            session_size: number;
+        };
+        /** StudySessionResponse */
+        StudySessionResponse: {
+            /** Items */
+            items: components["schemas"]["StudySessionItem"][];
+            /** Total Due Reviews */
+            total_due_reviews: number;
+            /** New Concepts Added */
+            new_concepts_added: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -1145,6 +1297,103 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_study_session_v1_study_session_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudySessionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudySessionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_review_v1_study_review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_course_progress_v1_progress__course_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseProgressResponse"];
+                };
             };
             /** @description Validation Error */
             422: {

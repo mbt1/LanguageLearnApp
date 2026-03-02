@@ -32,5 +32,14 @@ export type ConceptDetail = components['schemas']['ConceptDetail']
 export type ExerciseResponse = components['schemas']['ExerciseResponse']
 export type PrerequisiteInfo = components['schemas']['PrerequisiteInfo']
 
+// Study / SRS types
+export type StudySessionRequest = components['schemas']['StudySessionRequest']
+export type StudySessionItem = components['schemas']['StudySessionItem']
+export type StudySessionResponse = components['schemas']['StudySessionResponse']
+export type ReviewRequest = components['schemas']['ReviewRequest']
+export type ReviewResponse = components['schemas']['ReviewResponse']
+export type CefrProgressItem = components['schemas']['CefrProgressItem']
+export type CourseProgressResponse = components['schemas']['CourseProgressResponse']
+
 // Re-export full types for future openapi-fetch usage
 export type { paths, components } from './types.gen'

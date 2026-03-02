@@ -1,0 +1,197 @@
+# SPDX-License-Identifier: Apache-2.0
+"""Tests for the SRS session builder."""
+from __future__ import annotations
+
+from datetime import UTC, datetime, timedelta
+from typing import Any
+from uuid import UUID, uuid4
+
+from content.schemas import CefrLevel, ConceptType, ExerciseType
+from srs.session import SessionItem, build_session
+
+NOW = datetime(2026, 1, 1, tzinfo=UTC)
+
+
+def _make_progress(
+    concept_id: UUID | None = None,
+    *,
+    current_exercise_difficulty: str = "multiple_choice",
+    fsrs_due: datetime | None = None,
+    prompt: str = "hello",
+    target: str = "hola",
+    concept_type: str = "vocabulary",
+    cefr_level: str = "A1",
+) -> dict[str, Any]:
+    """Build a fake due-review progress dict (as returned by list_due_reviews)."""
+    return {
+        "concept_id": concept_id or uuid4(),
+        "current_exercise_difficulty": current_exercise_difficulty,
+        "fsrs_due": fsrs_due or (NOW - timedelta(hours=1)),
+        "prompt": prompt,
+        "target": target,
+        "concept_type": concept_type,
+        "cefr_level": cefr_level,
+        "consecutive_correct": 0,
+        "fsrs_state": "review",
+        "fsrs_step": None,
+        "fsrs_stability": 30.0,
+        "fsrs_difficulty": 5.0,
+        "fsrs_last_review": NOW - timedelta(days=30),
+        "is_mastered": False,
+    }
+
+
+def _make_concept(
+    concept_id: UUID | None = None,
+    *,
+    sequence: int = 1,
+    cefr_level: str = "A1",
+) -> dict[str, Any]:
+    """Build a fake new concept dict (as returned by list_new_concepts)."""
+    return {
+        "id": concept_id or uuid4(),
+        "course_id": uuid4(),
+        "prompt": f"prompt-{sequence}",
+        "target": f"target-{sequence}",
+        "concept_type": "vocabulary",
+        "cefr_level": cefr_level,
+        "sequence": sequence,
+    }
+
+
+# ── Session item dataclass ────────────────────────────────
+
+
+class TestSessionItem:
+    def test_is_review_field_preserved(self) -> None:
+        item = SessionItem(
+            concept_id=uuid4(),
+            exercise_type=ExerciseType.multiple_choice,
+            is_review=True,
+            prompt="p",
+            target="t",
+            concept_type=ConceptType.vocabulary,
+            cefr_level=CefrLevel.A1,
+        )
+        assert item.is_review is True
+
+
+# ── build_session ─────────────────────────────────────────
+
+
+class TestBuildSession:
+    def test_empty_inputs_returns_empty(self) -> None:
+        result = build_session(
+            due_reviews=[],
+            new_concepts=[],
+            prereq_difficulties={},
+            all_active_progress=[],
+            session_size=20,
+        )
+        assert result == []
+
+    def test_due_reviews_come_first(self) -> None:
+        review_id = uuid4()
+        new_id = uuid4()
+        result = build_session(
+            due_reviews=[_make_progress(review_id)],
+            new_concepts=[_make_concept(new_id)],
+            prereq_difficulties={},
+            all_active_progress=[_make_progress(review_id)],
+            session_size=20,
+        )
+        assert result[0].concept_id == review_id
+        assert result[1].concept_id == new_id
+
+    def test_session_size_respected(self) -> None:
+        reviews = [_make_progress() for _ in range(25)]
+        result = build_session(
+            due_reviews=reviews,
+            new_concepts=[],
+            prereq_difficulties={},
+            all_active_progress=reviews,
+            session_size=10,
+        )
+        assert len(result) <= 10
+
+    def test_review_items_flagged_is_review(self) -> None:
+        result = build_session(
+            due_reviews=[_make_progress()],
+            new_concepts=[],
+            prereq_difficulties={},
+            all_active_progress=[_make_progress()],
+            session_size=20,
+        )
+        assert result[0].is_review is True
+
+    def test_new_concepts_flagged_not_is_review(self) -> None:
+        result = build_session(
+            due_reviews=[],
+            new_concepts=[_make_concept()],
+            prereq_difficulties={},
+            all_active_progress=[],
+            session_size=20,
+        )
+        assert result[0].is_review is False
+
+    def test_new_concepts_use_multiple_choice(self) -> None:
+        result = build_session(
+            due_reviews=[],
+            new_concepts=[_make_concept()],
+            prereq_difficulties={},
+            all_active_progress=[],
+            session_size=20,
+        )
+        assert result[0].exercise_type == ExerciseType.multiple_choice
+
+    def test_prerequisite_cap_applied_to_reviews(self) -> None:
+        review_id = uuid4()
+        review = _make_progress(review_id, current_exercise_difficulty="typing")
+        result = build_session(
+            due_reviews=[review],
+            new_concepts=[],
+            prereq_difficulties={review_id: ["multiple_choice"]},
+            all_active_progress=[review],
+            session_size=20,
+        )
+        # Capped by unmastered prerequisite
+        assert result[0].exercise_type == ExerciseType.multiple_choice
+
+    def test_throttling_at_full_load_adds_no_new(self) -> None:
+        # 20 items already active → 100% load → no new concepts
+        active = [_make_progress() for _ in range(20)]
+        new_concepts = [_make_concept()]
+        result = build_session(
+            due_reviews=[],
+            new_concepts=new_concepts,
+            prereq_difficulties={},
+            all_active_progress=active,
+            session_size=20,
+        )
+        assert len(result) == 0
+
+    def test_no_throttling_when_empty(self) -> None:
+        new_concepts = [_make_concept(sequence=i) for i in range(5)]
+        result = build_session(
+            due_reviews=[],
+            new_concepts=new_concepts,
+            prereq_difficulties={},
+            all_active_progress=[],
+            session_size=20,
+        )
+        assert len(result) == 5
+
+    def test_due_reviews_not_throttled(self) -> None:
+        # Even at 100% active load, due reviews still come through
+        active = [_make_progress() for _ in range(20)]
+        due = active[:5]  # 5 are due right now
+        result = build_session(
+            due_reviews=due,
+            new_concepts=[_make_concept()],
+            prereq_difficulties={},
+            all_active_progress=active,
+            session_size=20,
+        )
+        # Reviews always included; new may be throttled
+        review_count = sum(1 for item in result if item.is_review)
+        assert review_count == 5

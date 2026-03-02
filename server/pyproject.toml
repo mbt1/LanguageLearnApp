@@ -40,10 +40,11 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S105", "S106", "PLR2004", "PLR0913", "PLC0415", "ERA001", "PT018"]
+"tests/**" = ["S101", "S105", "S106", "PLR2004", "PLR0913", "PLC0415", "ERA001", "PT018", "S311", "DTZ001", "PLW0108", "PERF401", "SIM300", "ARG001", "FBT001"]
 "db/queries/**" = ["PLR0913", "S101"]   # query functions map to table columns; assert for INSERT RETURNING
 "auth/**" = ["PLR0913"]                  # auth functions have many config params
 "routes/**" = ["PLR0913"]                # route handlers have many dependencies
+"srs/**" = ["PLR0913"]                   # SRS functions may require many FSRS fields
 "export_openapi.py" = ["T201"]           # print is intentional in CLI script
 
 [tool.pytest.ini_options]
@@ -62,3 +63,4 @@ venv = ".venv"
 reportUnknownArgumentType = "warning"
 reportUnknownParameterType = "warning"
 reportMissingTypeArgument = "warning"
+reportMissingTypeStubs = "none"

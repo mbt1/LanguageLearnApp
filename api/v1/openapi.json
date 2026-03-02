@@ -635,6 +635,146 @@
         }
       }
     },
+    "/v1/study/session": {
+      "post": {
+        "tags": [
+          "study"
+        ],
+        "summary": "Create Study Session",
+        "operationId": "create_study_session_v1_study_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudySessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudySessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/study/review": {
+      "post": {
+        "tags": [
+          "study"
+        ],
+        "summary": "Submit Review",
+        "operationId": "submit_review_v1_study_review_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/progress/{course_id}": {
+      "get": {
+        "tags": [
+          "study"
+        ],
+        "summary": "Get Course Progress",
+        "operationId": "get_course_progress_v1_progress__course_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseProgressResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/health": {
       "get": {
         "summary": "Health",
@@ -671,6 +811,33 @@
           "C2"
         ],
         "title": "CefrLevel"
+      },
+      "CefrProgressItem": {
+        "properties": {
+          "cefr_level": {
+            "$ref": "#/components/schemas/CefrLevel"
+          },
+          "total_concepts": {
+            "type": "integer",
+            "title": "Total Concepts"
+          },
+          "mastered_concepts": {
+            "type": "integer",
+            "title": "Mastered Concepts"
+          },
+          "mastery_percentage": {
+            "type": "number",
+            "title": "Mastery Percentage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cefr_level",
+          "total_concepts",
+          "mastered_concepts",
+          "mastery_percentage"
+        ],
+        "title": "CefrProgressItem"
       },
       "ConceptDetail": {
         "properties": {
@@ -964,6 +1131,28 @@
           "exercises_created"
         ],
         "title": "CourseImportResponse"
+      },
+      "CourseProgressResponse": {
+        "properties": {
+          "course_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Course Id"
+          },
+          "levels": {
+            "items": {
+              "$ref": "#/components/schemas/CefrProgressItem"
+            },
+            "type": "array",
+            "title": "Levels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_id",
+          "levels"
+        ],
+        "title": "CourseProgressResponse"
       },
       "CourseResponse": {
         "properties": {
@@ -1443,6 +1632,232 @@
           "message"
         ],
         "title": "RegisterResponse"
+      },
+      "ReviewRequest": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Concept Id"
+          },
+          "rating": {
+            "type": "string",
+            "pattern": "^(again|hard|good|easy)$",
+            "title": "Rating"
+          },
+          "exercise_type": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          },
+          "correct": {
+            "type": "boolean",
+            "title": "Correct"
+          },
+          "review_duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Duration Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "rating",
+          "exercise_type",
+          "correct"
+        ],
+        "title": "ReviewRequest"
+      },
+      "ReviewResponse": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Concept Id"
+          },
+          "new_exercise_difficulty": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "consecutive_correct": {
+            "type": "integer",
+            "title": "Consecutive Correct"
+          },
+          "is_mastered": {
+            "type": "boolean",
+            "title": "Is Mastered"
+          },
+          "fsrs_due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsrs Due"
+          },
+          "difficulty_advanced": {
+            "type": "boolean",
+            "title": "Difficulty Advanced"
+          },
+          "mastery_changed": {
+            "type": "boolean",
+            "title": "Mastery Changed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "new_exercise_difficulty",
+          "consecutive_correct",
+          "is_mastered",
+          "fsrs_due",
+          "difficulty_advanced",
+          "mastery_changed"
+        ],
+        "title": "ReviewResponse"
+      },
+      "StudySessionItem": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Concept Id"
+          },
+          "exercise_type": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "is_review": {
+            "type": "boolean",
+            "title": "Is Review"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "concept_type": {
+            "$ref": "#/components/schemas/ConceptType"
+          },
+          "cefr_level": {
+            "$ref": "#/components/schemas/CefrLevel"
+          },
+          "distractors": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distractors"
+          },
+          "sentence_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentence Template"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "exercise_type",
+          "is_review",
+          "prompt",
+          "target",
+          "concept_type",
+          "cefr_level"
+        ],
+        "title": "StudySessionItem"
+      },
+      "StudySessionRequest": {
+        "properties": {
+          "course_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Course Id"
+          },
+          "session_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Session Size",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_id"
+        ],
+        "title": "StudySessionRequest"
+      },
+      "StudySessionResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StudySessionItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_due_reviews": {
+            "type": "integer",
+            "title": "Total Due Reviews"
+          },
+          "new_concepts_added": {
+            "type": "integer",
+            "title": "New Concepts Added"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_due_reviews",
+          "new_concepts_added"
+        ],
+        "title": "StudySessionResponse"
       },
       "ValidationError": {
         "properties": {
