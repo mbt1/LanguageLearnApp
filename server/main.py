@@ -10,6 +10,7 @@ from psycopg import AsyncConnection
 from auth.config import get_config
 from db.pool import get_conn, lifespan
 from routes.auth import router as auth_router
+from routes.courses import router as courses_router
 from routes.passkeys import router as passkeys_router
 
 app = FastAPI(title="LanguageLearn API", version="0.1.0", lifespan=lifespan)
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(courses_router)
 app.include_router(passkeys_router)
 
 

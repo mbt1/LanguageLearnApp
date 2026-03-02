@@ -189,6 +189,221 @@
         ]
       }
     },
+    "/v1/courses": {
+      "get": {
+        "tags": [
+          "courses"
+        ],
+        "summary": "List Courses Endpoint",
+        "operationId": "list_courses_endpoint_v1_courses_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CourseResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Courses Endpoint V1 Courses Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/courses/import": {
+      "post": {
+        "tags": [
+          "courses"
+        ],
+        "summary": "Import Course Endpoint",
+        "operationId": "import_course_endpoint_v1_courses_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseImportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/courses/{course_id}": {
+      "get": {
+        "tags": [
+          "courses"
+        ],
+        "summary": "Get Course Detail",
+        "operationId": "get_course_detail_v1_courses__course_id__get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/courses/{course_id}/concepts": {
+      "get": {
+        "tags": [
+          "courses"
+        ],
+        "summary": "List Concepts Endpoint",
+        "operationId": "list_concepts_endpoint_v1_courses__course_id__concepts_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "cefr_level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CefrLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cefr Level"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConceptSummary"
+                  },
+                  "title": "Response List Concepts Endpoint V1 Courses  Course Id  Concepts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/concepts/{concept_id}": {
+      "get": {
+        "tags": [
+          "courses"
+        ],
+        "summary": "Get Concept Detail",
+        "operationId": "get_concept_detail_v1_concepts__concept_id__get",
+        "parameters": [
+          {
+            "name": "concept_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Concept Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/auth/passkeys/register/options": {
       "post": {
         "tags": [
@@ -445,6 +660,468 @@
   },
   "components": {
     "schemas": {
+      "CefrLevel": {
+        "type": "string",
+        "enum": [
+          "A1",
+          "A2",
+          "B1",
+          "B2",
+          "C1",
+          "C2"
+        ],
+        "title": "CefrLevel"
+      },
+      "ConceptDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "concept_type": {
+            "$ref": "#/components/schemas/ConceptType"
+          },
+          "cefr_level": {
+            "$ref": "#/components/schemas/CefrLevel"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "prerequisites": {
+            "items": {
+              "$ref": "#/components/schemas/PrerequisiteInfo"
+            },
+            "type": "array",
+            "title": "Prerequisites"
+          },
+          "exercises": {
+            "items": {
+              "$ref": "#/components/schemas/ExerciseResponse"
+            },
+            "type": "array",
+            "title": "Exercises"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "concept_type",
+          "cefr_level",
+          "sequence",
+          "prompt",
+          "target",
+          "prerequisites",
+          "exercises"
+        ],
+        "title": "ConceptDetail"
+      },
+      "ConceptImport": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "concept_type": {
+            "$ref": "#/components/schemas/ConceptType"
+          },
+          "cefr_level": {
+            "$ref": "#/components/schemas/CefrLevel"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "prerequisites": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prerequisites"
+          },
+          "exercises": {
+            "items": {
+              "$ref": "#/components/schemas/ExerciseImport"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Exercises"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "concept_type",
+          "cefr_level",
+          "sequence",
+          "prompt",
+          "target",
+          "exercises"
+        ],
+        "title": "ConceptImport"
+      },
+      "ConceptSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "concept_type": {
+            "$ref": "#/components/schemas/ConceptType"
+          },
+          "cefr_level": {
+            "$ref": "#/components/schemas/CefrLevel"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "concept_type",
+          "cefr_level",
+          "sequence",
+          "prompt",
+          "target"
+        ],
+        "title": "ConceptSummary"
+      },
+      "ConceptType": {
+        "type": "string",
+        "enum": [
+          "vocabulary",
+          "grammar"
+        ],
+        "title": "ConceptType"
+      },
+      "CourseDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "source_language": {
+            "type": "string",
+            "title": "Source Language"
+          },
+          "target_language": {
+            "type": "string",
+            "title": "Target Language"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "concepts_by_level": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ConceptSummary"
+              },
+              "type": "array"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/CefrLevel"
+            },
+            "type": "object",
+            "title": "Concepts By Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "source_language",
+          "target_language",
+          "created_at",
+          "concepts_by_level"
+        ],
+        "title": "CourseDetail"
+      },
+      "CourseImport": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "source_language": {
+            "type": "string",
+            "title": "Source Language"
+          },
+          "target_language": {
+            "type": "string",
+            "title": "Target Language"
+          },
+          "concepts": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptImport"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Concepts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "title",
+          "source_language",
+          "target_language",
+          "concepts"
+        ],
+        "title": "CourseImport"
+      },
+      "CourseImportResponse": {
+        "properties": {
+          "course_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Course Id"
+          },
+          "concepts_created": {
+            "type": "integer",
+            "title": "Concepts Created"
+          },
+          "exercises_created": {
+            "type": "integer",
+            "title": "Exercises Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_id",
+          "concepts_created",
+          "exercises_created"
+        ],
+        "title": "CourseImportResponse"
+      },
+      "CourseResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "source_language": {
+            "type": "string",
+            "title": "Source Language"
+          },
+          "target_language": {
+            "type": "string",
+            "title": "Target Language"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "source_language",
+          "target_language",
+          "created_at"
+        ],
+        "title": "CourseResponse"
+      },
+      "DependencySource": {
+        "type": "string",
+        "enum": [
+          "manual",
+          "auto"
+        ],
+        "title": "DependencySource"
+      },
+      "ExerciseImport": {
+        "properties": {
+          "exercise_type": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "correct_answer": {
+            "type": "string",
+            "title": "Correct Answer"
+          },
+          "distractors": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distractors"
+          },
+          "sentence_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentence Template"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exercise_type",
+          "prompt",
+          "correct_answer"
+        ],
+        "title": "ExerciseImport"
+      },
+      "ExerciseResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "exercise_type": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "correct_answer": {
+            "type": "string",
+            "title": "Correct Answer"
+          },
+          "distractors": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distractors"
+          },
+          "sentence_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentence Template"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "exercise_type",
+          "prompt",
+          "correct_answer"
+        ],
+        "title": "ExerciseResponse"
+      },
+      "ExerciseType": {
+        "type": "string",
+        "enum": [
+          "multiple_choice",
+          "cloze",
+          "reverse_typing",
+          "typing"
+        ],
+        "title": "ExerciseType"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -661,6 +1338,38 @@
           "message"
         ],
         "title": "PasskeyRegistrationVerifyResponse"
+      },
+      "PrerequisiteInfo": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Concept Id"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "cefr_level": {
+            "$ref": "#/components/schemas/CefrLevel"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DependencySource"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "prompt",
+          "target",
+          "cefr_level",
+          "source"
+        ],
+        "title": "PrerequisiteInfo"
       },
       "RefreshResponse": {
         "properties": {

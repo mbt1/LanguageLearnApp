@@ -23,5 +23,14 @@ export type PasskeyAuthenticationVerifyResponse =
   components['schemas']['PasskeyAuthenticationVerifyResponse']
 export type PasskeyListItem = components['schemas']['PasskeyListItem']
 
+// Course & content types
+export type CourseResponse = components['schemas']['CourseResponse']
+export type CourseDetail = components['schemas']['CourseDetail']
+export type CourseImportResponse = components['schemas']['CourseImportResponse']
+export type ConceptSummary = components['schemas']['ConceptSummary']
+export type ConceptDetail = components['schemas']['ConceptDetail']
+export type ExerciseResponse = components['schemas']['ExerciseResponse']
+export type PrerequisiteInfo = components['schemas']['PrerequisiteInfo']
+
 // Re-export full types for future openapi-fetch usage
 export type { paths, components } from './types.gen'

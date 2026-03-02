@@ -124,6 +124,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Courses Endpoint */
+        get: operations["list_courses_endpoint_v1_courses_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/courses/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Course Endpoint */
+        post: operations["import_course_endpoint_v1_courses_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/courses/{course_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Course Detail */
+        get: operations["get_course_detail_v1_courses__course_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/courses/{course_id}/concepts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Concepts Endpoint */
+        get: operations["list_concepts_endpoint_v1_courses__course_id__concepts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/concepts/{concept_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Concept Detail */
+        get: operations["get_concept_detail_v1_concepts__concept_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/passkeys/register/options": {
         parameters: {
             query?: never;
@@ -265,6 +350,177 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * CefrLevel
+         * @enum {string}
+         */
+        CefrLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+        /** ConceptDetail */
+        ConceptDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            concept_type: components["schemas"]["ConceptType"];
+            cefr_level: components["schemas"]["CefrLevel"];
+            /** Sequence */
+            sequence: number;
+            /** Prompt */
+            prompt: string;
+            /** Target */
+            target: string;
+            /** Explanation */
+            explanation?: string | null;
+            /** Prerequisites */
+            prerequisites: components["schemas"]["PrerequisiteInfo"][];
+            /** Exercises */
+            exercises: components["schemas"]["ExerciseResponse"][];
+        };
+        /** ConceptImport */
+        ConceptImport: {
+            /** Ref */
+            ref: string;
+            concept_type: components["schemas"]["ConceptType"];
+            cefr_level: components["schemas"]["CefrLevel"];
+            /** Sequence */
+            sequence: number;
+            /** Prompt */
+            prompt: string;
+            /** Target */
+            target: string;
+            /** Explanation */
+            explanation?: string | null;
+            /** Prerequisites */
+            prerequisites?: string[] | null;
+            /** Exercises */
+            exercises: components["schemas"]["ExerciseImport"][];
+        };
+        /** ConceptSummary */
+        ConceptSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            concept_type: components["schemas"]["ConceptType"];
+            cefr_level: components["schemas"]["CefrLevel"];
+            /** Sequence */
+            sequence: number;
+            /** Prompt */
+            prompt: string;
+            /** Target */
+            target: string;
+        };
+        /**
+         * ConceptType
+         * @enum {string}
+         */
+        ConceptType: "vocabulary" | "grammar";
+        /** CourseDetail */
+        CourseDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+            /** Source Language */
+            source_language: string;
+            /** Target Language */
+            target_language: string;
+            /** Created At */
+            created_at: string;
+            /** Concepts By Level */
+            concepts_by_level: {
+                [key: string]: components["schemas"]["ConceptSummary"][];
+            };
+        };
+        /** CourseImport */
+        CourseImport: {
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+            /** Source Language */
+            source_language: string;
+            /** Target Language */
+            target_language: string;
+            /** Concepts */
+            concepts: components["schemas"]["ConceptImport"][];
+        };
+        /** CourseImportResponse */
+        CourseImportResponse: {
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Concepts Created */
+            concepts_created: number;
+            /** Exercises Created */
+            exercises_created: number;
+        };
+        /** CourseResponse */
+        CourseResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+            /** Source Language */
+            source_language: string;
+            /** Target Language */
+            target_language: string;
+            /** Created At */
+            created_at: string;
+        };
+        /**
+         * DependencySource
+         * @enum {string}
+         */
+        DependencySource: "manual" | "auto";
+        /** ExerciseImport */
+        ExerciseImport: {
+            exercise_type: components["schemas"]["ExerciseType"];
+            /** Prompt */
+            prompt: string;
+            /** Correct Answer */
+            correct_answer: string;
+            /** Distractors */
+            distractors?: string[] | null;
+            /** Sentence Template */
+            sentence_template?: string | null;
+        };
+        /** ExerciseResponse */
+        ExerciseResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            exercise_type: components["schemas"]["ExerciseType"];
+            /** Prompt */
+            prompt: string;
+            /** Correct Answer */
+            correct_answer: string;
+            /** Distractors */
+            distractors?: string[] | null;
+            /** Sentence Template */
+            sentence_template?: string | null;
+        };
+        /**
+         * ExerciseType
+         * @enum {string}
+         */
+        ExerciseType: "multiple_choice" | "cloze" | "reverse_typing" | "typing";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -359,6 +615,20 @@ export interface components {
         PasskeyRegistrationVerifyResponse: {
             /** Message */
             message: string;
+        };
+        /** PrerequisiteInfo */
+        PrerequisiteInfo: {
+            /**
+             * Concept Id
+             * Format: uuid
+             */
+            concept_id: string;
+            /** Prompt */
+            prompt: string;
+            /** Target */
+            target: string;
+            cefr_level: components["schemas"]["CefrLevel"];
+            source: components["schemas"]["DependencySource"];
         };
         /** RefreshResponse */
         RefreshResponse: {
@@ -568,6 +838,154 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_courses_endpoint_v1_courses_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseResponse"][];
+                };
+            };
+        };
+    };
+    import_course_endpoint_v1_courses_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseImport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseImportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_course_detail_v1_courses__course_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_concepts_endpoint_v1_courses__course_id__concepts_get: {
+        parameters: {
+            query?: {
+                cefr_level?: components["schemas"]["CefrLevel"] | null;
+            };
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConceptSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_concept_detail_v1_concepts__concept_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                concept_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConceptDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
