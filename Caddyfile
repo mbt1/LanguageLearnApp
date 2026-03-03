@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 LanguageLearn Contributors
+#
+# Production Caddyfile. Set the DOMAIN environment variable in .env.
+# Caddy handles automatic HTTPS via Let's Encrypt.
+
+{$DOMAIN} {
+    # Proxy all API requests to the FastAPI server
+    handle /v1/* {
+        reverse_proxy server:8000
+    }
+
+    # Serve the React SPA with client-side routing fallback
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+}
