@@ -32,6 +32,12 @@ export class ApiError extends Error {
   }
 }
 
+function fetchWithTimeout(input: string, init: RequestInit, ms = 10_000): Promise<Response> {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), ms)
+  return fetch(input, { ...init, signal: controller.signal }).finally(() => clearTimeout(id))
+}
+
 async function parseError(resp: Response): Promise<ApiError> {
   try {
     const body = (await resp.json()) as { detail?: string }
@@ -43,7 +49,7 @@ async function parseError(resp: Response): Promise<ApiError> {
 
 async function refreshAccessToken(): Promise<boolean> {
   try {
-    const resp = await fetch('/v1/auth/refresh', {
+    const resp = await fetchWithTimeout('/v1/auth/refresh', {
       method: 'POST',
       credentials: 'include',
     })
@@ -65,7 +71,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     headers.set('Content-Type', 'application/json')
   }
 
-  const resp = await fetch(path, {
+  const resp = await fetchWithTimeout(path, {
     ...options,
     headers,
     credentials: 'include',
@@ -76,7 +82,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       headers.set('Authorization', `Bearer ${accessToken}`)
-      const retry = await fetch(path, {
+      const retry = await fetchWithTimeout(path, {
         ...options,
         headers,
         credentials: 'include',

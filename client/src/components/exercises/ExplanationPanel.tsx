@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 LanguageLearn Contributors
 
+import DOMPurify from 'dompurify'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -23,7 +24,7 @@ export function ExplanationPanel({ explanation, defaultOpen = false }: Explanati
       {open && (
         <div
           className="prose prose-sm mt-2 rounded-md border bg-muted p-4 text-sm"
-          dangerouslySetInnerHTML={{ __html: explanation }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(explanation) }}
         />
       )}
     </div>

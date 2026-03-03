@@ -40,8 +40,9 @@ export function ClozeExercise({ sentenceTemplate, onAnswer }: ClozeExerciseProps
               onKeyDown={(e) => {
                 if (e.key === 'Enter') submit()
               }}
+              aria-label="Fill in the blank"
               disabled={submitted}
-              className="mx-2 inline-block w-32"
+              className="mx-2 inline-block min-w-16 max-w-48"
               autoFocus
             />
             {after}

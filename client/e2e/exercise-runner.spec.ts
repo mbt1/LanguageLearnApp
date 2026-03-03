@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 LanguageLearn Contributors
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 const API_BASE = 'http://localhost:8000'
 
@@ -48,7 +48,7 @@ async function setupSession() {
 }
 
 test.describe('Exercise runner', () => {
-  test('completes a multiple choice exercise and shows feedback', async ({ page }) => {
+  test('completes a multiple choice exercise and shows feedback', async ({ page, checkA11y }) => {
     const { email, courseId } = await setupSession()
 
     // Login
@@ -62,6 +62,7 @@ test.describe('Exercise runner', () => {
 
     // Wait for exercise to load
     await expect(page.getByText("Choose 'hello'")).toBeVisible({ timeout: 10000 })
+    await checkA11y()
 
     // Click the correct answer
     await page.getByRole('button', { name: 'hola' }).click()
@@ -69,5 +70,6 @@ test.describe('Exercise runner', () => {
     // Feedback shown
     await expect(page.getByText(/correct/i)).toBeVisible()
     await expect(page.getByRole('button', { name: /next/i })).toBeVisible()
+    await checkA11y()
   })
 })

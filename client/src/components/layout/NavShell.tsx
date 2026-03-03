@@ -13,11 +13,11 @@ export function NavShell() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="mx-auto flex max-w-4xl items-center gap-6 px-4 py-3">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-4 px-4 py-3">
           <NavLink to="/" className="text-lg font-bold tracking-tight">
             LanguageLearn
           </NavLink>
-          <nav className="flex items-center gap-4 text-sm">
+          <nav aria-label="Main navigation" className="flex items-center gap-4 text-sm">
             <NavLink
               to="/"
               end

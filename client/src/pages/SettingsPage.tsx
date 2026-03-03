@@ -68,7 +68,7 @@ export function SettingsPage() {
           <CardTitle className="text-base">Theme</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" onClick={toggleDarkMode}>
+          <Button variant="outline" aria-pressed={darkMode} onClick={toggleDarkMode}>
             {darkMode ? 'Switch to Light mode' : 'Switch to Dark mode'}
           </Button>
         </CardContent>

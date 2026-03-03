@@ -29,6 +29,7 @@ export function FeedbackPanel({
 
   return (
     <div
+      role="alert"
       className={`rounded-lg border p-4 ${
         correct
           ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950'

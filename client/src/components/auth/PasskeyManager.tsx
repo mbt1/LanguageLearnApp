@@ -19,7 +19,7 @@ export function PasskeyManager() {
       const list = await authApi.listPasskeys()
       setPasskeys(list)
     } catch {
-      // Silently fail — user will see empty list
+      setError('Failed to load passkeys')
     }
   }, [])
 
@@ -90,6 +90,7 @@ export function PasskeyManager() {
                 <Button
                   variant="destructive"
                   size="sm"
+                  aria-label={`Remove passkey ${pk.name}`}
                   onClick={() => {
                     void handleDelete(pk.id)
                   }}

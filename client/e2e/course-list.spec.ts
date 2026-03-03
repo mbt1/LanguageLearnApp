@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 LanguageLearn Contributors
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 const API_BASE = 'http://localhost:8000'
 
@@ -54,7 +54,7 @@ async function importCourse(token: string) {
 }
 
 test.describe('Course list', () => {
-  test('shows imported course with CEFR badge and Study link', async ({ page }) => {
+  test('shows imported course with CEFR badge and Study link', async ({ page, checkA11y }) => {
     const { email, token } = await registerUser()
     await importCourse(token)
 
@@ -67,6 +67,7 @@ test.describe('Course list', () => {
     // Should land on course list
     await expect(page.getByRole('heading', { name: /your courses/i })).toBeVisible()
     await expect(page.getByText('E2E Spanish Course')).toBeVisible()
+    await checkA11y()
 
     // CEFR badge shown
     await expect(page.getByText(/A1/)).toBeVisible()

@@ -29,8 +29,9 @@ export function TypingExercise({ prompt, onAnswer }: TypingExerciseProps) {
           <p className="text-lg font-medium">{prompt}</p>
         </CardContent>
       </Card>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Input
+          aria-label="Your answer"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
@@ -40,7 +41,7 @@ export function TypingExercise({ prompt, onAnswer }: TypingExerciseProps) {
           placeholder="Type your answer…"
           autoFocus
         />
-        <Button onClick={submit} disabled={submitted || !value.trim()}>
+        <Button aria-label="Submit answer" onClick={submit} disabled={submitted || !value.trim()}>
           Submit
         </Button>
       </div>

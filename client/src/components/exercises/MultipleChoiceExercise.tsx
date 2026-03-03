@@ -28,10 +28,11 @@ export function MultipleChoiceExercise({ prompt, options, onAnswer }: MultipleCh
           <p className="text-lg font-medium">{prompt}</p>
         </CardContent>
       </Card>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {options.map((option) => (
           <Button
             key={option}
+            aria-label={option}
             variant={selected === option ? 'default' : 'outline'}
             disabled={selected !== null}
             onClick={() => handleSelect(option)}

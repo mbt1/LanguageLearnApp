@@ -23,7 +23,7 @@ export function SessionSummary({ results, onFinish }: SessionSummaryProps) {
         <CardTitle>Session complete!</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="grid grid-cols-1 gap-4 text-center sm:grid-cols-2">
           <div>
             <p className="text-3xl font-bold">{accuracyPct}%</p>
             <p className="text-muted-foreground text-sm">Accuracy</p>
