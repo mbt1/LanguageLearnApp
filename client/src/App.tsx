@@ -5,10 +5,14 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import { AuthProvider } from '@/auth/AuthContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { NavShell } from '@/components/layout/NavShell'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage'
-import { DashboardPage } from '@/pages/DashboardPage'
+import { CourseListPage } from '@/pages/CourseListPage'
+import { LearnPage } from '@/pages/LearnPage'
+import { ProgressPage } from '@/pages/ProgressPage'
+import { SettingsPage } from '@/pages/SettingsPage'
 
 export default function App() {
   return (
@@ -19,13 +23,17 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route
-            path="/"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <NavShell />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route path="/" element={<CourseListPage />} />
+            <Route path="/learn/:courseId" element={<LearnPage />} />
+            <Route path="/progress" element={<ProgressPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
         </Routes>
       </AuthProvider>
     </BrowserRouter>
