@@ -2,8 +2,14 @@
 # Copyright 2026 LanguageLearn Contributors
 #
 # Production Docker Compose.
-# Copy .env.example → .env, fill in secrets, then run:
-#   docker compose -f docker-compose.prod.yml up -d
+#
+# Quick start:
+#   cp .env.example .env          # fill in all secrets
+#   docker compose -f docker-compose.yml pull
+#   docker compose -f docker-compose.yml up -d
+#
+# To build images locally instead of pulling from GHCR, replace each
+# image: line with the commented-out build: block beneath it.
 
 services:
   db:
@@ -23,9 +29,8 @@ services:
       start_period: 20s
 
   server:
-    build:
-      context: .
-      target: server
+    image: ${SERVER_IMAGE:-ghcr.io/languagelearn/languagelearn/server:latest}
+    # build: { context: ., target: server }
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -33,9 +38,8 @@ services:
         condition: service_healthy
 
   caddy:
-    build:
-      context: .
-      target: caddy
+    image: ${CADDY_IMAGE:-ghcr.io/languagelearn/languagelearn/caddy:latest}
+    # build: { context: ., target: caddy }
     restart: unless-stopped
     ports:
       - "80:80"
@@ -50,9 +54,8 @@ services:
       - server
 
   backup:
-    build:
-      context: .
-      target: backup
+    image: ${BACKUP_IMAGE:-ghcr.io/languagelearn/languagelearn/backup:latest}
+    # build: { context: ., target: backup }
     restart: unless-stopped
     env_file: .env
     volumes:
