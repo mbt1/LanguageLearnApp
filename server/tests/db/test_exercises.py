@@ -8,7 +8,7 @@ from psycopg import AsyncConnection
 
 from db.queries.concepts import create_concept
 from db.queries.courses import create_course
-from db.queries.exercises import create_exercise, get_exercises_for_concept
+from db.queries.exercises import create_exercise, get_exercise_by_type, get_exercises_for_concept
 
 
 @pytest.fixture
@@ -90,6 +90,30 @@ async def test_get_exercises_for_concept(
     types = [e["exercise_type"] for e in exercises]
     assert "multiple_choice" in types
     assert "typing" in types
+
+
+async def test_get_exercise_by_type_returns_row(
+    db_conn: AsyncConnection, concept: dict,
+) -> None:
+    await create_exercise(
+        db_conn, concept_id=concept["id"], exercise_type="typing",
+        prompt="Type it", correct_answer="hola",
+    )
+    row = await get_exercise_by_type(
+        db_conn, concept_id=concept["id"], exercise_type="typing",
+    )
+    assert row is not None
+    assert row["correct_answer"] == "hola"
+    assert row["exercise_type"] == "typing"
+
+
+async def test_get_exercise_by_type_returns_none_when_not_found(
+    db_conn: AsyncConnection, concept: dict,
+) -> None:
+    row = await get_exercise_by_type(
+        db_conn, concept_id=concept["id"], exercise_type="typing",
+    )
+    assert row is None
 
 
 async def test_duplicate_exercise_type_rejected(

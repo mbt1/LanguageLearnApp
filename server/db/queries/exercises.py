@@ -45,6 +45,24 @@ async def create_exercise(
     return row
 
 
+async def get_exercise_by_type(
+    conn: AsyncConnection,
+    *,
+    concept_id: UUID,
+    exercise_type: str,
+) -> dict[str, Any] | None:
+    """Fetch a single exercise by concept and type, or None if not found."""
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT * FROM exercises
+            WHERE concept_id = %(concept_id)s AND exercise_type = %(exercise_type)s
+            """,
+            {"concept_id": concept_id, "exercise_type": exercise_type},
+        )
+        return await cur.fetchone()
+
+
 async def get_exercises_for_concept(
     conn: AsyncConnection,
     *,

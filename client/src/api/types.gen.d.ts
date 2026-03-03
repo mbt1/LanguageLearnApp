@@ -209,6 +209,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/exercises/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Exercise */
+        post: operations["submit_exercise_v1_exercises_submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/passkeys/register/options": {
         parameters: {
             query?: never;
@@ -586,6 +603,39 @@ export interface components {
             distractors?: string[] | null;
             /** Sentence Template */
             sentence_template?: string | null;
+        };
+        /** ExerciseSubmitRequest */
+        ExerciseSubmitRequest: {
+            /**
+             * Concept Id
+             * Format: uuid
+             */
+            concept_id: string;
+            exercise_type: components["schemas"]["ExerciseType"];
+            /** User Answer */
+            user_answer: string;
+            /** Review Duration Ms */
+            review_duration_ms?: number | null;
+        };
+        /** ExerciseSubmitResponse */
+        ExerciseSubmitResponse: {
+            /** Correct */
+            correct: boolean;
+            /** Correct Answer */
+            correct_answer: string;
+            /** Normalized User Answer */
+            normalized_user_answer: string;
+            new_exercise_difficulty: components["schemas"]["ExerciseType"];
+            /** Consecutive Correct */
+            consecutive_correct: number;
+            /** Is Mastered */
+            is_mastered: boolean;
+            /** Fsrs Due */
+            fsrs_due: string | null;
+            /** Difficulty Advanced */
+            difficulty_advanced: boolean;
+            /** Mastery Changed */
+            mastery_changed: boolean;
         };
         /**
          * ExerciseType
@@ -1128,6 +1178,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConceptDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_exercise_v1_exercises_submit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExerciseSubmitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExerciseSubmitResponse"];
                 };
             };
             /** @description Validation Error */

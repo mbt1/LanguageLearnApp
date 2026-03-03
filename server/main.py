@@ -11,6 +11,7 @@ from auth.config import get_config
 from db.pool import get_conn, lifespan
 from routes.auth import router as auth_router
 from routes.courses import router as courses_router
+from routes.exercises import router as exercises_router
 from routes.passkeys import router as passkeys_router
 from routes.study import router as study_router
 
@@ -27,6 +28,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(courses_router)
+app.include_router(exercises_router)
 app.include_router(passkeys_router)
 app.include_router(study_router)
 

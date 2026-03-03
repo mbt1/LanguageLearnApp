@@ -58,6 +58,28 @@ class ReviewResponse(BaseModel):
     mastery_changed: bool
 
 
+# ── Exercise submission (server-graded) ───────────────────
+
+
+class ExerciseSubmitRequest(BaseModel):
+    concept_id: UUID
+    exercise_type: ExerciseType
+    user_answer: str
+    review_duration_ms: int | None = None
+
+
+class ExerciseSubmitResponse(BaseModel):
+    correct: bool
+    correct_answer: str           # original (un-normalized) correct answer for display
+    normalized_user_answer: str   # the string that was actually graded
+    new_exercise_difficulty: ExerciseType
+    consecutive_correct: int
+    is_mastered: bool
+    fsrs_due: datetime | None
+    difficulty_advanced: bool
+    mastery_changed: bool
+
+
 # ── Progress ──────────────────────────────────────────────
 
 

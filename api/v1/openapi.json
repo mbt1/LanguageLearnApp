@@ -404,6 +404,52 @@
         }
       }
     },
+    "/v1/exercises/submit": {
+      "post": {
+        "tags": [
+          "exercises"
+        ],
+        "summary": "Submit Exercise",
+        "operationId": "submit_exercise_v1_exercises_submit_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExerciseSubmitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExerciseSubmitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/v1/auth/passkeys/register/options": {
       "post": {
         "tags": [
@@ -1300,6 +1346,100 @@
           "correct_answer"
         ],
         "title": "ExerciseResponse"
+      },
+      "ExerciseSubmitRequest": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Concept Id"
+          },
+          "exercise_type": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "user_answer": {
+            "type": "string",
+            "title": "User Answer"
+          },
+          "review_duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Duration Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "exercise_type",
+          "user_answer"
+        ],
+        "title": "ExerciseSubmitRequest"
+      },
+      "ExerciseSubmitResponse": {
+        "properties": {
+          "correct": {
+            "type": "boolean",
+            "title": "Correct"
+          },
+          "correct_answer": {
+            "type": "string",
+            "title": "Correct Answer"
+          },
+          "normalized_user_answer": {
+            "type": "string",
+            "title": "Normalized User Answer"
+          },
+          "new_exercise_difficulty": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "consecutive_correct": {
+            "type": "integer",
+            "title": "Consecutive Correct"
+          },
+          "is_mastered": {
+            "type": "boolean",
+            "title": "Is Mastered"
+          },
+          "fsrs_due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsrs Due"
+          },
+          "difficulty_advanced": {
+            "type": "boolean",
+            "title": "Difficulty Advanced"
+          },
+          "mastery_changed": {
+            "type": "boolean",
+            "title": "Mastery Changed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "correct",
+          "correct_answer",
+          "normalized_user_answer",
+          "new_exercise_difficulty",
+          "consecutive_correct",
+          "is_mastered",
+          "fsrs_due",
+          "difficulty_advanced",
+          "mastery_changed"
+        ],
+        "title": "ExerciseSubmitResponse"
       },
       "ExerciseType": {
         "type": "string",
