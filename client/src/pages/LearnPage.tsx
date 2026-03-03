@@ -84,7 +84,11 @@ export function LearnPage() {
   }
 
   if (state === 'loading') {
-    return <p className="text-muted-foreground">Loading session...</p>
+    return (
+      <p role="status" aria-live="polite" className="text-muted-foreground">
+        Loading session...
+      </p>
+    )
   }
 
   if (state === 'error') {

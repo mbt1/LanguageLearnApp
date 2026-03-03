@@ -39,7 +39,11 @@ export function VerifyEmailPage() {
           <CardTitle>Email Verification</CardTitle>
         </CardHeader>
         <CardContent>
-          {status === 'loading' && <p>Verifying...</p>}
+          {status === 'loading' && (
+            <p role="status" aria-live="polite">
+              Verifying...
+            </p>
+          )}
           {status === 'success' && (
             <>
               <p className="text-sm text-green-700 dark:text-green-300">{message}</p>

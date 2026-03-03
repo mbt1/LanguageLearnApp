@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const SESSION_SIZE_KEY = 'sessionSize'
+const DARK_MODE_KEY = 'darkMode'
 const DEFAULT_SESSION_SIZE = 20
 
 function clamp(value: number, min: number, max: number): number {
@@ -20,17 +21,23 @@ export function SettingsPage() {
     return stored ? clamp(parseInt(stored, 10), 5, 100) : DEFAULT_SESSION_SIZE
   })
 
-  const [darkMode, setDarkMode] = useState<boolean>(() =>
-    document.documentElement.classList.contains('dark'),
-  )
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const stored = localStorage.getItem(DARK_MODE_KEY)
+    if (stored !== null) return stored === 'true'
+    return document.documentElement.classList.contains('dark')
+  })
 
   useEffect(() => {
     localStorage.setItem(SESSION_SIZE_KEY, String(sessionSize))
   }, [sessionSize])
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode)
+    localStorage.setItem(DARK_MODE_KEY, String(darkMode))
+  }, [darkMode])
+
   function toggleDarkMode() {
-    const isDark = document.documentElement.classList.toggle('dark')
-    setDarkMode(isDark)
+    setDarkMode((prev) => !prev)
   }
 
   return (

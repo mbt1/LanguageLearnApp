@@ -89,7 +89,11 @@ export function ProgressPage() {
   }
 
   if (data === null) {
-    return <p className="text-muted-foreground">Loading progress...</p>
+    return (
+      <p role="status" aria-live="polite" className="text-muted-foreground">
+        Loading progress...
+      </p>
+    )
   }
 
   if (data.length === 0) {

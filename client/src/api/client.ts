@@ -35,7 +35,9 @@ export class ApiError extends Error {
 function fetchWithTimeout(input: string, init: RequestInit, ms = 10_000): Promise<Response> {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), ms)
-  return fetch(input, { ...init, signal: controller.signal }).finally(() => clearTimeout(id))
+  const signals = [controller.signal, init.signal].filter(Boolean) as AbortSignal[]
+  const signal = signals.length > 1 ? AbortSignal.any(signals) : signals[0]
+  return fetch(input, { ...init, signal }).finally(() => clearTimeout(id))
 }
 
 async function parseError(resp: Response): Promise<ApiError> {

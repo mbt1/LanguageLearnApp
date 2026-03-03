@@ -93,7 +93,11 @@ export function CourseListPage() {
   }
 
   if (courses === null) {
-    return <p className="text-muted-foreground">Loading courses...</p>
+    return (
+      <p role="status" aria-live="polite" className="text-muted-foreground">
+        Loading courses...
+      </p>
+    )
   }
 
   if (courses.length === 0) {

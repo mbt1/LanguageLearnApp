@@ -5,8 +5,12 @@
 # fresh EC2 environment, runs all E2E tests, tears it down, and promotes
 # the image to :latest if tests passed.
 #
-# Triggered manually (workflow_dispatch) with the SHA from a Publish run.
-# Wiring of automatic triggers is handled separately.
+# Triggers:
+#   • Automatically after Publish completes on main (workflow_run)
+#   • Manually via workflow_dispatch — leave image_sha blank to certify HEAD
+#
+# The pipeline aborts early (without spinning up EC2) if the resolved SHA
+# has already been promoted to :latest.
 #
 # Required GitHub Actions secrets (created by infra/setup.ps1):
 #   AWS_CERTIFY_ROLE_ARN      — IAM role to assume via OIDC
@@ -16,23 +20,74 @@
 name: Certify
 
 on:
+  workflow_run:
+    workflows: ['Publish']
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       image_sha:
-        description: 'Git SHA of the images to certify (from a Publish run)'
-        required: true
+        description: 'Git SHA of the images to certify (leave blank to use HEAD)'
+        required: false
+        default: ''
 
 env:
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/languagelearn
-  TF_VAR_image_sha:            ${{ inputs.image_sha }}
+  RESOLVED_SHA:     ${{ inputs.image_sha || github.event.workflow_run.head_sha || github.sha }}
+  TF_VAR_image_sha: ${{ inputs.image_sha || github.event.workflow_run.head_sha || github.sha }}
   TF_VAR_image_owner:          ${{ github.repository_owner }}
   TF_VAR_run_id:               ${{ github.run_id }}
   TF_VAR_state_encryption_key: ${{ secrets.TF_STATE_ENCRYPTION_KEY }}
 
 jobs:
+  # ── Check: skip if this SHA is already :latest ───────────────────────────────
+  check:
+    name: Check if already certified
+    runs-on: ubuntu-latest
+    # For workflow_run: only proceed when Publish actually succeeded.
+    # For workflow_dispatch: always proceed.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      packages: read
+
+    outputs:
+      already_certified: ${{ steps.compare.outputs.already_certified }}
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compare SHA and :latest digests
+        id: compare
+        env:
+          IMAGE: ${{ env.IMAGE_PREFIX }}/server
+          SHA:   ${{ env.RESOLVED_SHA }}
+        run: |
+          sha_digest=$(docker buildx imagetools inspect "$IMAGE:$SHA" \
+            --format '{{json .Manifest.Digest}}' 2>/dev/null | tr -d '"' || true)
+          latest_digest=$(docker buildx imagetools inspect "$IMAGE:latest" \
+            --format '{{json .Manifest.Digest}}' 2>/dev/null | tr -d '"' || true)
+
+          if [ -n "$sha_digest" ] && [ -n "$latest_digest" ] && [ "$sha_digest" = "$latest_digest" ]; then
+            echo "already_certified=true" >> "$GITHUB_OUTPUT"
+            echo "Image $SHA is already certified as :latest — skipping pipeline."
+          else
+            echo "already_certified=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # ── Apply: create the test environment ──────────────────────────────────────
   apply:
     name: Spin up environment
+    needs: [check]
+    if: needs.check.outputs.already_certified != 'true'
     runs-on: ubuntu-latest
     permissions:
       id-token: write   # required for OIDC
@@ -138,14 +193,16 @@ jobs:
           for target in server caddy backup; do
             docker buildx imagetools create \
               --tag "${{ env.IMAGE_PREFIX }}/${target}:latest" \
-              "${{ env.IMAGE_PREFIX }}/${target}:${{ inputs.image_sha }}"
+              "${{ env.IMAGE_PREFIX }}/${target}:${{ env.RESOLVED_SHA }}"
           done
 
   # ── Destroy: always tear down the environment ────────────────────────────────
   destroy:
     name: Tear down environment
     needs: [apply, test]
-    if: always()
+    # Run if apply was attempted (success or failure), but not if it was skipped
+    # (i.e. the already-certified early exit path).
+    if: always() && needs.apply.result != 'skipped'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
