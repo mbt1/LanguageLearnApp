@@ -1,16 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 LanguageLearn Contributors
 #
-# Builds production Docker images, runs E2E tests against them, and if they
-# pass, publishes them to GHCR tagged :sha + :latest (= certified).
+# Builds production Docker images and pushes them to GHCR tagged with the
+# commit SHA. Certification (E2E testing + :latest promotion) is a separate
+# pipeline (certify.yml) that runs independently.
 #
-# Images produced on success:
-#   ghcr.io/OWNER/languagelearn/server:SHA   + :latest
-#   ghcr.io/OWNER/languagelearn/caddy:SHA    + :latest
-#   ghcr.io/OWNER/languagelearn/backup:SHA   + :latest
-#
-# The private deployment pipeline independently pulls :latest whenever it
-# chooses to deploy — no cross-repo triggering.
+# Images produced:
+#   ghcr.io/OWNER/languagelearn/server:SHA
+#   ghcr.io/OWNER/languagelearn/caddy:SHA
+#   ghcr.io/OWNER/languagelearn/backup:SHA
 
 name: Publish
 
@@ -31,7 +29,7 @@ env:
 
 jobs:
   publish:
-    name: Build, test & publish
+    name: Build & push
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -49,9 +47,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      # Build all three images and push with :sha tag only.
-      # :latest is added after E2E tests pass (certification).
 
       - name: Build and push server image
         uses: docker/build-push-action@v6
@@ -82,46 +77,3 @@ jobs:
           tags: ${{ env.IMAGE_PREFIX }}/backup:${{ github.sha }}
           cache-from: type=gha,scope=backup
           cache-to: type=gha,mode=max,scope=backup
-
-      # Run E2E tests against the freshly built images.
-      # The server + caddy images are stood up via docker compose; Playwright
-      # runs against them. A real DB is spun up as a service.
-
-      - name: Run E2E tests against built images
-        env:
-          SERVER_IMAGE: ${{ env.IMAGE_PREFIX }}/server:${{ github.sha }}
-          CADDY_IMAGE:  ${{ env.IMAGE_PREFIX }}/caddy:${{ github.sha }}
-          BACKUP_IMAGE: ${{ env.IMAGE_PREFIX }}/backup:${{ github.sha }}
-          DOMAIN: localhost
-          # Remaining secrets injected from repository secrets
-          POSTGRES_DB:       languagelearn
-          POSTGRES_USER:     languagelearn
-          POSTGRES_PASSWORD: ci-password
-          DATABASE_URL:      postgresql://languagelearn:ci-password@db:5432/languagelearn
-          JWT_SECRET:        ci-secret-not-for-production
-          WEBAUTHN_RP_ID:    localhost
-          WEBAUTHN_RP_NAME:  LanguageLearn
-          WEBAUTHN_RP_ORIGIN: http://localhost
-        run: |
-          # Write a .env file for compose
-          env | grep -E '^(POSTGRES|DATABASE|JWT|WEBAUTHN|DOMAIN|SERVER_IMAGE|CADDY_IMAGE|BACKUP_IMAGE)' > .env
-
-          docker compose -f docker-compose.yml up -d
-
-          # Wait for health check
-          timeout 60 bash -c 'until curl -sf http://localhost/v1/health; do sleep 2; done'
-
-          cd client
-          pnpm install --frozen-lockfile
-          pnpm exec playwright install --with-deps chromium
-          pnpm test:e2e
-
-      # Only promote to :latest after E2E tests pass — this is the certified tag.
-
-      - name: Promote to :latest
-        run: |
-          for target in server caddy backup; do
-            docker buildx imagetools create \
-              --tag "${{ env.IMAGE_PREFIX }}/${target}:latest" \
-              "${{ env.IMAGE_PREFIX }}/${target}:${{ github.sha }}"
-          done

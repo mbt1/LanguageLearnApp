@@ -1,0 +1,187 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 LanguageLearn Contributors
+#
+# Certification pipeline: pulls a built image off the shelf, spins up a
+# fresh EC2 environment, runs all E2E tests, tears it down, and promotes
+# the image to :latest if tests passed.
+#
+# Triggered manually (workflow_dispatch) with the SHA from a Publish run.
+# Wiring of automatic triggers is handled separately.
+#
+# Required GitHub Actions secrets (created by infra/setup.ps1):
+#   AWS_CERTIFY_ROLE_ARN      — IAM role to assume via OIDC
+#   AWS_REGION                — AWS region
+#   TF_STATE_ENCRYPTION_KEY   — OpenTofu state encryption passphrase
+
+name: Certify
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_sha:
+        description: 'Git SHA of the images to certify (from a Publish run)'
+        required: true
+
+env:
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/languagelearn
+  TF_VAR_image_sha:            ${{ inputs.image_sha }}
+  TF_VAR_image_owner:          ${{ github.repository_owner }}
+  TF_VAR_run_id:               ${{ github.run_id }}
+  TF_VAR_state_encryption_key: ${{ secrets.TF_STATE_ENCRYPTION_KEY }}
+
+jobs:
+  # ── Apply: create the test environment ──────────────────────────────────────
+  apply:
+    name: Spin up environment
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # required for OIDC
+      contents: read
+
+    outputs:
+      instance_ip: ${{ steps.tofu-output.outputs.instance_ip }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: '1.8.x'
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_CERTIFY_ROLE_ARN }}
+          aws-region:     ${{ secrets.AWS_REGION }}
+
+      - name: tofu init
+        working-directory: infra
+        run: tofu init
+
+      - name: tofu apply
+        working-directory: infra
+        run: tofu apply -auto-approve -var="aws_region=${{ secrets.AWS_REGION }}"
+
+      - name: Capture outputs
+        id: tofu-output
+        working-directory: infra
+        run: |
+          echo "instance_ip=$(tofu output -raw instance_public_ip)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload encrypted state
+        uses: actions/upload-artifact@v4
+        with:
+          name: tofu-state-${{ github.run_id }}
+          path: infra/terraform.tfstate
+          retention-days: 1
+
+  # ── Test: run E2E against the live environment ───────────────────────────────
+  test:
+    name: Run E2E tests
+    needs: [apply]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: Install client dependencies
+        working-directory: client
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        working-directory: client
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Wait for environment to be healthy
+        run: |
+          timeout 180 bash -c \
+            'until curl -sf "http://${{ needs.apply.outputs.instance_ip }}/v1/health"; do sleep 5; done'
+
+      - name: Run Playwright E2E tests
+        working-directory: client
+        env:
+          PLAYWRIGHT_BASE_URL: http://${{ needs.apply.outputs.instance_ip }}
+        run: pnpm test:e2e
+
+  # ── Certify: promote :sha → :latest on success ───────────────────────────────
+  certify:
+    name: Promote to :latest
+    needs: [test]
+    if: success()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Promote images to :latest
+        run: |
+          for target in server caddy backup; do
+            docker buildx imagetools create \
+              --tag "${{ env.IMAGE_PREFIX }}/${target}:latest" \
+              "${{ env.IMAGE_PREFIX }}/${target}:${{ inputs.image_sha }}"
+          done
+
+  # ── Destroy: always tear down the environment ────────────────────────────────
+  destroy:
+    name: Tear down environment
+    needs: [apply, test]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: '1.8.x'
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_CERTIFY_ROLE_ARN }}
+          aws-region:     ${{ secrets.AWS_REGION }}
+
+      - name: Download state artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tofu-state-${{ github.run_id }}
+          path: infra
+
+      - name: tofu init
+        working-directory: infra
+        run: tofu init
+
+      - name: tofu destroy
+        working-directory: infra
+        run: tofu destroy -auto-approve -var="aws_region=${{ secrets.AWS_REGION }}"
+
+      - name: Upload final state (audit trail)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tofu-state-${{ github.run_id }}-final
+          path: infra/terraform.tfstate
+          retention-days: 7
