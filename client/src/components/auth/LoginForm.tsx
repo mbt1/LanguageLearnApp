@@ -8,12 +8,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { ApiError } from '@/api/client'
-
-function getErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof ApiError) return err.detail
-  return fallback
-}
+import { getErrorMessage } from '@/api/client'
 
 export function LoginForm() {
   const { login, loginWithPasskey } = useAuth()

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -10,6 +11,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from auth.config import get_config
 from auth.schemas import CurrentUser
 from auth.tokens import decode_access_token
+
+logger = logging.getLogger(__name__)
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -31,6 +34,7 @@ async def get_current_user(
             algorithm=config.jwt_algorithm,
         )
     except Exception:  # noqa: BLE001
+        logger.debug("Token decode failed", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

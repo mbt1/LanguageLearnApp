@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from uuid import UUID
@@ -8,6 +9,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from psycopg import AsyncConnection
 from psycopg.errors import UniqueViolation
+
+logger = logging.getLogger(__name__)
 
 from auth.config import get_config
 from auth.dependencies import get_current_user
@@ -112,7 +115,13 @@ async def register(
             display_name=body.display_name,
             password_hash=pw_hash,
         )
-    except UniqueViolation:
+    except UniqueViolation as exc:
+        logger.warning(
+            "Registration unique violation: constraint=%s table=%s detail=%s",
+            exc.diag.constraint_name,
+            exc.diag.table_name,
+            exc.diag.message_detail,
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered",

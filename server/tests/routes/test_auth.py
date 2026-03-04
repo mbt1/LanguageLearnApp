@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 import httpx
-import psycopg
-
-from tests.conftest import DATABASE_URL
 
 # ── Registration ─────────────────────────────────────
 
@@ -165,7 +163,7 @@ async def test_logout(client: httpx.AsyncClient) -> None:
 # ── Email verification ───────────────────────────────
 
 
-async def test_verify_email_success(client: httpx.AsyncClient) -> None:
+async def test_verify_email_success(client: httpx.AsyncClient, test_conn: Any) -> None:
     # Register to create user + verification token
     email = f"verify-{datetime.now(UTC).timestamp()}@example.com"
     reg_resp = await client.post(
@@ -174,21 +172,17 @@ async def test_verify_email_success(client: httpx.AsyncClient) -> None:
     )
     assert reg_resp.status_code == 201
 
-    # Fetch the token directly from DB
-    conn = await psycopg.AsyncConnection.connect(DATABASE_URL)
-    try:
-        async with conn.cursor() as cur:
-            await cur.execute(
-                "SELECT token FROM email_verification_tokens "
-                "JOIN users ON users.id = email_verification_tokens.user_id "
-                "WHERE users.email = %s",
-                (email,),
-            )
-            row = await cur.fetchone()
-            assert row is not None
-            token = row[0]
-    finally:
-        await conn.close()
+    # Fetch the token from the shared test connection (same txn as the request)
+    async with test_conn.cursor() as cur:
+        await cur.execute(
+            "SELECT token FROM email_verification_tokens "
+            "JOIN users ON users.id = email_verification_tokens.user_id "
+            "WHERE users.email = %s",
+            (email,),
+        )
+        row = await cur.fetchone()
+        assert row is not None
+        token = row[0]
 
     resp = await client.get(f"/v1/auth/verify-email?token={token}")
     assert resp.status_code == 200

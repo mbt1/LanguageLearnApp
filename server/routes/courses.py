@@ -95,9 +95,13 @@ async def import_course_endpoint(
         ) from exc
     except psycopg.errors.UniqueViolation as exc:
         await conn.rollback()
+        diag = exc.diag
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="A course with this slug already exists.",
+            detail=(
+                f"Unique constraint violated: {diag.constraint_name or 'unknown'} "
+                f"on table {diag.table_name or 'unknown'} — {diag.message_detail or str(exc)}"
+            ),
         ) from exc
     return result
 

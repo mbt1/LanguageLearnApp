@@ -25,6 +25,7 @@ class StudySessionItem(BaseModel):
     target: str
     concept_type: ConceptType
     cefr_level: CefrLevel
+    exercise_id: UUID | None = None
     distractors: list[str] | None = None
     sentence_template: str | None = None
     explanation: str | None = None
@@ -65,6 +66,7 @@ class ExerciseSubmitRequest(BaseModel):
     concept_id: UUID
     exercise_type: ExerciseType
     user_answer: str
+    exercise_id: UUID | None = None
     review_duration_ms: int | None = None
 
 
@@ -93,3 +95,7 @@ class CefrProgressItem(BaseModel):
 class CourseProgressResponse(BaseModel):
     course_id: UUID
     levels: list[CefrProgressItem]
+
+
+class AllProgressResponse(BaseModel):
+    courses: list[CourseProgressResponse]

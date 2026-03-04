@@ -3,8 +3,9 @@
 
 import { useEffect, useState } from 'react'
 
+import { getErrorMessage } from '@/api/client'
 import { listCourses } from '@/api/courses'
-import { getCourseProgress } from '@/api/study'
+import { getAllProgress } from '@/api/study'
 import type { CefrProgressItem, CourseResponse } from '@/api/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -59,22 +60,19 @@ export function ProgressPage() {
 
     async function load() {
       try {
-        const courses = await listCourses()
+        const [courses, progressMap] = await Promise.all([
+          listCourses(),
+          getAllProgress(),
+        ])
         if (cancelled) return
 
-        const results = await Promise.allSettled(courses.map((c) => getCourseProgress(c.id)))
-        if (cancelled) return
-
-        const combined: CourseLevels[] = []
-        courses.forEach((course, i) => {
-          const result = results[i]
-          if (result?.status === 'fulfilled') {
-            combined.push({ course, levels: result.value.levels })
-          }
-        })
+        const combined: CourseLevels[] = courses.map((course) => ({
+          course,
+          levels: progressMap[course.id] ?? [],
+        }))
         setData(combined)
-      } catch {
-        if (!cancelled) setError('Failed to load progress.')
+      } catch (err) {
+        if (!cancelled) setError(getErrorMessage(err, 'Failed to load progress.'))
       }
     }
 

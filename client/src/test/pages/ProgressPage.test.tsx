@@ -12,7 +12,7 @@ vi.mock('@/api/courses', () => ({
 }))
 
 vi.mock('@/api/study', () => ({
-  getCourseProgress: vi.fn(),
+  getAllProgress: vi.fn(),
 }))
 
 import * as coursesApi from '@/api/courses'
@@ -33,12 +33,14 @@ describe('ProgressPage', () => {
 
   it('shows loading state initially', () => {
     vi.mocked(coursesApi.listCourses).mockReturnValue(new Promise(() => {}))
+    vi.mocked(studyApi.getAllProgress).mockReturnValue(new Promise(() => {}))
     renderPage()
     expect(screen.getByText(/loading progress/i)).toBeInTheDocument()
   })
 
   it('shows empty state when no courses', async () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([])
+    vi.mocked(studyApi.getAllProgress).mockResolvedValue({})
     renderPage()
     expect(await screen.findByText(/no courses yet/i)).toBeInTheDocument()
   })
@@ -54,9 +56,8 @@ describe('ProgressPage', () => {
         created_at: '2026-01-01T00:00:00Z',
       },
     ])
-    vi.mocked(studyApi.getCourseProgress).mockResolvedValue({
-      course_id: 'course-1',
-      levels: [
+    vi.mocked(studyApi.getAllProgress).mockResolvedValue({
+      'course-1': [
         { cefr_level: 'A1', total_concepts: 10, mastered_concepts: 7, mastery_percentage: 70 },
         { cefr_level: 'A2', total_concepts: 5, mastered_concepts: 0, mastery_percentage: 0 },
       ],

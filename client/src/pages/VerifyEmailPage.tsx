@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { getErrorMessage } from '@/api/client'
 import * as authApi from '@/api/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,9 +27,9 @@ export function VerifyEmailPage() {
         setStatus('success')
         setMessage(data.message)
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         setStatus('error')
-        setMessage('Verification failed. The link may be expired or invalid.')
+        setMessage(getErrorMessage(err, 'Verification failed. The link may be expired or invalid.'))
       })
   }, [token])
 

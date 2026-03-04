@@ -100,7 +100,7 @@ async def list_due_reviews(
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
-            SELECT ucp.*, c.prompt, c.target, c.concept_type, c.cefr_level
+            SELECT ucp.*, c.prompt, c.target, c.concept_type, c.cefr_level, c.explanation
             FROM user_concept_progress ucp
             JOIN concepts c ON c.id = ucp.concept_id
             WHERE ucp.user_id = %(user_id)s
@@ -249,5 +249,30 @@ async def get_progress_summary(
             ORDER BY c.cefr_level
             """,
             {"user_id": user_id, "course_id": course_id},
+        )
+        return await cur.fetchall()
+
+
+async def get_all_progress_summary(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+) -> list[dict[str, Any]]:
+    """Return mastery counts per course + CEFR level for a user (single query)."""
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT
+                c.course_id,
+                c.cefr_level,
+                COUNT(*) AS total_concepts,
+                COUNT(ucp.concept_id) FILTER (WHERE ucp.is_mastered = true) AS mastered_concepts
+            FROM concepts c
+            LEFT JOIN user_concept_progress ucp
+                ON ucp.concept_id = c.id AND ucp.user_id = %(user_id)s
+            GROUP BY c.course_id, c.cefr_level
+            ORDER BY c.course_id, c.cefr_level
+            """,
+            {"user_id": user_id},
         )
         return await cur.fetchall()

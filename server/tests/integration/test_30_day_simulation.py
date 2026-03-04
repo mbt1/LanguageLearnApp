@@ -10,7 +10,7 @@ Simulates a user learning a small course over 30 days:
 from __future__ import annotations
 
 import random
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import patch
@@ -27,19 +27,23 @@ from tests.conftest import DATABASE_URL
 # ── Fixtures ─────────────────────────────────────────────────
 
 @pytest.fixture
-def test_app_sim() -> Generator[FastAPI, Any, None]:
-    """Test app for simulation — commits persist within the test."""
+async def test_app_sim() -> AsyncGenerator[FastAPI, None]:
+    """Test app for simulation — shared conn with no-op commit for isolation."""
+    conn = await psycopg.AsyncConnection.connect(DATABASE_URL, autocommit=False)
+
+    async def _noop_commit() -> None:  # noqa: D401
+        """Swallow commit — keeps everything inside one rollback-able txn."""
+
+    conn.commit = _noop_commit  # type: ignore[method-assign]
+
     async def _override_get_conn() -> AsyncGenerator[psycopg.AsyncConnection[Any], None]:
-        conn = await psycopg.AsyncConnection.connect(DATABASE_URL)
-        try:
-            yield conn
-        finally:
-            await conn.rollback()
-            await conn.close()
+        yield conn
 
     app.dependency_overrides[get_conn] = _override_get_conn
     yield app
     app.dependency_overrides.clear()
+    await conn.rollback()
+    await conn.close()
 
 
 @pytest.fixture

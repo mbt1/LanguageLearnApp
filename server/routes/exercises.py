@@ -12,7 +12,7 @@ from auth.dependencies import get_current_user
 from auth.schemas import CurrentUser  # noqa: TC001
 from content.schemas import ExerciseType
 from db.pool import get_conn
-from db.queries.exercises import get_exercise_by_type
+from db.queries.exercises import get_exercise_by_id, get_exercise_by_type
 from db.queries.progress import get_prerequisite_difficulties, get_progress, upsert_progress
 from db.queries.reviews import record_review
 from grading.provider import default_grader
@@ -36,14 +36,18 @@ async def submit_exercise(
     user_id = current_user.user_id
     concept_id = request.concept_id
 
-    # Fetch the exercise to get the correct answer
-    exercise = await get_exercise_by_type(
-        conn, concept_id=concept_id, exercise_type=request.exercise_type.value,
-    )
+    # Fetch the specific exercise to get the correct answer
+    if request.exercise_id:
+        exercise = await get_exercise_by_id(conn, exercise_id=request.exercise_id)
+    else:
+        exercise = await get_exercise_by_type(
+            conn, concept_id=concept_id, exercise_type=request.exercise_type.value,
+        )
     if exercise is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Exercise not found for this concept and type.",
+            detail=f"Exercise not found (exercise_id={request.exercise_id}, "
+            f"concept_id={concept_id}, type={request.exercise_type.value}).",
         )
 
     # Fetch current progress — 404 if not started

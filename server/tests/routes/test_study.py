@@ -262,3 +262,82 @@ async def test_progress_course_not_found(client: httpx.AsyncClient) -> None:
         headers=_auth_headers(user["access_token"]),
     )
     assert resp.status_code == 404
+
+
+# ── Session distractors ──────────────────────────────────────
+
+
+async def test_session_mc_items_include_distractors(client: httpx.AsyncClient) -> None:
+    """Multiple choice items must include distractors from the exercises table."""
+    user = await _register(client)
+    course = await _import_course(client)
+    resp = await client.post(
+        "/v1/study/session",
+        json={"course_id": course["course_id"]},
+        headers=_auth_headers(user["access_token"]),
+    )
+    assert resp.status_code == 200
+    items = resp.json()["items"]
+    mc_items = [i for i in items if i["exercise_type"] == "multiple_choice"]
+    assert len(mc_items) > 0, "expected at least one MC item"
+    for item in mc_items:
+        assert item["distractors"] is not None, f"distractors missing for {item['concept_id']}"
+        assert len(item["distractors"]) >= 1, "need at least 1 distractor"
+
+
+# ── GET /v1/progress (batch) ─────────────────────────────────
+
+
+async def test_batch_progress_requires_auth(client: httpx.AsyncClient) -> None:
+    resp = await client.get("/v1/progress")
+    assert resp.status_code == 401
+
+
+async def test_batch_progress_returns_all_courses(client: httpx.AsyncClient) -> None:
+    user = await _register(client)
+    course = await _import_course(client)
+    # Start a session so progress rows exist
+    await client.post(
+        "/v1/study/session",
+        json={"course_id": course["course_id"]},
+        headers=_auth_headers(user["access_token"]),
+    )
+    resp = await client.get(
+        "/v1/progress",
+        headers=_auth_headers(user["access_token"]),
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "courses" in data
+    assert isinstance(data["courses"], list)
+    assert len(data["courses"]) >= 1
+    entry = data["courses"][0]
+    assert "course_id" in entry
+    assert "levels" in entry
+
+
+async def test_batch_progress_empty_when_no_courses(client: httpx.AsyncClient) -> None:
+    user = await _register(client)
+    resp = await client.get(
+        "/v1/progress",
+        headers=_auth_headers(user["access_token"]),
+    )
+    assert resp.status_code == 200
+    assert resp.json()["courses"] == []
+
+
+# ── Test isolation ────────────────────────────────────────────
+
+
+async def test_isolation_no_leftover_courses(client: httpx.AsyncClient) -> None:
+    """Verify that courses created in one test don't leak to the next.
+
+    This test deliberately lists courses without creating any — it must see zero.
+    """
+    user = await _register(client)
+    resp = await client.get(
+        "/v1/courses",
+        headers=_auth_headers(user["access_token"]),
+    )
+    assert resp.status_code == 200
+    assert resp.json() == []

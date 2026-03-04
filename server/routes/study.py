@@ -2,6 +2,7 @@
 """Study session and review submission endpoints."""
 from __future__ import annotations
 
+import random
 from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
@@ -12,9 +13,13 @@ from psycopg import AsyncConnection
 from auth.dependencies import get_current_user
 from auth.schemas import CurrentUser  # noqa: TC001
 from content.schemas import CefrLevel, ExerciseType
+from dataclasses import replace
+
 from db.pool import get_conn
 from db.queries.courses import get_course
+from db.queries.exercises import get_exercises_for_session
 from db.queries.progress import (
+    get_all_progress_summary,
     get_prerequisite_difficulties,
     get_prerequisite_difficulties_batch,
     get_progress,
@@ -34,6 +39,7 @@ from srs.scheduler import (
     reconstruct_card,
 )
 from srs.schemas import (
+    AllProgressResponse,
     CefrProgressItem,
     CourseProgressResponse,
     ReviewRequest,
@@ -89,6 +95,24 @@ async def create_study_session(
         session_size=request.session_size,
     )
 
+    # Batch fetch exercise-specific data (distractors, sentence_template, exercise_id)
+    exercise_keys = [(item.concept_id, item.exercise_type.value) for item in items]
+    exercise_map = await get_exercises_for_session(conn, items=exercise_keys)
+    enriched_items: list[SessionItem] = []
+    for item in items:
+        exercises = exercise_map.get((item.concept_id, item.exercise_type.value))
+        if exercises:
+            ex = random.choice(exercises)  # noqa: S311
+            enriched_items.append(replace(
+                item,
+                exercise_id=ex["id"],
+                distractors=ex.get("distractors"),
+                sentence_template=ex.get("sentence_template"),
+            ))
+        else:
+            enriched_items.append(item)
+    items = enriched_items
+
     # Create initial progress rows for new concepts added to session
     new_items = [item for item in items if not item.is_review]
     for item in new_items:
@@ -117,6 +141,7 @@ def _items_to_response(items: list[SessionItem]) -> list[StudySessionItem]:
             target=item.target,
             concept_type=item.concept_type,
             cefr_level=item.cefr_level,
+            exercise_id=item.exercise_id,
             distractors=item.distractors,
             sentence_template=item.sentence_template,
             explanation=item.explanation,
@@ -254,3 +279,35 @@ async def get_course_progress(
         for row in rows
     ]
     return CourseProgressResponse(course_id=course_id, levels=levels)
+
+
+# ── GET /v1/progress ──────────────────────────────────────────
+
+
+@router.get("/v1/progress", response_model=AllProgressResponse)
+async def get_all_progress(
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    conn: Annotated[AsyncConnection, Depends(get_conn)],  # pyright: ignore[reportMissingTypeArgument]
+) -> AllProgressResponse:
+    """Return mastery progress for every course in a single query."""
+    rows = await get_all_progress_summary(conn, user_id=current_user.user_id)
+
+    courses_map: dict[UUID, list[CefrProgressItem]] = {}
+    for row in rows:
+        cid = row["course_id"]
+        item = CefrProgressItem(
+            cefr_level=CefrLevel(row["cefr_level"]),
+            total_concepts=row["total_concepts"],
+            mastered_concepts=row["mastered_concepts"],
+            mastery_percentage=round(
+                row["mastered_concepts"] / row["total_concepts"] * 100, 1,
+            ) if row["total_concepts"] > 0 else 0.0,
+        )
+        courses_map.setdefault(cid, []).append(item)
+
+    return AllProgressResponse(
+        courses=[
+            CourseProgressResponse(course_id=cid, levels=levels)
+            for cid, levels in courses_map.items()
+        ],
+    )

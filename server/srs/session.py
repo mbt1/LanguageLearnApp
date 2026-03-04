@@ -22,6 +22,7 @@ class SessionItem:
     target: str
     concept_type: ConceptType
     cefr_level: CefrLevel
+    exercise_id: UUID | None = field(default=None)
     distractors: list[str] | None = field(default=None)
     sentence_template: str | None = field(default=None)
     explanation: str | None = field(default=None)
@@ -81,6 +82,7 @@ def build_session(
             target=row["target"],
             concept_type=ConceptType(row["concept_type"]),
             cefr_level=CefrLevel(row["cefr_level"]),
+            explanation=row.get("explanation"),
         ))
 
     # ── Phase 2: new concepts with throttling ─────────────
@@ -97,6 +99,7 @@ def build_session(
                 target=concept["target"],
                 concept_type=ConceptType(concept["concept_type"]),
                 cefr_level=CefrLevel(concept["cefr_level"]),
+                explanation=concept.get("explanation"),
             )
             for concept in new_concepts[:allowed]
         )

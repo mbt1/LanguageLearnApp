@@ -110,3 +110,8 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   if (resp.status === 204) return undefined as T
   return (await resp.json()) as T
 }
+
+export function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) return err.detail
+  return fallback
+}

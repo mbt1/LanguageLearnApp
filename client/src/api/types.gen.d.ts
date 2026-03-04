@@ -397,6 +397,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Progress
+         * @description Return mastery progress for every course in a single query.
+         */
+        get: operations["get_all_progress_v1_progress_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/health": {
         parameters: {
             query?: never;
@@ -418,6 +438,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AllProgressResponse */
+        AllProgressResponse: {
+            /** Courses */
+            courses: components["schemas"]["CourseProgressResponse"][];
+        };
         /**
          * CefrLevel
          * @enum {string}
@@ -614,6 +639,8 @@ export interface components {
             exercise_type: components["schemas"]["ExerciseType"];
             /** User Answer */
             user_answer: string;
+            /** Exercise Id */
+            exercise_id?: string | null;
             /** Review Duration Ms */
             review_duration_ms?: number | null;
         };
@@ -834,6 +861,8 @@ export interface components {
             target: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
+            /** Exercise Id */
+            exercise_id?: string | null;
             /** Distractors */
             distractors?: string[] | null;
             /** Sentence Template */
@@ -1485,6 +1514,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_all_progress_v1_progress_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AllProgressResponse"];
                 };
             };
         };

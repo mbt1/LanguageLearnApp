@@ -12,7 +12,7 @@ vi.mock('@/api/courses', () => ({
 }))
 
 vi.mock('@/api/study', () => ({
-  getCourseProgress: vi.fn(),
+  getAllProgress: vi.fn(),
 }))
 
 import * as coursesApi from '@/api/courses'
@@ -53,9 +53,8 @@ describe('CourseListPage', () => {
 
   it('shows course titles after loading', async () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
-    vi.mocked(studyApi.getCourseProgress).mockResolvedValue({
-      course_id: 'course-1',
-      levels: [{ cefr_level: 'A1', total_concepts: 5, mastered_concepts: 2, mastery_percentage: 40 }],
+    vi.mocked(studyApi.getAllProgress).mockResolvedValue({
+      'course-1': [{ cefr_level: 'A1', total_concepts: 5, mastered_concepts: 2, mastery_percentage: 40 }],
     })
 
     renderPage()
@@ -65,9 +64,8 @@ describe('CourseListPage', () => {
 
   it('shows mastery summary and CEFR breakdown', async () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
-    vi.mocked(studyApi.getCourseProgress).mockResolvedValue({
-      course_id: 'course-1',
-      levels: [
+    vi.mocked(studyApi.getAllProgress).mockResolvedValue({
+      'course-1': [
         { cefr_level: 'A1', total_concepts: 10, mastered_concepts: 4, mastery_percentage: 40 },
         { cefr_level: 'A2', total_concepts: 5, mastered_concepts: 0, mastery_percentage: 0 },
       ],
@@ -90,10 +88,7 @@ describe('CourseListPage', () => {
     }))
 
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
-    vi.mocked(studyApi.getCourseProgress).mockResolvedValue({
-      course_id: 'course-1',
-      levels: [],
-    })
+    vi.mocked(studyApi.getAllProgress).mockResolvedValue({})
 
     renderPage()
 

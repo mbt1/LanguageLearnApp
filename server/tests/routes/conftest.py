@@ -2,7 +2,7 @@
 """Shared fixtures for route integration tests."""
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 from typing import Any
 
 import httpx
@@ -16,20 +16,36 @@ from tests.conftest import DATABASE_URL
 
 
 @pytest.fixture
-def test_app() -> Generator[FastAPI, Any, None]:
-    """Create test app with a real DB connection override."""
+async def test_app() -> AsyncGenerator[FastAPI, None]:
+    """Create test app with a single shared DB connection.
+
+    All requests within a test share one connection whose ``commit()`` is
+    a no-op so data never actually persists.  The outer transaction is
+    rolled back once the test finishes, guaranteeing perfect isolation.
+    """
+    conn = await psycopg.AsyncConnection.connect(DATABASE_URL, autocommit=False)
+
+    async def _noop_commit() -> None:  # noqa: D401
+        """Swallow commit — keeps everything inside one rollback-able txn."""
+
+    conn.commit = _noop_commit  # type: ignore[method-assign]
 
     async def _override_get_conn() -> AsyncGenerator[psycopg.AsyncConnection[Any], None]:
-        conn = await psycopg.AsyncConnection.connect(DATABASE_URL)
-        try:
-            yield conn
-        finally:
-            await conn.rollback()
-            await conn.close()
+        yield conn
 
     app.dependency_overrides[get_conn] = _override_get_conn
+    # Store connection on the app so tests can access it via test_conn fixture
+    app._test_conn = conn  # type: ignore[attr-defined]
     yield app
     app.dependency_overrides.clear()
+    await conn.rollback()
+    await conn.close()
+
+
+@pytest.fixture
+async def test_conn(test_app: FastAPI) -> psycopg.AsyncConnection[Any]:
+    """Return the shared test connection for direct DB queries in tests."""
+    return test_app._test_conn  # type: ignore[attr-defined]
 
 
 @pytest.fixture

@@ -116,17 +116,20 @@ async def test_get_exercise_by_type_returns_none_when_not_found(
     assert row is None
 
 
-async def test_duplicate_exercise_type_rejected(
+async def test_multiple_exercises_same_type_allowed(
     db_conn: AsyncConnection, concept: dict,
 ) -> None:
-    import psycopg.errors
-
+    """Multiple exercises of the same type per concept are allowed."""
     await create_exercise(
-        db_conn, concept_id=concept["id"], exercise_type="typing",
-        prompt="prompt1", correct_answer="hola",
+        db_conn, concept_id=concept["id"], exercise_type="multiple_choice",
+        prompt="Choose hello", correct_answer="hola",
+        distractors=["adiós"],
     )
-    with pytest.raises(psycopg.errors.UniqueViolation):
-        await create_exercise(
-            db_conn, concept_id=concept["id"], exercise_type="typing",
-            prompt="prompt2", correct_answer="hola",
-        )
+    await create_exercise(
+        db_conn, concept_id=concept["id"], exercise_type="multiple_choice",
+        prompt="Pick the greeting", correct_answer="hola",
+        distractors=["gracias"],
+    )
+    exercises = await get_exercises_for_concept(db_conn, concept_id=concept["id"])
+    mc_exercises = [e for e in exercises if e["exercise_type"] == "multiple_choice"]
+    assert len(mc_exercises) == 2

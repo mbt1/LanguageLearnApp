@@ -7,7 +7,7 @@ import * as authApi from '@/api/auth'
 import type { PasskeyListItem } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ApiError } from '@/api/client'
+import { ApiError, getErrorMessage } from '@/api/client'
 
 export function PasskeyManager() {
   const [passkeys, setPasskeys] = useState<PasskeyListItem[]>([])
@@ -18,8 +18,8 @@ export function PasskeyManager() {
     try {
       const list = await authApi.listPasskeys()
       setPasskeys(list)
-    } catch {
-      setError('Failed to load passkeys')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to load passkeys'))
     }
   }, [])
 

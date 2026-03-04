@@ -821,6 +821,33 @@
         }
       }
     },
+    "/v1/progress": {
+      "get": {
+        "tags": [
+          "study"
+        ],
+        "summary": "Get All Progress",
+        "description": "Return mastery progress for every course in a single query.",
+        "operationId": "get_all_progress_v1_progress_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllProgressResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/v1/health": {
       "get": {
         "summary": "Health",
@@ -846,6 +873,22 @@
   },
   "components": {
     "schemas": {
+      "AllProgressResponse": {
+        "properties": {
+          "courses": {
+            "items": {
+              "$ref": "#/components/schemas/CourseProgressResponse"
+            },
+            "type": "array",
+            "title": "Courses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "courses"
+        ],
+        "title": "AllProgressResponse"
+      },
       "CefrLevel": {
         "type": "string",
         "enum": [
@@ -1360,6 +1403,18 @@
           "user_answer": {
             "type": "string",
             "title": "User Answer"
+          },
+          "exercise_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exercise Id"
           },
           "review_duration_ms": {
             "anyOf": [
@@ -1902,6 +1957,18 @@
           },
           "cefr_level": {
             "$ref": "#/components/schemas/CefrLevel"
+          },
+          "exercise_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exercise Id"
           },
           "distractors": {
             "anyOf": [

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
 
@@ -27,20 +27,23 @@ def openapi_spec() -> dict[str, Any]:
 
 
 @pytest.fixture
-def test_app() -> Generator[FastAPI, Any, None]:
-    """Create test app with a real DB connection override."""
+async def test_app() -> AsyncGenerator[FastAPI, None]:
+    """Create test app with a single shared DB connection (no-op commit)."""
+    conn = await psycopg.AsyncConnection.connect(DATABASE_URL, autocommit=False)
+
+    async def _noop_commit() -> None:  # noqa: D401
+        """Swallow commit — keeps everything inside one rollback-able txn."""
+
+    conn.commit = _noop_commit  # type: ignore[method-assign]
 
     async def _override_get_conn() -> AsyncGenerator[psycopg.AsyncConnection[Any], None]:
-        conn = await psycopg.AsyncConnection.connect(DATABASE_URL)
-        try:
-            yield conn
-        finally:
-            await conn.rollback()
-            await conn.close()
+        yield conn
 
     app.dependency_overrides[get_conn] = _override_get_conn
     yield app
     app.dependency_overrides.clear()
+    await conn.rollback()
+    await conn.close()
 
 
 @pytest.fixture

@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import { getErrorMessage } from '@/api/client'
 import { submitExercise, studySession } from '@/api/study'
 import type { ExerciseSubmitResponse, StudySessionItem, StudySessionResponse } from '@/api/types'
 import { ClozeExercise } from '@/components/exercises/ClozeExercise'
@@ -39,8 +40,8 @@ export function LearnPage() {
           setState('exercise')
         }
       })
-      .catch(() => {
-        setError('Failed to load session. Please try again.')
+      .catch((err: unknown) => {
+        setError(getErrorMessage(err, 'Failed to load session. Please try again.'))
         setState('error')
       })
   }, [courseId])
@@ -58,12 +59,13 @@ export function LearnPage() {
         concept_id: item.concept_id,
         exercise_type: item.exercise_type,
         user_answer: userAnswer,
+        ...(item.exercise_id ? { exercise_id: item.exercise_id } : {}),
       })
       setLastResult(result)
       setResults((prev) => [...prev, result])
       setState('feedback')
-    } catch {
-      setError('Failed to submit answer. Please try again.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to submit answer. Please try again.'))
       setState('error')
     }
   }

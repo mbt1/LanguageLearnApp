@@ -1,0 +1,7 @@
+operations:
+  - sql:
+      up: |
+        ALTER TABLE exercises DROP CONSTRAINT exercises_concept_type_key;
+      down: |
+        ALTER TABLE exercises
+        ADD CONSTRAINT exercises_concept_type_key UNIQUE (concept_id, exercise_type);
