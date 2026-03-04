@@ -13,6 +13,7 @@ import { FeedbackPanel } from '@/components/exercises/FeedbackPanel'
 import { MultipleChoiceExercise } from '@/components/exercises/MultipleChoiceExercise'
 import { SessionSummary } from '@/components/exercises/SessionSummary'
 import { TypingExercise } from '@/components/exercises/TypingExercise'
+import { Card, CardContent } from '@/components/ui/card'
 
 type State = 'loading' | 'exercise' | 'feedback' | 'summary' | 'error'
 
@@ -124,7 +125,7 @@ export function LearnPage() {
           {item.exercise_type === 'multiple_choice' && (
             <MultipleChoiceExercise
               prompt={item.prompt}
-              options={shuffled([...( item.distractors ?? []), item.target])}
+              options={shuffled([...(item.distractors ?? []), item.correct_answer ?? item.target])}
               onAnswer={(a) => void handleAnswer(a)}
             />
           )}
@@ -149,6 +150,11 @@ export function LearnPage() {
 
       {state === 'feedback' && lastResult && (
         <>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-lg font-medium">{item.prompt}</p>
+            </CardContent>
+          </Card>
           <FeedbackPanel
             correct={lastResult.correct}
             correctAnswer={lastResult.correct_answer}

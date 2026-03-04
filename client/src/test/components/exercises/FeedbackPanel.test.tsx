@@ -35,7 +35,7 @@ describe('FeedbackPanel', () => {
     expect(screen.getByText(/your answer/i)).toBeInTheDocument()
   })
 
-  it('calls onNext when Next button is clicked', async () => {
+  it('calls onNext when feedback box is clicked', async () => {
     const user = userEvent.setup()
     const onNext = vi.fn()
 
@@ -48,7 +48,7 @@ describe('FeedbackPanel', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: /next/i }))
+    await user.click(screen.getByRole('button', { name: /click to continue/i }))
 
     expect(onNext).toHaveBeenCalled()
   })

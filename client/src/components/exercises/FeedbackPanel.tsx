@@ -3,8 +3,6 @@
 
 import { useEffect } from 'react'
 
-import { Button } from '@/components/ui/button'
-
 interface FeedbackPanelProps {
   correct: boolean
   correctAnswer: string
@@ -18,10 +16,13 @@ export function FeedbackPanel({
   normalizedUserAnswer,
   onNext,
 }: FeedbackPanelProps) {
-  // Allow Enter key to advance
+  // Allow Enter / Space / click anywhere to advance
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Enter') onNext()
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        onNext()
+      }
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
@@ -29,8 +30,11 @@ export function FeedbackPanel({
 
   return (
     <div
-      role="alert"
-      className={`rounded-lg border p-4 ${
+      role="button"
+      tabIndex={0}
+      aria-label={correct ? 'Correct — click to continue' : 'Incorrect — click to continue'}
+      onClick={onNext}
+      className={`cursor-pointer rounded-lg border p-4 transition-opacity hover:opacity-90 ${
         correct
           ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950'
           : 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950'
@@ -50,9 +54,7 @@ export function FeedbackPanel({
           Your answer: {normalizedUserAnswer}
         </p>
       )}
-      <Button className="mt-3" onClick={onNext}>
-        Next
-      </Button>
+      <p className="text-muted-foreground mt-2 text-xs">Click or press Enter to continue</p>
     </div>
   )
 }

@@ -23,6 +23,7 @@ class SessionItem:
     concept_type: ConceptType
     cefr_level: CefrLevel
     exercise_id: UUID | None = field(default=None)
+    correct_answer: str | None = field(default=None)
     distractors: list[str] | None = field(default=None)
     sentence_template: str | None = field(default=None)
     explanation: str | None = field(default=None)

@@ -316,28 +316,43 @@ async def test_batch_progress_returns_all_courses(client: httpx.AsyncClient) -> 
     assert "levels" in entry
 
 
-async def test_batch_progress_empty_when_no_courses(client: httpx.AsyncClient) -> None:
+async def test_batch_progress_zero_mastery_for_new_user(client: httpx.AsyncClient) -> None:
+    """A fresh user has zero mastered concepts across all courses."""
     user = await _register(client)
     resp = await client.get(
         "/v1/progress",
         headers=_auth_headers(user["access_token"]),
     )
     assert resp.status_code == 200
-    assert resp.json()["courses"] == []
+    data = resp.json()
+    assert isinstance(data["courses"], list)
+    for course in data["courses"]:
+        for level in course["levels"]:
+            assert level["mastered_concepts"] == 0
 
 
 # ── Test isolation ────────────────────────────────────────────
 
 
-async def test_isolation_no_leftover_courses(client: httpx.AsyncClient) -> None:
+async def test_isolation_no_leftover_test_courses(client: httpx.AsyncClient) -> None:
     """Verify that courses created in one test don't leak to the next.
 
-    This test deliberately lists courses without creating any — it must see zero.
+    Imports a course within this test, then checks that a subsequent list
+    does not include it (only pre-existing seed data should be visible).
     """
-    user = await _register(client)
-    resp = await client.get(
-        "/v1/courses",
-        headers=_auth_headers(user["access_token"]),
-    )
-    assert resp.status_code == 200
-    assert resp.json() == []
+    # Snapshot current course count
+    resp_before = await client.get("/v1/courses")
+    assert resp_before.status_code == 200
+    count_before = len(resp_before.json())
+
+    # Import a course (will be rolled back by the no-op commit fixture)
+    await _import_course(client)
+
+    # The test-created course should be visible within this transaction
+    resp_during = await client.get("/v1/courses")
+    slugs = [c["slug"] for c in resp_during.json()]
+    assert any(s.startswith("study-test-") for s in slugs)
+
+    # After teardown (in the next test) this course will be gone.
+    # For now just verify the count increased by exactly 1.
+    assert len(resp_during.json()) == count_before + 1

@@ -863,6 +863,8 @@ export interface components {
             cefr_level: components["schemas"]["CefrLevel"];
             /** Exercise Id */
             exercise_id?: string | null;
+            /** Correct Answer */
+            correct_answer?: string | null;
             /** Distractors */
             distractors?: string[] | null;
             /** Sentence Template */

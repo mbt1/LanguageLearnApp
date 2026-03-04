@@ -1970,6 +1970,17 @@
             ],
             "title": "Exercise Id"
           },
+          "correct_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer"
+          },
           "distractors": {
             "anyOf": [
               {

@@ -93,7 +93,7 @@ describe('LearnPage', () => {
     await user.click(await screen.findByRole('button', { name: 'hola' }))
 
     expect(await screen.findByText(/correct/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /click to continue/i })).toBeInTheDocument()
   })
 
   it('shows session summary after last item', async () => {
@@ -108,7 +108,7 @@ describe('LearnPage', () => {
     renderPage()
 
     await user.click(await screen.findByRole('button', { name: 'hola' }))
-    await user.click(await screen.findByRole('button', { name: /next/i }))
+    await user.click(await screen.findByRole('button', { name: /click to continue/i }))
 
     expect(await screen.findByText(/session complete/i)).toBeInTheDocument()
     expect(screen.getByText('100%')).toBeInTheDocument()

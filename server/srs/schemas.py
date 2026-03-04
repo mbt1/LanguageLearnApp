@@ -26,6 +26,7 @@ class StudySessionItem(BaseModel):
     concept_type: ConceptType
     cefr_level: CefrLevel
     exercise_id: UUID | None = None
+    correct_answer: str | None = None
     distractors: list[str] | None = None
     sentence_template: str | None = None
     explanation: str | None = None

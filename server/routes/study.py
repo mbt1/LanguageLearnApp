@@ -106,6 +106,7 @@ async def create_study_session(
             enriched_items.append(replace(
                 item,
                 exercise_id=ex["id"],
+                correct_answer=ex.get("correct_answer"),
                 distractors=ex.get("distractors"),
                 sentence_template=ex.get("sentence_template"),
             ))
@@ -142,6 +143,7 @@ def _items_to_response(items: list[SessionItem]) -> list[StudySessionItem]:
             concept_type=item.concept_type,
             cefr_level=item.cefr_level,
             exercise_id=item.exercise_id,
+            correct_answer=item.correct_answer,
             distractors=item.distractors,
             sentence_template=item.sentence_template,
             explanation=item.explanation,
