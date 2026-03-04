@@ -24,8 +24,16 @@ RUN apt-get update \
         postgresql-client \
         powershell \
         gh \
+        unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# ---- AWS CLI v2 ----
+RUN ARCH=$(uname -m) \
+    && curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH}.zip" -o /tmp/awscliv2.zip \
+    && unzip -q /tmp/awscliv2.zip -d /tmp \
+    && /tmp/aws/install \
+    && rm -rf /tmp/awscliv2.zip /tmp/aws
 
 # ---- pnpm ----
 RUN npm install -g pnpm
