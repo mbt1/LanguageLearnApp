@@ -328,7 +328,8 @@ async def test_batch_progress_zero_mastery_for_new_user(client: httpx.AsyncClien
     assert isinstance(data["courses"], list)
     for course in data["courses"]:
         for level in course["levels"]:
-            assert level["mastered_concepts"] == 0
+            assert level["mastered"] == 0
+            assert level["not_started"] == level["total_concepts"]
 
 
 # ── Test isolation ────────────────────────────────────────────

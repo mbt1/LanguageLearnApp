@@ -453,10 +453,18 @@ export interface components {
             cefr_level: components["schemas"]["CefrLevel"];
             /** Total Concepts */
             total_concepts: number;
-            /** Mastered Concepts */
-            mastered_concepts: number;
-            /** Mastery Percentage */
-            mastery_percentage: number;
+            /** Not Started */
+            not_started: number;
+            /** Seen */
+            seen: number;
+            /** Familiar */
+            familiar: number;
+            /** Practiced */
+            practiced: number;
+            /** Proficient */
+            proficient: number;
+            /** Mastered */
+            mastered: number;
         };
         /** ConceptDetail */
         ConceptDetail: {

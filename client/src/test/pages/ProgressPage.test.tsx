@@ -58,8 +58,8 @@ describe('ProgressPage', () => {
     ])
     vi.mocked(studyApi.getAllProgress).mockResolvedValue({
       'course-1': [
-        { cefr_level: 'A1', total_concepts: 10, mastered_concepts: 7, mastery_percentage: 70 },
-        { cefr_level: 'A2', total_concepts: 5, mastered_concepts: 0, mastery_percentage: 0 },
+        { cefr_level: 'A1', total_concepts: 10, not_started: 3, seen: 2, familiar: 1, practiced: 1, proficient: 1, mastered: 2 },
+        { cefr_level: 'A2', total_concepts: 5, not_started: 5, seen: 0, familiar: 0, practiced: 0, proficient: 0, mastered: 0 },
       ],
     })
 
@@ -69,10 +69,8 @@ describe('ProgressPage', () => {
     // CEFR rows shown
     expect(screen.getByText('A1')).toBeInTheDocument()
     expect(screen.getByText('A2')).toBeInTheDocument()
-    // Mastery info shown
-    expect(screen.getByText(/7\/10 mastered/i)).toBeInTheDocument()
-    // Progress bars rendered
-    const progressBars = screen.getAllByRole('progressbar')
-    expect(progressBars.length).toBeGreaterThanOrEqual(2)
+    // Started/total counts shown
+    expect(screen.getByText('7/10')).toBeInTheDocument()
+    expect(screen.getByText('0/5')).toBeInTheDocument()
   })
 })

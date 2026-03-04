@@ -286,4 +286,5 @@ async def test_get_progress_summary(
     row = rows[0]
     assert row["cefr_level"] == "A1"
     assert row["total_concepts"] == 2
-    assert row["mastered_concepts"] == 1
+    assert row["mastered"] == 1
+    assert row["seen"] == 1  # c2 defaults to multiple_choice, not mastered

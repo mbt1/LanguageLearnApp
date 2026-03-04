@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -106,6 +106,7 @@ async def create_study_session(
             enriched_items.append(replace(
                 item,
                 exercise_id=ex["id"],
+                prompt=ex.get("prompt") or item.prompt,
                 correct_answer=ex.get("correct_answer"),
                 distractors=ex.get("distractors"),
                 sentence_template=ex.get("sentence_template"),
@@ -129,6 +130,19 @@ async def create_study_session(
         items=_items_to_response(items),
         total_due_reviews=len(due_reviews),
         new_concepts_added=len(new_items),
+    )
+
+
+def _row_to_progress_item(row: dict[str, Any]) -> CefrProgressItem:
+    return CefrProgressItem(
+        cefr_level=CefrLevel(row["cefr_level"]),
+        total_concepts=row["total_concepts"],
+        not_started=row["not_started"],
+        seen=row["seen"],
+        familiar=row["familiar"],
+        practiced=row["practiced"],
+        proficient=row["proficient"],
+        mastered=row["mastered"],
     )
 
 
@@ -269,17 +283,7 @@ async def get_course_progress(
     rows = await get_progress_summary(
         conn, user_id=current_user.user_id, course_id=course_id,
     )
-    levels = [
-        CefrProgressItem(
-            cefr_level=CefrLevel(row["cefr_level"]),
-            total_concepts=row["total_concepts"],
-            mastered_concepts=row["mastered_concepts"],
-            mastery_percentage=round(
-                row["mastered_concepts"] / row["total_concepts"] * 100, 1,
-            ) if row["total_concepts"] > 0 else 0.0,
-        )
-        for row in rows
-    ]
+    levels = [_row_to_progress_item(row) for row in rows]
     return CourseProgressResponse(course_id=course_id, levels=levels)
 
 
@@ -297,15 +301,7 @@ async def get_all_progress(
     courses_map: dict[UUID, list[CefrProgressItem]] = {}
     for row in rows:
         cid = row["course_id"]
-        item = CefrProgressItem(
-            cefr_level=CefrLevel(row["cefr_level"]),
-            total_concepts=row["total_concepts"],
-            mastered_concepts=row["mastered_concepts"],
-            mastery_percentage=round(
-                row["mastered_concepts"] / row["total_concepts"] * 100, 1,
-            ) if row["total_concepts"] > 0 else 0.0,
-        )
-        courses_map.setdefault(cid, []).append(item)
+        courses_map.setdefault(cid, []).append(_row_to_progress_item(row))
 
     return AllProgressResponse(
         courses=[

@@ -19,7 +19,7 @@ interface CourseCardProps {
 
 function CourseCard({ course, levels }: CourseCardProps) {
   const totalConcepts = levels?.reduce((sum, item) => sum + item.total_concepts, 0) ?? 0
-  const masteredConcepts = levels?.reduce((sum, item) => sum + item.mastered_concepts, 0) ?? 0
+  const startedConcepts = levels?.reduce((sum, item) => sum + item.total_concepts - item.not_started, 0) ?? 0
 
   return (
     <Card>
@@ -38,7 +38,7 @@ function CourseCard({ course, levels }: CourseCardProps) {
         <div className="flex flex-wrap items-center gap-2 text-sm">
           {totalConcepts > 0 && (
             <span className="text-muted-foreground">
-              {masteredConcepts}/{totalConcepts} mastered
+              {startedConcepts}/{totalConcepts} started
             </span>
           )}
           {levels?.map((item) => (

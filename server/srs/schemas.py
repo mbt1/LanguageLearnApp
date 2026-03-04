@@ -89,8 +89,12 @@ class ExerciseSubmitResponse(BaseModel):
 class CefrProgressItem(BaseModel):
     cefr_level: CefrLevel
     total_concepts: int
-    mastered_concepts: int
-    mastery_percentage: float
+    not_started: int
+    seen: int        # at multiple_choice level
+    familiar: int    # at cloze level
+    practiced: int   # at reverse_typing level
+    proficient: int  # at typing level, not yet mastered
+    mastered: int
 
 
 class CourseProgressResponse(BaseModel):

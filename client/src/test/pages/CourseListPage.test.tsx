@@ -54,7 +54,7 @@ describe('CourseListPage', () => {
   it('shows course titles after loading', async () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
     vi.mocked(studyApi.getAllProgress).mockResolvedValue({
-      'course-1': [{ cefr_level: 'A1', total_concepts: 5, mastered_concepts: 2, mastery_percentage: 40 }],
+      'course-1': [{ cefr_level: 'A1', total_concepts: 5, not_started: 3, seen: 1, familiar: 1, practiced: 0, proficient: 0, mastered: 0 }],
     })
 
     renderPage()
@@ -62,21 +62,20 @@ describe('CourseListPage', () => {
     expect(await screen.findByText('Spanish Basics')).toBeInTheDocument()
   })
 
-  it('shows mastery summary and CEFR breakdown', async () => {
+  it('shows started summary and CEFR breakdown', async () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
     vi.mocked(studyApi.getAllProgress).mockResolvedValue({
       'course-1': [
-        { cefr_level: 'A1', total_concepts: 10, mastered_concepts: 4, mastery_percentage: 40 },
-        { cefr_level: 'A2', total_concepts: 5, mastered_concepts: 0, mastery_percentage: 0 },
+        { cefr_level: 'A1', total_concepts: 10, not_started: 3, seen: 2, familiar: 1, practiced: 1, proficient: 1, mastered: 2 },
+        { cefr_level: 'A2', total_concepts: 5, not_started: 5, seen: 0, familiar: 0, practiced: 0, proficient: 0, mastered: 0 },
       ],
     })
 
     renderPage()
 
-    // Wait for data to load
     await screen.findByText('Spanish Basics')
-    // Mastery summary shown (4+0/10+5 = 4/15 mastered)
-    expect(screen.getByText(/4\/15 mastered/i)).toBeInTheDocument()
+    // Started summary: (10-3)+(5-5) = 7 started out of 15
+    expect(screen.getByText(/7\/15 started/i)).toBeInTheDocument()
     // CEFR level badges shown
     expect(screen.getByText(/^A1:/)).toBeInTheDocument()
     expect(screen.getByText(/^A2:/)).toBeInTheDocument()

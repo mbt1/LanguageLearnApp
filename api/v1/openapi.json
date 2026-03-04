@@ -910,21 +910,41 @@
             "type": "integer",
             "title": "Total Concepts"
           },
-          "mastered_concepts": {
+          "not_started": {
             "type": "integer",
-            "title": "Mastered Concepts"
+            "title": "Not Started"
           },
-          "mastery_percentage": {
-            "type": "number",
-            "title": "Mastery Percentage"
+          "seen": {
+            "type": "integer",
+            "title": "Seen"
+          },
+          "familiar": {
+            "type": "integer",
+            "title": "Familiar"
+          },
+          "practiced": {
+            "type": "integer",
+            "title": "Practiced"
+          },
+          "proficient": {
+            "type": "integer",
+            "title": "Proficient"
+          },
+          "mastered": {
+            "type": "integer",
+            "title": "Mastered"
           }
         },
         "type": "object",
         "required": [
           "cefr_level",
           "total_concepts",
-          "mastered_concepts",
-          "mastery_percentage"
+          "not_started",
+          "seen",
+          "familiar",
+          "practiced",
+          "proficient",
+          "mastered"
         ],
         "title": "CefrProgressItem"
       },

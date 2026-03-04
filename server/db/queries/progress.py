@@ -233,14 +233,38 @@ async def get_progress_summary(
     user_id: UUID,
     course_id: UUID,
 ) -> list[dict[str, Any]]:
-    """Return mastery counts per CEFR level for a user in a course."""
+    """Return stage counts per CEFR level for a user in a course.
+
+    Stages map to exercise difficulty progression:
+      not_started, seen (MC), familiar (cloze), practiced (rev_typing),
+      proficient (typing, not mastered), mastered.
+    """
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
             SELECT
                 c.cefr_level,
                 COUNT(*) AS total_concepts,
-                COUNT(ucp.concept_id) FILTER (WHERE ucp.is_mastered = true) AS mastered_concepts
+                COUNT(*) - COUNT(ucp.concept_id) AS not_started,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'multiple_choice'
+                      AND NOT ucp.is_mastered
+                ) AS seen,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'cloze'
+                      AND NOT ucp.is_mastered
+                ) AS familiar,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'reverse_typing'
+                      AND NOT ucp.is_mastered
+                ) AS practiced,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'typing'
+                      AND NOT ucp.is_mastered
+                ) AS proficient,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.is_mastered = true
+                ) AS mastered
             FROM concepts c
             LEFT JOIN user_concept_progress ucp
                 ON ucp.concept_id = c.id AND ucp.user_id = %(user_id)s
@@ -258,7 +282,7 @@ async def get_all_progress_summary(
     *,
     user_id: UUID,
 ) -> list[dict[str, Any]]:
-    """Return mastery counts per course + CEFR level for a user (single query)."""
+    """Return stage counts per course + CEFR level for a user (single query)."""
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
@@ -266,7 +290,26 @@ async def get_all_progress_summary(
                 c.course_id,
                 c.cefr_level,
                 COUNT(*) AS total_concepts,
-                COUNT(ucp.concept_id) FILTER (WHERE ucp.is_mastered = true) AS mastered_concepts
+                COUNT(*) - COUNT(ucp.concept_id) AS not_started,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'multiple_choice'
+                      AND NOT ucp.is_mastered
+                ) AS seen,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'cloze'
+                      AND NOT ucp.is_mastered
+                ) AS familiar,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'reverse_typing'
+                      AND NOT ucp.is_mastered
+                ) AS practiced,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'typing'
+                      AND NOT ucp.is_mastered
+                ) AS proficient,
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.is_mastered = true
+                ) AS mastered
             FROM concepts c
             LEFT JOIN user_concept_progress ucp
                 ON ucp.concept_id = c.id AND ucp.user_id = %(user_id)s

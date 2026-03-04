@@ -8,24 +8,66 @@ import { listCourses } from '@/api/courses'
 import { getAllProgress } from '@/api/study'
 import type { CefrProgressItem, CourseResponse } from '@/api/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 
 interface CourseLevels {
   course: CourseResponse
   levels: CefrProgressItem[]
 }
 
-function LevelRow({ item }: { item: CefrProgressItem }) {
-  const pct = Math.round(item.mastery_percentage)
+/**
+ * Stages in learning progression, ordered from earliest to most advanced.
+ * Each maps to a Tailwind background class and a tooltip label.
+ */
+const STAGES = [
+  { key: 'seen', bg: 'bg-zinc-400', label: 'Seen' },
+  { key: 'familiar', bg: 'bg-emerald-200', label: 'Familiar' },
+  { key: 'practiced', bg: 'bg-emerald-400', label: 'Practiced' },
+  { key: 'proficient', bg: 'bg-emerald-600', label: 'Proficient' },
+  { key: 'mastered', bg: 'bg-emerald-800', label: 'Mastered' },
+] as const
+
+function StageBar({ item }: { item: CefrProgressItem }) {
+  const total = item.total_concepts
+  if (total === 0) return null
+
+  const started = total - item.not_started
+
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">{item.cefr_level}</span>
         <span className="text-muted-foreground">
-          {item.mastered_concepts}/{item.total_concepts} mastered ({pct}%)
+          {started}/{total}
         </span>
       </div>
-      <Progress value={pct} />
+      <div className="flex h-3 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+        {STAGES.map(({ key, bg, label }) => {
+          const count = item[key]
+          if (count === 0) return null
+          const pct = (count / total) * 100
+          return (
+            <div
+              key={key}
+              className={`${bg} transition-all`}
+              style={{ width: `${pct}%` }}
+              title={`${label}: ${count}`}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function StageLegend() {
+  return (
+    <div className="flex flex-wrap gap-3 text-xs">
+      {STAGES.map(({ key, bg, label }) => (
+        <div key={key} className="flex items-center gap-1">
+          <div className={`${bg} h-2.5 w-2.5 rounded-sm`} />
+          <span className="text-muted-foreground">{label}</span>
+        </div>
+      ))}
     </div>
   )
 }
@@ -44,7 +86,7 @@ function CourseProgressCard({ course, levels }: CourseLevels) {
           <p className="text-muted-foreground text-sm">No progress yet.</p>
         )}
         {levels.map((item) => (
-          <LevelRow key={item.cefr_level} item={item} />
+          <StageBar key={item.cefr_level} item={item} />
         ))}
       </CardContent>
     </Card>
@@ -106,6 +148,7 @@ export function ProgressPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Progress</h1>
+      <StageLegend />
       <div className="space-y-4">
         {data.map(({ course, levels }) => (
           <CourseProgressCard key={course.id} course={course} levels={levels} />
