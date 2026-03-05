@@ -28,14 +28,6 @@ export function NavShell() {
               Courses
             </NavLink>
             <NavLink
-              to="/progress"
-              className={({ isActive }) =>
-                isActive ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }
-            >
-              Progress
-            </NavLink>
-            <NavLink
               to="/settings"
               className={({ isActive }) =>
                 isActive ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'

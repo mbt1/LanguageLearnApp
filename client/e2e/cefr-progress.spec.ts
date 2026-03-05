@@ -48,7 +48,7 @@ async function setupUserWithCourse() {
 }
 
 test.describe('CEFR progress view', () => {
-  test('shows progress page with A1 level for a course', async ({ page }) => {
+  test('shows progress bars with A1 level on courses page', async ({ page }) => {
     const { email } = await setupUserWithCourse()
 
     // Login
@@ -57,11 +57,7 @@ test.describe('CEFR progress view', () => {
     await page.getByLabel(/password/i).fill('strongpassword')
     await page.getByRole('button', { name: /log in/i }).click()
 
-    // Navigate to progress page
-    await page.getByRole('link', { name: /progress/i }).click()
-    await expect(page).toHaveURL('/progress')
-
-    // Course shown with A1 level
+    // Courses page (home) shows progress inline
     await expect(page.getByText('E2E Progress Course')).toBeVisible()
     await expect(page.getByText('A1')).toBeVisible()
   })

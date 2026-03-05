@@ -8,19 +8,69 @@ import { getErrorMessage } from '@/api/client'
 import { listCourses } from '@/api/courses'
 import { getAllProgress } from '@/api/study'
 import type { CefrProgressItem, CourseResponse } from '@/api/types'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+const STAGES = [
+  { key: 'seen', bg: 'bg-zinc-400', label: 'Seen' },
+  { key: 'familiar', bg: 'bg-emerald-200', label: 'Familiar' },
+  { key: 'practiced', bg: 'bg-emerald-400', label: 'Practiced' },
+  { key: 'proficient', bg: 'bg-emerald-600', label: 'Proficient' },
+  { key: 'mastered', bg: 'bg-emerald-800', label: 'Mastered' },
+] as const
+
+function StageBar({ item }: { item: CefrProgressItem }) {
+  const total = item.total_concepts
+  if (total === 0) return null
+
+  const started = total - item.not_started
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium">{item.cefr_level}</span>
+        <span className="text-muted-foreground">
+          {started}/{total}
+        </span>
+      </div>
+      <div className="flex h-3 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+        {STAGES.map(({ key, bg, label }) => {
+          const count = item[key]
+          if (count === 0) return null
+          const pct = (count / total) * 100
+          return (
+            <div
+              key={key}
+              className={`${bg} transition-all`}
+              style={{ width: `${pct}%` }}
+              title={`${label}: ${count}`}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function StageLegend() {
+  return (
+    <div className="flex flex-wrap gap-3 text-xs">
+      {STAGES.map(({ key, bg, label }) => (
+        <div key={key} className="flex items-center gap-1">
+          <div className={`${bg} h-2.5 w-2.5 rounded-sm`} />
+          <span className="text-muted-foreground">{label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 interface CourseCardProps {
   course: CourseResponse
-  levels: CefrProgressItem[] | null
+  levels: CefrProgressItem[]
 }
 
 function CourseCard({ course, levels }: CourseCardProps) {
-  const totalConcepts = levels?.reduce((sum, item) => sum + item.total_concepts, 0) ?? 0
-  const startedConcepts = levels?.reduce((sum, item) => sum + item.total_concepts - item.not_started, 0) ?? 0
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between pb-2">
@@ -34,19 +84,13 @@ function CourseCard({ course, levels }: CourseCardProps) {
           <Link to={`/learn/${course.id}`}>Study</Link>
         </Button>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          {totalConcepts > 0 && (
-            <span className="text-muted-foreground">
-              {startedConcepts}/{totalConcepts} started
-            </span>
-          )}
-          {levels?.map((item) => (
-            <Badge key={item.cefr_level} variant="outline">
-              {item.cefr_level}: {item.total_concepts}
-            </Badge>
-          ))}
-        </div>
+      <CardContent className="space-y-3">
+        {levels.length === 0 && (
+          <p className="text-muted-foreground text-sm">No progress yet.</p>
+        )}
+        {levels.map((item) => (
+          <StageBar key={item.cefr_level} item={item} />
+        ))}
       </CardContent>
     </Card>
   )
@@ -62,13 +106,13 @@ export function CourseListPage() {
 
     async function load() {
       try {
-        const [courseList, progressMap] = await Promise.all([
+        const [courseList, progress] = await Promise.all([
           listCourses(),
           getAllProgress(),
         ])
         if (cancelled) return
         setCourses(courseList)
-        setProgressMap(progressMap)
+        setProgressMap(progress)
       } catch (err) {
         if (!cancelled) setError(getErrorMessage(err, 'Failed to load courses.'))
       }
@@ -104,9 +148,10 @@ export function CourseListPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Your Courses</h1>
+      <StageLegend />
       <div className="space-y-3">
         {courses.map((course) => (
-          <CourseCard key={course.id} course={course} levels={progressMap[course.id] ?? null} />
+          <CourseCard key={course.id} course={course} levels={progressMap[course.id] ?? []} />
         ))}
       </div>
     </div>

@@ -45,6 +45,7 @@ describe('CourseListPage', () => {
 
   it('shows empty state when no courses', async () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([])
+    vi.mocked(studyApi.getAllProgress).mockResolvedValue({})
 
     renderPage()
 
@@ -62,7 +63,7 @@ describe('CourseListPage', () => {
     expect(await screen.findByText('Spanish Basics')).toBeInTheDocument()
   })
 
-  it('shows started summary and CEFR breakdown', async () => {
+  it('shows CEFR progress bars with started counts', async () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
     vi.mocked(studyApi.getAllProgress).mockResolvedValue({
       'course-1': [
@@ -74,11 +75,20 @@ describe('CourseListPage', () => {
     renderPage()
 
     await screen.findByText('Spanish Basics')
-    // Started summary: (10-3)+(5-5) = 7 started out of 15
-    expect(screen.getByText(/7\/15 started/i)).toBeInTheDocument()
-    // CEFR level badges shown
-    expect(screen.getByText(/^A1:/)).toBeInTheDocument()
-    expect(screen.getByText(/^A2:/)).toBeInTheDocument()
+    expect(screen.getByText('A1')).toBeInTheDocument()
+    expect(screen.getByText('A2')).toBeInTheDocument()
+    expect(screen.getByText('7/10')).toBeInTheDocument()
+    expect(screen.getByText('0/5')).toBeInTheDocument()
+  })
+
+  it('shows no progress message when levels are empty', async () => {
+    vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
+    vi.mocked(studyApi.getAllProgress).mockResolvedValue({})
+
+    renderPage()
+
+    await screen.findByText('Spanish Basics')
+    expect(screen.getByText(/no progress yet/i)).toBeInTheDocument()
   })
 
   it('navigates to /learn/:courseId on Study click', async () => {
