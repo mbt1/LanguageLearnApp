@@ -16,17 +16,20 @@ from content.schemas import CefrLevel, ExerciseType
 from dataclasses import replace
 
 from db.pool import get_conn
-from db.queries.courses import get_course
+from db.queries.concepts import get_concept
+from db.queries.courses import get_course, list_courses
 from db.queries.exercises import get_exercises_for_session
 from db.queries.progress import (
-    get_all_progress_summary,
     get_prerequisite_difficulties,
     get_prerequisite_difficulties_batch,
     get_progress,
-    get_progress_summary,
     list_all_active_progress,
     list_due_reviews,
     list_new_concepts,
+    read_all_progress_summary,
+    read_progress_summary,
+    refresh_course_progress_summary,
+    refresh_progress_summary,
     upsert_progress,
 )
 from db.queries.reviews import record_review
@@ -123,6 +126,12 @@ async def create_study_session(
             user_id=user_id,
             concept_id=item.concept_id,
             fsrs_due=now,
+        )
+
+    # Refresh progress summary cache (new concepts change "not_started" counts)
+    if new_items:
+        await refresh_course_progress_summary(
+            conn, user_id=user_id, course_id=course_id,
         )
     await conn.commit()
 
@@ -253,6 +262,16 @@ async def submit_review(
         response=request.response,
         review_duration_ms=request.review_duration_ms,
     )
+
+    # Refresh progress summary cache
+    concept = await get_concept(conn, concept_id=concept_id)
+    if concept:
+        await refresh_progress_summary(
+            conn,
+            user_id=user_id,
+            course_id=concept["course_id"],
+            cefr_level=concept["cefr_level"],
+        )
     await conn.commit()
 
     return ReviewResponse(
@@ -280,9 +299,18 @@ async def get_course_progress(
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
 
-    rows = await get_progress_summary(
+    rows = await read_progress_summary(
         conn, user_id=current_user.user_id, course_id=course_id,
     )
+    if not rows:
+        # Lazy-fill cache for existing users who have never had it populated
+        await refresh_course_progress_summary(
+            conn, user_id=current_user.user_id, course_id=course_id,
+        )
+        await conn.commit()
+        rows = await read_progress_summary(
+            conn, user_id=current_user.user_id, course_id=course_id,
+        )
     levels = [_row_to_progress_item(row) for row in rows]
     return CourseProgressResponse(course_id=course_id, levels=levels)
 
@@ -295,8 +323,18 @@ async def get_all_progress(
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
     conn: Annotated[AsyncConnection, Depends(get_conn)],  # pyright: ignore[reportMissingTypeArgument]
 ) -> AllProgressResponse:
-    """Return mastery progress for every course in a single query."""
-    rows = await get_all_progress_summary(conn, user_id=current_user.user_id)
+    """Return progress for every course from precalculated cache."""
+    rows = await read_all_progress_summary(conn, user_id=current_user.user_id)
+
+    if not rows:
+        # Lazy-fill cache for existing users
+        all_courses = await list_courses(conn)
+        for c in all_courses:
+            await refresh_course_progress_summary(
+                conn, user_id=current_user.user_id, course_id=c["id"],
+            )
+        await conn.commit()
+        rows = await read_all_progress_summary(conn, user_id=current_user.user_id)
 
     courses_map: dict[UUID, list[CefrProgressItem]] = {}
     for row in rows:

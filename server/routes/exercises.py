@@ -12,8 +12,14 @@ from auth.dependencies import get_current_user
 from auth.schemas import CurrentUser  # noqa: TC001
 from content.schemas import ExerciseType
 from db.pool import get_conn
+from db.queries.concepts import get_concept
 from db.queries.exercises import get_exercise_by_id, get_exercise_by_type
-from db.queries.progress import get_prerequisite_difficulties, get_progress, upsert_progress
+from db.queries.progress import (
+    get_prerequisite_difficulties,
+    get_progress,
+    refresh_progress_summary,
+    upsert_progress,
+)
 from db.queries.reviews import record_review
 from grading.provider import default_grader
 from grading.schemas import GradingRequest, Verdict
@@ -134,6 +140,15 @@ async def submit_exercise(
         response=request.user_answer,
         review_duration_ms=request.review_duration_ms,
     )
+    # Refresh precalculated progress summary
+    concept = await get_concept(conn, concept_id=concept_id)
+    if concept:
+        await refresh_progress_summary(
+            conn,
+            user_id=user_id,
+            course_id=concept["course_id"],
+            cefr_level=concept["cefr_level"],
+        )
     await conn.commit()
 
     return ExerciseSubmitResponse(

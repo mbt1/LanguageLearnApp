@@ -319,3 +319,156 @@ async def get_all_progress_summary(
             {"user_id": user_id},
         )
         return await cur.fetchall()
+
+
+# ── Precalculated progress cache ─────────────────────────
+
+
+async def refresh_progress_summary(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+    course_id: UUID,
+    cefr_level: str,
+) -> None:
+    """Recompute and upsert one row in user_progress_summary."""
+    async with conn.cursor() as cur:
+        await cur.execute(
+            """
+            INSERT INTO user_progress_summary
+                (user_id, course_id, cefr_level,
+                 total_concepts, not_started, seen, familiar,
+                 practiced, proficient, mastered, updated_at)
+            SELECT
+                %(user_id)s,
+                %(course_id)s,
+                c.cefr_level,
+                COUNT(*),
+                COUNT(*) - COUNT(ucp.concept_id),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'multiple_choice'
+                      AND NOT ucp.is_mastered),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'cloze'
+                      AND NOT ucp.is_mastered),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'reverse_typing'
+                      AND NOT ucp.is_mastered),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'typing'
+                      AND NOT ucp.is_mastered),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.is_mastered = true),
+                now()
+            FROM concepts c
+            LEFT JOIN user_concept_progress ucp
+                ON ucp.concept_id = c.id AND ucp.user_id = %(user_id)s
+            WHERE c.course_id = %(course_id)s AND c.cefr_level = %(cefr_level)s
+            GROUP BY c.cefr_level
+            ON CONFLICT (user_id, course_id, cefr_level) DO UPDATE SET
+                total_concepts = EXCLUDED.total_concepts,
+                not_started    = EXCLUDED.not_started,
+                seen           = EXCLUDED.seen,
+                familiar       = EXCLUDED.familiar,
+                practiced      = EXCLUDED.practiced,
+                proficient     = EXCLUDED.proficient,
+                mastered       = EXCLUDED.mastered,
+                updated_at     = EXCLUDED.updated_at
+            """,
+            {"user_id": user_id, "course_id": course_id, "cefr_level": cefr_level},
+        )
+
+
+async def refresh_course_progress_summary(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+    course_id: UUID,
+) -> None:
+    """Recompute all CEFR level rows for a user+course in user_progress_summary."""
+    async with conn.cursor() as cur:
+        await cur.execute(
+            """
+            INSERT INTO user_progress_summary
+                (user_id, course_id, cefr_level,
+                 total_concepts, not_started, seen, familiar,
+                 practiced, proficient, mastered, updated_at)
+            SELECT
+                %(user_id)s,
+                %(course_id)s,
+                c.cefr_level,
+                COUNT(*),
+                COUNT(*) - COUNT(ucp.concept_id),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'multiple_choice'
+                      AND NOT ucp.is_mastered),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'cloze'
+                      AND NOT ucp.is_mastered),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'reverse_typing'
+                      AND NOT ucp.is_mastered),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.current_exercise_difficulty = 'typing'
+                      AND NOT ucp.is_mastered),
+                COUNT(ucp.concept_id) FILTER (
+                    WHERE ucp.is_mastered = true),
+                now()
+            FROM concepts c
+            LEFT JOIN user_concept_progress ucp
+                ON ucp.concept_id = c.id AND ucp.user_id = %(user_id)s
+            WHERE c.course_id = %(course_id)s
+            GROUP BY c.cefr_level
+            ON CONFLICT (user_id, course_id, cefr_level) DO UPDATE SET
+                total_concepts = EXCLUDED.total_concepts,
+                not_started    = EXCLUDED.not_started,
+                seen           = EXCLUDED.seen,
+                familiar       = EXCLUDED.familiar,
+                practiced      = EXCLUDED.practiced,
+                proficient     = EXCLUDED.proficient,
+                mastered       = EXCLUDED.mastered,
+                updated_at     = EXCLUDED.updated_at
+            """,
+            {"user_id": user_id, "course_id": course_id},
+        )
+
+
+async def read_progress_summary(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+    course_id: UUID,
+) -> list[dict[str, Any]]:
+    """Read cached progress summary for a course. Falls back to empty list."""
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT cefr_level, total_concepts, not_started,
+                   seen, familiar, practiced, proficient, mastered
+            FROM user_progress_summary
+            WHERE user_id = %(user_id)s AND course_id = %(course_id)s
+            ORDER BY cefr_level
+            """,
+            {"user_id": user_id, "course_id": course_id},
+        )
+        return await cur.fetchall()
+
+
+async def read_all_progress_summary(
+    conn: AsyncConnection,
+    *,
+    user_id: UUID,
+) -> list[dict[str, Any]]:
+    """Read cached progress summary for all courses."""
+    async with conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(
+            """
+            SELECT course_id, cefr_level, total_concepts, not_started,
+                   seen, familiar, practiced, proficient, mastered
+            FROM user_progress_summary
+            WHERE user_id = %(user_id)s
+            ORDER BY course_id, cefr_level
+            """,
+            {"user_id": user_id},
+        )
+        return await cur.fetchall()

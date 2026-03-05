@@ -827,7 +827,7 @@
           "study"
         ],
         "summary": "Get All Progress",
-        "description": "Return mastery progress for every course in a single query.",
+        "description": "Return progress for every course from precalculated cache.",
         "operationId": "get_all_progress_v1_progress_get",
         "responses": {
           "200": {

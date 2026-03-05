@@ -115,3 +115,32 @@ export function getErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) return err.detail
   return fallback
 }
+
+// ── Simple in-memory GET cache ──────────────────────────────
+
+interface CacheEntry {
+  data: unknown
+  expiry: number
+}
+
+const cache = new Map<string, CacheEntry>()
+
+const DEFAULT_TTL_MS = 30_000
+
+export function cachedGet<T>(path: string, ttlMs = DEFAULT_TTL_MS): Promise<T> {
+  const entry = cache.get(path)
+  if (entry && entry.expiry > Date.now()) {
+    return Promise.resolve(entry.data as T)
+  }
+  return apiRequest<T>(path).then((data) => {
+    cache.set(path, { data, expiry: Date.now() + ttlMs })
+    return data
+  })
+}
+
+/** Drop cached entries whose key starts with the given prefix. */
+export function invalidateCache(prefix: string): void {
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) cache.delete(key)
+  }
+}
