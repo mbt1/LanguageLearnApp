@@ -40,7 +40,7 @@ describe('ClozeExercise', () => {
     expect(onAnswer).toHaveBeenCalledWith('está')
   })
 
-  it('disables input and button after submission', async () => {
+  it('disables input and hides submit button after submission', async () => {
     const user = userEvent.setup()
 
     render(<ClozeExercise sentenceTemplate="Él ___ allí." onAnswer={vi.fn()} />)
@@ -49,6 +49,6 @@ describe('ClozeExercise', () => {
     await user.click(screen.getByRole('button', { name: /submit/i }))
 
     expect(screen.getByRole('textbox')).toBeDisabled()
-    expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: /submit/i })).not.toBeInTheDocument()
   })
 })

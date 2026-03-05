@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 LanguageLearn Contributors
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { getErrorMessage } from '@/api/client'
 import { submitExercise, studySession } from '@/api/study'
-import type { ExerciseSubmitResponse, StudySessionItem, StudySessionResponse } from '@/api/types'
+import type { ExerciseSubmitResponse, StudySessionResponse } from '@/api/types'
 import { ClozeExercise } from '@/components/exercises/ClozeExercise'
 import { ExplanationPanel } from '@/components/exercises/ExplanationPanel'
 import { FeedbackPanel } from '@/components/exercises/FeedbackPanel'
 import { MultipleChoiceExercise } from '@/components/exercises/MultipleChoiceExercise'
 import { SessionSummary } from '@/components/exercises/SessionSummary'
 import { TypingExercise } from '@/components/exercises/TypingExercise'
-import { Card, CardContent } from '@/components/ui/card'
 
 type State = 'loading' | 'exercise' | 'feedback' | 'summary' | 'error'
 
@@ -47,20 +46,16 @@ export function LearnPage() {
       })
   }, [courseId])
 
-  function currentItem(): StudySessionItem | null {
-    return session?.items[index] ?? null
-  }
-
   async function handleAnswer(userAnswer: string) {
-    const item = currentItem()
-    if (!item) return
+    const current = session?.items[index]
+    if (!current) return
 
     try {
       const result = await submitExercise({
-        concept_id: item.concept_id,
-        exercise_type: item.exercise_type,
+        concept_id: current.concept_id,
+        exercise_type: current.exercise_type,
         user_answer: userAnswer,
-        ...(item.exercise_id ? { exercise_id: item.exercise_id } : {}),
+        ...(current.exercise_id ? { exercise_id: current.exercise_id } : {}),
       })
       setLastResult(result)
       setResults((prev) => [...prev, result])
@@ -86,6 +81,14 @@ export function LearnPage() {
     void navigate('/')
   }
 
+  // Memoize MC options so they don't reshuffle on exercise→feedback transition
+  const item = session?.items[index] ?? null
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const mcOptions = useMemo(() => {
+    if (!item || item.exercise_type !== 'multiple_choice') return []
+    return shuffled([...(item.distractors ?? []), item.correct_answer ?? item.target])
+  }, [index, session])
+
   if (state === 'loading') {
     return (
       <p role="status" aria-live="polite" className="text-muted-foreground">
@@ -102,7 +105,6 @@ export function LearnPage() {
     return <SessionSummary results={results} onFinish={handleFinish} />
   }
 
-  const item = currentItem()
   if (!item) return null
 
   const isGrammar = item.concept_type === 'grammar'
@@ -113,6 +115,8 @@ export function LearnPage() {
   const autoOpenExplanation = isGrammar && !hasSeenConceptBefore
 
   const progress = session ? `${index + 1} / ${session.items.length}` : ''
+  const showingFeedback = state === 'feedback' && lastResult !== null
+  const feedbackData = showingFeedback ? lastResult : null
 
   return (
     <div className="space-y-4">
@@ -120,52 +124,45 @@ export function LearnPage() {
         <p className="text-muted-foreground text-sm">{progress}</p>
       </div>
 
-      {state === 'exercise' && (
-        <>
-          {item.exercise_type === 'multiple_choice' && (
-            <MultipleChoiceExercise
-              prompt={item.prompt}
-              options={shuffled([...(item.distractors ?? []), item.correct_answer ?? item.target])}
-              onAnswer={(a) => void handleAnswer(a)}
-            />
-          )}
-          {item.exercise_type === 'cloze' && item.sentence_template && (
-            <ClozeExercise
-              sentenceTemplate={item.sentence_template}
-              onAnswer={(a) => void handleAnswer(a)}
-            />
-          )}
-          {(item.exercise_type === 'typing' || item.exercise_type === 'reverse_typing') && (
-            <TypingExercise
-              prompt={item.prompt}
-              onAnswer={(a) => void handleAnswer(a)}
-            />
-          )}
-          <ExplanationPanel
-            explanation={item.explanation ?? null}
-            defaultOpen={autoOpenExplanation}
-          />
-        </>
+      {item.exercise_type === 'multiple_choice' && (
+        <MultipleChoiceExercise
+          key={index}
+          prompt={item.prompt}
+          options={mcOptions}
+          onAnswer={(a) => void handleAnswer(a)}
+          feedback={feedbackData ? { correct: feedbackData.correct, correctAnswer: feedbackData.correct_answer } : null}
+        />
+      )}
+      {item.exercise_type === 'cloze' && item.sentence_template && (
+        <ClozeExercise
+          key={index}
+          sentenceTemplate={item.sentence_template}
+          onAnswer={(a) => void handleAnswer(a)}
+          feedback={feedbackData ? { correct: feedbackData.correct } : null}
+        />
+      )}
+      {(item.exercise_type === 'typing' || item.exercise_type === 'reverse_typing') && (
+        <TypingExercise
+          key={index}
+          prompt={item.prompt}
+          onAnswer={(a) => void handleAnswer(a)}
+          feedback={feedbackData ? { correct: feedbackData.correct } : null}
+        />
       )}
 
-      {state === 'feedback' && lastResult && (
-        <>
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-lg font-medium">{item.prompt}</p>
-            </CardContent>
-          </Card>
-          <FeedbackPanel
-            correct={lastResult.correct}
-            correctAnswer={lastResult.correct_answer}
-            normalizedUserAnswer={lastResult.normalized_user_answer}
-            onNext={handleNext}
-          />
-          <ExplanationPanel
-            explanation={item.explanation ?? null}
-          />
-        </>
+      {showingFeedback && (
+        <FeedbackPanel
+          correct={lastResult.correct}
+          correctAnswer={lastResult.correct_answer}
+          normalizedUserAnswer={lastResult.normalized_user_answer}
+          onNext={handleNext}
+        />
       )}
+
+      <ExplanationPanel
+        explanation={item.explanation ?? null}
+        defaultOpen={!showingFeedback ? autoOpenExplanation : undefined}
+      />
     </div>
   )
 }

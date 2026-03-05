@@ -10,9 +10,10 @@ import { Card, CardContent } from '@/components/ui/card'
 interface ClozeExerciseProps {
   sentenceTemplate: string
   onAnswer: (answer: string) => void
+  feedback?: { correct: boolean } | null
 }
 
-export function ClozeExercise({ sentenceTemplate, onAnswer }: ClozeExerciseProps) {
+export function ClozeExercise({ sentenceTemplate, onAnswer, feedback }: ClozeExerciseProps) {
   const [value, setValue] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -26,6 +27,12 @@ export function ClozeExercise({ sentenceTemplate, onAnswer }: ClozeExerciseProps
     setSubmitted(true)
     onAnswer(value.trim())
   }
+
+  const inputColor = feedback
+    ? feedback.correct
+      ? 'border-green-600 ring-1 ring-green-600'
+      : 'border-red-600 ring-1 ring-red-600'
+    : ''
 
   return (
     <div className="space-y-4">
@@ -42,16 +49,18 @@ export function ClozeExercise({ sentenceTemplate, onAnswer }: ClozeExerciseProps
               }}
               aria-label="Fill in the blank"
               disabled={submitted}
-              className="mx-2 inline-block min-w-16 max-w-48"
+              className={`mx-2 inline-block min-w-16 max-w-48 ${inputColor}`}
               autoFocus
             />
             {after}
           </p>
         </CardContent>
       </Card>
-      <Button onClick={submit} disabled={submitted || !value.trim()}>
-        Submit
-      </Button>
+      {!submitted && (
+        <Button onClick={submit} disabled={!value.trim()}>
+          Submit
+        </Button>
+      )}
     </div>
   )
 }

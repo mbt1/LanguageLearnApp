@@ -10,9 +10,10 @@ import { Input } from '@/components/ui/input'
 interface TypingExerciseProps {
   prompt: string
   onAnswer: (answer: string) => void
+  feedback?: { correct: boolean } | null
 }
 
-export function TypingExercise({ prompt, onAnswer }: TypingExerciseProps) {
+export function TypingExercise({ prompt, onAnswer, feedback }: TypingExerciseProps) {
   const [value, setValue] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
@@ -21,6 +22,12 @@ export function TypingExercise({ prompt, onAnswer }: TypingExerciseProps) {
     setSubmitted(true)
     onAnswer(value.trim())
   }
+
+  const inputColor = feedback
+    ? feedback.correct
+      ? 'border-green-600 ring-1 ring-green-600'
+      : 'border-red-600 ring-1 ring-red-600'
+    : ''
 
   return (
     <div className="space-y-4">
@@ -40,10 +47,13 @@ export function TypingExercise({ prompt, onAnswer }: TypingExerciseProps) {
           disabled={submitted}
           placeholder="Type your answer…"
           autoFocus
+          className={inputColor}
         />
-        <Button aria-label="Submit answer" onClick={submit} disabled={submitted || !value.trim()}>
-          Submit
-        </Button>
+        {!submitted && (
+          <Button aria-label="Submit answer" onClick={submit} disabled={!value.trim()}>
+            Submit
+          </Button>
+        )}
       </div>
     </div>
   )

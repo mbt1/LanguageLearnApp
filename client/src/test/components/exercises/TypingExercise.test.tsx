@@ -36,7 +36,7 @@ describe('TypingExercise', () => {
     expect(onAnswer).toHaveBeenCalledWith('adiós')
   })
 
-  it('disables input and button after submission', async () => {
+  it('disables input and hides submit button after submission', async () => {
     const user = userEvent.setup()
 
     render(<TypingExercise prompt="Translate: yes" onAnswer={vi.fn()} />)
@@ -45,6 +45,6 @@ describe('TypingExercise', () => {
     await user.click(screen.getByRole('button', { name: /submit/i }))
 
     expect(screen.getByRole('textbox')).toBeDisabled()
-    expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: /submit/i })).not.toBeInTheDocument()
   })
 })
