@@ -162,7 +162,21 @@ async def create_study_session(
                 sentence_template=ex.get("sentence_template"),
             ))
         else:
-            enriched_items.append(item)
+            # Auto-generate for typing exercises without explicit content
+            if item.exercise_type == ExerciseType.reverse_typing:
+                # Reverse direction: show target language, expect source language
+                enriched_items.append(replace(
+                    item,
+                    prompt=item.target,
+                    correct_answer=item.prompt,
+                ))
+            elif item.exercise_type == ExerciseType.typing:
+                enriched_items.append(replace(
+                    item,
+                    correct_answer=item.target,
+                ))
+            else:
+                enriched_items.append(item)
     items = enriched_items
 
     # Create initial progress rows for new concepts added to session

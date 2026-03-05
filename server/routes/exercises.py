@@ -50,11 +50,24 @@ async def submit_exercise(
             conn, concept_id=concept_id, exercise_type=request.exercise_type.value,
         )
     if exercise is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Exercise not found (exercise_id={request.exercise_id}, "
-            f"concept_id={concept_id}, type={request.exercise_type.value}).",
-        )
+        # Auto-generate correct_answer for typing exercises without explicit content
+        concept = await get_concept(conn, concept_id=concept_id)
+        if concept is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Concept {concept_id} not found.",
+            )
+        if request.exercise_type == ExerciseType.reverse_typing:
+            # Reverse direction: correct answer is source language (prompt)
+            exercise = {"correct_answer": concept["prompt"], "id": None}
+        elif request.exercise_type == ExerciseType.typing:
+            exercise = {"correct_answer": concept["target"], "id": None}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Exercise not found (exercise_id={request.exercise_id}, "
+                f"concept_id={concept_id}, type={request.exercise_type.value}).",
+            )
 
     # Fetch current progress — 404 if not started
     progress = await get_progress(conn, user_id=user_id, concept_id=concept_id)

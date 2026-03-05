@@ -498,3 +498,65 @@ async def test_session_concept_ids_not_found(client: httpx.AsyncClient) -> None:
     )
     assert resp.status_code == 404
     assert "not found" in resp.json()["detail"]
+
+
+# ── reverse_typing auto-swap ─────────────────────────────────
+
+
+async def _advance_to_reverse_typing(
+    client: httpx.AsyncClient,
+    concept_id: str,
+    headers: dict[str, str],
+) -> None:
+    """Submit 6 correct reviews to advance from MC → cloze → reverse_typing."""
+    for _ in range(6):
+        resp = await client.post(
+            "/v1/study/review",
+            json={
+                "concept_id": concept_id,
+                "rating": "good",
+                "exercise_type": "multiple_choice",
+                "correct": True,
+            },
+            headers=headers,
+        )
+        assert resp.status_code == 200
+
+
+async def test_session_reverse_typing_swaps_prompt_target(
+    client: httpx.AsyncClient,
+) -> None:
+    """reverse_typing without explicit exercise auto-swaps prompt/target."""
+    user = await _register(client)
+    course = await _import_course(client)
+    headers = _auth_headers(user["access_token"])
+
+    # Start a session to create progress for hola (concept with prompt=hello, target=hola)
+    session = await client.post(
+        "/v1/study/session",
+        json={"course_id": course["course_id"]},
+        headers=headers,
+    )
+    items = session.json()["items"]
+    # Find hola concept (the one with target="hola")
+    hola_item = next(i for i in items if i["target"] == "hola")
+    concept_id = hola_item["concept_id"]
+
+    # Advance to reverse_typing difficulty (4 correct reviews)
+    await _advance_to_reverse_typing(client, concept_id, headers)
+
+    # Targeted session should now be at reverse_typing with swapped prompt/target
+    resp = await client.post(
+        "/v1/study/session",
+        json={
+            "course_id": course["course_id"],
+            "concept_ids": [concept_id],
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    item = resp.json()["items"][0]
+    assert item["exercise_type"] == "reverse_typing"
+    # Prompt should be target language (Spanish), correct_answer source language (English)
+    assert item["prompt"] == "hola"
+    assert item["correct_answer"] == "hello"

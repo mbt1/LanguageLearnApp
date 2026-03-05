@@ -188,6 +188,16 @@ async def test_verify_email_success(client: httpx.AsyncClient, test_conn: Any) -
     assert resp.status_code == 200
     assert resp.json()["message"] == "Email verified successfully"
 
+    # Verify the flag is actually set in the database
+    async with test_conn.cursor() as cur:
+        await cur.execute(
+            "SELECT email_verified FROM users WHERE email = %s",
+            (email,),
+        )
+        row = await cur.fetchone()
+        assert row is not None
+        assert row[0] is True
+
 
 async def test_verify_email_invalid_token(client: httpx.AsyncClient) -> None:
     resp = await client.get("/v1/auth/verify-email?token=nonexistent-token")
@@ -200,3 +210,24 @@ async def test_verify_email_invalid_token(client: httpx.AsyncClient) -> None:
 async def test_resend_verification_requires_auth(client: httpx.AsyncClient) -> None:
     resp = await client.post("/v1/auth/resend-verification")
     assert resp.status_code in (401, 403)
+
+
+# ── Verification email logging ───────────────────────
+
+
+async def test_register_logs_verification_email(
+    client: httpx.AsyncClient, caplog: Any,
+) -> None:
+    """Verification email URL must appear in application logs (regression for missing basicConfig)."""
+    import logging
+
+    email = f"logtest-{datetime.now(UTC).timestamp()}@example.com"
+    with caplog.at_level(logging.INFO, logger="auth.email"):
+        resp = await client.post(
+            "/v1/auth/register",
+            json={"email": email, "password": "password123"},
+        )
+    assert resp.status_code == 201
+    assert "VERIFICATION EMAIL" in caplog.text
+    assert email in caplog.text
+    assert "/verify-email?token=" in caplog.text

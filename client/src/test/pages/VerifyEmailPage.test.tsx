@@ -40,6 +40,7 @@ describe('VerifyEmailPage', () => {
 
     expect(await screen.findByText('Your email has been verified.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /go to login/i })).toBeInTheDocument()
+    expect(authApi.verifyEmail).toHaveBeenCalledOnce()
   })
 
   it('shows failure message and back link when token is expired or invalid', async () => {
@@ -53,5 +54,6 @@ describe('VerifyEmailPage', () => {
 
     expect(await screen.findByText(/expired or invalid/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /back to login/i })).toBeInTheDocument()
+    expect(authApi.verifyEmail).toHaveBeenCalledOnce()
   })
 })

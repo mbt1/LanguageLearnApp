@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 LanguageLearn Contributors
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { getErrorMessage } from '@/api/client'
@@ -19,8 +19,10 @@ export function VerifyEmailPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(initialStatus)
   const [message, setMessage] = useState(initialMessage)
 
+  const calledRef = useRef(false)
   useEffect(() => {
-    if (!token) return
+    if (!token || calledRef.current) return
+    calledRef.current = true
     void authApi
       .verifyEmail(token)
       .then((data) => {

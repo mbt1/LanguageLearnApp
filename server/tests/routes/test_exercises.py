@@ -293,3 +293,87 @@ async def test_submit_concept_without_progress(client: httpx.AsyncClient) -> Non
         headers=_auth_headers(user["access_token"]),
     )
     assert resp.status_code == 404
+
+
+async def _advance_to_reverse_typing(
+    client: httpx.AsyncClient,
+    concept_id: str,
+    token: str,
+) -> None:
+    """Submit 6 correct reviews to advance from MC → cloze → reverse_typing."""
+    headers = _auth_headers(token)
+    for _ in range(6):
+        resp = await client.post(
+            "/v1/study/review",
+            json={
+                "concept_id": concept_id,
+                "rating": "good",
+                "exercise_type": "multiple_choice",
+                "correct": True,
+            },
+            headers=headers,
+        )
+        assert resp.status_code == 200
+
+
+async def test_submit_reverse_typing_without_explicit_exercise(
+    client: httpx.AsyncClient,
+) -> None:
+    """reverse_typing with no DB exercise uses concept prompt as correct_answer."""
+    user = await _register(client)
+    course_resp = await client.post("/v1/courses/import", json=_mini_course())
+    assert course_resp.status_code == 201
+    course_id = course_resp.json()["course_id"]
+
+    items = await _start_session(client, course_id, user["access_token"])
+    # Find hola concept (prompt=hello, target=hola)
+    hola_item = next(i for i in items if i["target"] == "hola")
+    concept_id = hola_item["concept_id"]
+
+    # Advance to reverse_typing
+    await _advance_to_reverse_typing(client, concept_id, user["access_token"])
+
+    # Submit reverse_typing answer: correct answer should be "hello" (source language)
+    resp = await client.post(
+        "/v1/exercises/submit",
+        json={
+            "concept_id": concept_id,
+            "exercise_type": "reverse_typing",
+            "user_answer": "hello",
+        },
+        headers=_auth_headers(user["access_token"]),
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["correct"] is True
+    assert data["correct_answer"] == "hello"
+
+
+async def test_submit_reverse_typing_wrong_answer(
+    client: httpx.AsyncClient,
+) -> None:
+    """Wrong answer for reverse_typing is rejected."""
+    user = await _register(client)
+    course_resp = await client.post("/v1/courses/import", json=_mini_course())
+    assert course_resp.status_code == 201
+    course_id = course_resp.json()["course_id"]
+
+    items = await _start_session(client, course_id, user["access_token"])
+    hola_item = next(i for i in items if i["target"] == "hola")
+    concept_id = hola_item["concept_id"]
+
+    await _advance_to_reverse_typing(client, concept_id, user["access_token"])
+
+    resp = await client.post(
+        "/v1/exercises/submit",
+        json={
+            "concept_id": concept_id,
+            "exercise_type": "reverse_typing",
+            "user_answer": "hola",  # wrong — this is the Spanish word, not English
+        },
+        headers=_auth_headers(user["access_token"]),
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["correct"] is False
+    assert data["correct_answer"] == "hello"

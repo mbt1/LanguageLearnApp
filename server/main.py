@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 LanguageLearn Contributors
 
+import logging
+
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
@@ -14,6 +16,8 @@ from routes.courses import router as courses_router
 from routes.exercises import router as exercises_router
 from routes.passkeys import router as passkeys_router
 from routes.study import router as study_router
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="LanguageLearn API", version="0.1.0", lifespan=lifespan)
 
