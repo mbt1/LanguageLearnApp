@@ -75,10 +75,13 @@ describe('CourseListPage', () => {
     renderPage()
 
     await screen.findByText('Spanish Basics')
+    // CEFR level labels
     expect(screen.getByText('A1')).toBeInTheDocument()
     expect(screen.getByText('A2')).toBeInTheDocument()
-    expect(screen.getByText('7/10')).toBeInTheDocument()
-    expect(screen.getByText('0/5')).toBeInTheDocument()
+    // Total shown at end of bar
+    expect(screen.getByText('10')).toBeInTheDocument()
+    // A1 cumulative: seen=2, familiar=2+1=3, practiced=3+1=4, proficient=4+1=5, mastered=5+2=7
+    expect(screen.getByText('7')).toBeInTheDocument()
   })
 
   it('shows no progress message when levels are empty', async () => {

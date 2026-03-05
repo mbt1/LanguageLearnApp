@@ -12,42 +12,46 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const STAGES = [
-  { key: 'seen', bg: 'bg-zinc-400', label: 'Seen' },
-  { key: 'familiar', bg: 'bg-emerald-200', label: 'Familiar' },
-  { key: 'practiced', bg: 'bg-emerald-400', label: 'Practiced' },
-  { key: 'proficient', bg: 'bg-emerald-600', label: 'Proficient' },
   { key: 'mastered', bg: 'bg-emerald-800', label: 'Mastered' },
+  { key: 'proficient', bg: 'bg-emerald-600', label: 'Proficient' },
+  { key: 'practiced', bg: 'bg-emerald-400', label: 'Practiced' },
+  { key: 'familiar', bg: 'bg-emerald-200', label: 'Familiar' },
+  { key: 'seen', bg: 'bg-zinc-400', label: 'Seen' },
 ] as const
 
 function StageBar({ item }: { item: CefrProgressItem }) {
   const total = item.total_concepts
   if (total === 0) return null
 
-  const started = total - item.not_started
+  // Build segments with cumulative counts
+  const segments: { key: string; bg: string; text: string; label: string; pct: number; cumulative: number }[] = []
+  let cumulative = 0
+  for (const { key, bg, label } of STAGES) {
+    const count = item[key]
+    if (count === 0) continue
+    cumulative += count
+    const pct = (count / total) * 100
+    // Dark text on light backgrounds, white on darker ones
+    const text = key === 'seen' || key === 'familiar' ? 'text-zinc-700' : 'text-white/90'
+    segments.push({ key, bg, text, label, pct, cumulative })
+  }
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-medium">{item.cefr_level}</span>
-        <span className="text-muted-foreground">
-          {started}/{total}
-        </span>
+    <div className="flex items-center gap-2">
+      <span className="w-7 text-sm font-medium">{item.cefr_level}</span>
+      <div className="flex h-5 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+        {segments.map(({ key, bg, text, label, pct, cumulative: cum }) => (
+          <div
+            key={key}
+            className={`${bg} flex items-center justify-end overflow-hidden transition-all`}
+            style={{ width: `${pct}%` }}
+            title={`${label}: ${item[key]}`}
+          >
+            <span className={`${text} px-1 text-[10px] leading-none`}>{cum}</span>
+          </div>
+        ))}
       </div>
-      <div className="flex h-3 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
-        {STAGES.map(({ key, bg, label }) => {
-          const count = item[key]
-          if (count === 0) return null
-          const pct = (count / total) * 100
-          return (
-            <div
-              key={key}
-              className={`${bg} transition-all`}
-              style={{ width: `${pct}%` }}
-              title={`${label}: ${count}`}
-            />
-          )
-        })}
-      </div>
+      <span className="w-7 text-right text-xs text-muted-foreground">{total}</span>
     </div>
   )
 }
