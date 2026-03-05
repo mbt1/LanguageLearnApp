@@ -8,11 +8,21 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const SESSION_SIZE_KEY = 'sessionSize'
-const DARK_MODE_KEY = 'darkMode'
+const THEME_KEY = 'theme'
+const REVIEW_SCHEDULE_KEY = 'showReviewSchedule'
 const DEFAULT_SESSION_SIZE = 20
+
+type Theme = 'auto' | 'light' | 'dark'
+const THEMES: Theme[] = ['auto', 'light', 'dark']
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
+}
+
+function resolveTheme(theme: Theme): boolean {
+  if (theme === 'dark') return true
+  if (theme === 'light') return false
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
 export function SettingsPage() {
@@ -21,10 +31,18 @@ export function SettingsPage() {
     return stored ? clamp(parseInt(stored, 10), 5, 100) : DEFAULT_SESSION_SIZE
   })
 
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    const stored = localStorage.getItem(DARK_MODE_KEY)
-    if (stored !== null) return stored === 'true'
-    return document.documentElement.classList.contains('dark')
+  const [showReviewSchedule, setShowReviewSchedule] = useState<boolean>(
+    () => localStorage.getItem(REVIEW_SCHEDULE_KEY) === 'true',
+  )
+
+  const [theme, setTheme] = useState<Theme>(() => {
+    const stored = localStorage.getItem(THEME_KEY)
+    if (stored === 'light' || stored === 'dark') return stored
+    // Migrate legacy boolean key
+    const legacy = localStorage.getItem('darkMode')
+    if (legacy === 'true') return 'dark'
+    if (legacy === 'false') return 'light'
+    return 'auto'
   })
 
   useEffect(() => {
@@ -32,12 +50,29 @@ export function SettingsPage() {
   }, [sessionSize])
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode)
-    localStorage.setItem(DARK_MODE_KEY, String(darkMode))
-  }, [darkMode])
+    localStorage.setItem(REVIEW_SCHEDULE_KEY, String(showReviewSchedule))
+    window.dispatchEvent(new Event('settings-changed'))
+  }, [showReviewSchedule])
 
-  function toggleDarkMode() {
-    setDarkMode((prev) => !prev)
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', resolveTheme(theme))
+    localStorage.setItem(THEME_KEY, theme)
+    localStorage.removeItem('darkMode')
+  }, [theme])
+
+  // When theme is auto, listen for OS preference changes
+  useEffect(() => {
+    if (theme !== 'auto') return
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    function onChange() {
+      document.documentElement.classList.toggle('dark', mql.matches)
+    }
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [theme])
+
+  function cycleTheme() {
+    setTheme((prev) => THEMES[(THEMES.indexOf(prev) + 1) % THEMES.length])
   }
 
   return (
@@ -73,11 +108,48 @@ export function SettingsPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Theme</CardTitle>
+          <p className="text-muted-foreground text-sm">
+            Auto follows your operating system preference.
+          </p>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" aria-pressed={darkMode} onClick={toggleDarkMode}>
-            {darkMode ? 'Switch to Light mode' : 'Switch to Dark mode'}
+          <div className="flex gap-2">
+            {THEMES.map((t) => (
+              <Button
+                key={t}
+                variant={theme === t ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTheme(t)}
+                aria-pressed={theme === t}
+              >
+                {t === 'auto' ? 'Auto' : t === 'light' ? 'Light' : 'Dark'}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Developer tools */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Developer tools</CardTitle>
+          <p className="text-muted-foreground text-sm">
+            Advanced features for power users.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            aria-pressed={showReviewSchedule}
+            onClick={() => setShowReviewSchedule((prev) => !prev)}
+          >
+            {showReviewSchedule ? 'Hide Review Schedule' : 'Show Review Schedule'}
           </Button>
+          {showReviewSchedule && (
+            <p className="text-muted-foreground mt-2 text-sm">
+              The Review Schedule page is now available in the navigation menu.
+            </p>
+          )}
         </CardContent>
       </Card>
 

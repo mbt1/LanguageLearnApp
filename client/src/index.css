@@ -122,3 +122,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Override browser autofill — must be outside @layer and use !important
+   because Chrome's UA autofill styles are !important */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--card) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Password managers (e.g. 1Password) force a themed background on filled inputs.
+   When the user overrides light/dark manually, the fill may mismatch the app theme.
+   Ensure text contrast matches the forced background, not the app theme. */
+.dark input[data-com-onepassword-filled="light"] {
+  -webkit-text-fill-color: #000 !important;
+  color: #000 !important;
+}
+:root:not(.dark) input[data-com-onepassword-filled="dark"] {
+  -webkit-text-fill-color: #fff !important;
+  color: #fff !important;
+}

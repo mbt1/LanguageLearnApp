@@ -848,6 +848,55 @@
         ]
       }
     },
+    "/v1/review-schedule/{course_id}": {
+      "get": {
+        "tags": [
+          "study"
+        ],
+        "summary": "Get Review Schedule",
+        "description": "Return full SRS detail for all concepts the user has started in a course.",
+        "operationId": "get_review_schedule_v1_review_schedule__course_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewScheduleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/health": {
       "get": {
         "summary": "Health",
@@ -1081,6 +1130,110 @@
           "exercises"
         ],
         "title": "ConceptImport"
+      },
+      "ConceptProgressDetail": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Concept Id"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "concept_type": {
+            "$ref": "#/components/schemas/ConceptType"
+          },
+          "cefr_level": {
+            "$ref": "#/components/schemas/CefrLevel"
+          },
+          "current_exercise_difficulty": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "consecutive_correct": {
+            "type": "integer",
+            "title": "Consecutive Correct"
+          },
+          "is_mastered": {
+            "type": "boolean",
+            "title": "Is Mastered"
+          },
+          "fsrs_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsrs State"
+          },
+          "fsrs_stability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsrs Stability"
+          },
+          "fsrs_difficulty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsrs Difficulty"
+          },
+          "fsrs_due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsrs Due"
+          },
+          "fsrs_last_review": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsrs Last Review"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "prompt",
+          "target",
+          "concept_type",
+          "cefr_level",
+          "current_exercise_difficulty",
+          "consecutive_correct",
+          "is_mastered"
+        ],
+        "title": "ConceptProgressDetail",
+        "description": "Full SRS detail for a single concept the user has started."
       },
       "ConceptSummary": {
         "properties": {
@@ -1949,6 +2102,28 @@
           "mastery_changed"
         ],
         "title": "ReviewResponse"
+      },
+      "ReviewScheduleResponse": {
+        "properties": {
+          "course_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Course Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptProgressDetail"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_id",
+          "items"
+        ],
+        "title": "ReviewScheduleResponse"
       },
       "StudySessionItem": {
         "properties": {

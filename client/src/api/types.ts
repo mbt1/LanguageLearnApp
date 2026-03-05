@@ -45,5 +45,9 @@ export type CourseProgressResponse = components['schemas']['CourseProgressRespon
 export type ExerciseSubmitRequest = components['schemas']['ExerciseSubmitRequest']
 export type ExerciseSubmitResponse = components['schemas']['ExerciseSubmitResponse']
 
+// Review schedule
+export type ConceptProgressDetail = components['schemas']['ConceptProgressDetail']
+export type ReviewScheduleResponse = components['schemas']['ReviewScheduleResponse']
+
 // Re-export full types for future openapi-fetch usage
 export type { paths, components } from './types.gen'

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 LanguageLearn Contributors
 
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/AuthContext'
@@ -9,6 +10,17 @@ import { Button } from '@/components/ui/button'
 
 export function NavShell() {
   const { user, logout } = useAuth()
+  const [showReviewSchedule, setShowReviewSchedule] = useState(
+    () => localStorage.getItem('showReviewSchedule') === 'true',
+  )
+
+  useEffect(() => {
+    function onSettingsChange() {
+      setShowReviewSchedule(localStorage.getItem('showReviewSchedule') === 'true')
+    }
+    window.addEventListener('settings-changed', onSettingsChange)
+    return () => window.removeEventListener('settings-changed', onSettingsChange)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,6 +47,16 @@ export function NavShell() {
             >
               Settings
             </NavLink>
+            {showReviewSchedule && (
+              <NavLink
+                to="/review-schedule"
+                className={({ isActive }) =>
+                  isActive ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'
+                }
+              >
+                Schedule
+              </NavLink>
+            )}
           </nav>
           <div className="ml-auto">
             <Button variant="outline" size="sm" onClick={() => void logout()}>

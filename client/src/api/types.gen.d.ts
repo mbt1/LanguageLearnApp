@@ -406,9 +406,29 @@ export interface paths {
         };
         /**
          * Get All Progress
-         * @description Return mastery progress for every course in a single query.
+         * @description Return progress for every course from precalculated cache.
          */
         get: operations["get_all_progress_v1_progress_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/review-schedule/{course_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Review Schedule
+         * @description Return full SRS detail for all concepts the user has started in a course.
+         */
+        get: operations["get_review_schedule_v1_review_schedule__course_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -506,6 +526,38 @@ export interface components {
             prerequisites?: string[] | null;
             /** Exercises */
             exercises: components["schemas"]["ExerciseImport"][];
+        };
+        /**
+         * ConceptProgressDetail
+         * @description Full SRS detail for a single concept the user has started.
+         */
+        ConceptProgressDetail: {
+            /**
+             * Concept Id
+             * Format: uuid
+             */
+            concept_id: string;
+            /** Prompt */
+            prompt: string;
+            /** Target */
+            target: string;
+            concept_type: components["schemas"]["ConceptType"];
+            cefr_level: components["schemas"]["CefrLevel"];
+            current_exercise_difficulty: components["schemas"]["ExerciseType"];
+            /** Consecutive Correct */
+            consecutive_correct: number;
+            /** Is Mastered */
+            is_mastered: boolean;
+            /** Fsrs State */
+            fsrs_state?: string | null;
+            /** Fsrs Stability */
+            fsrs_stability?: number | null;
+            /** Fsrs Difficulty */
+            fsrs_difficulty?: number | null;
+            /** Fsrs Due */
+            fsrs_due?: string | null;
+            /** Fsrs Last Review */
+            fsrs_last_review?: string | null;
         };
         /** ConceptSummary */
         ConceptSummary: {
@@ -852,6 +904,16 @@ export interface components {
             difficulty_advanced: boolean;
             /** Mastery Changed */
             mastery_changed: boolean;
+        };
+        /** ReviewScheduleResponse */
+        ReviewScheduleResponse: {
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Items */
+            items: components["schemas"]["ConceptProgressDetail"][];
         };
         /** StudySessionItem */
         StudySessionItem: {
@@ -1544,6 +1606,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AllProgressResponse"];
+                };
+            };
+        };
+    };
+    get_review_schedule_v1_review_schedule__course_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewScheduleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

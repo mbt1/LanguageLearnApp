@@ -5,12 +5,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/api/client', () => ({
   apiRequest: vi.fn(),
+  cachedGet: vi.fn(),
+  invalidateCache: vi.fn(),
 }))
 
-import { getCourseProgress, studySession, submitExercise } from '@/api/study'
-import { apiRequest } from '@/api/client'
+import { getCourseProgress, getReviewSchedule, studySession, submitExercise } from '@/api/study'
+import { apiRequest, cachedGet } from '@/api/client'
 
 const mockApiRequest = vi.mocked(apiRequest)
+const mockCachedGet = vi.mocked(cachedGet)
 
 describe('studySession', () => {
   beforeEach(() => {
@@ -79,10 +82,24 @@ describe('getCourseProgress', () => {
   })
 
   it('gets from /v1/progress/:courseId', async () => {
-    mockApiRequest.mockResolvedValueOnce({ course_id: 'course-1', items: [] })
+    mockCachedGet.mockResolvedValueOnce({ course_id: 'course-1', items: [] })
 
     await getCourseProgress('course-1')
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/v1/progress/course-1')
+    expect(mockCachedGet).toHaveBeenCalledWith('/v1/progress/course-1')
+  })
+})
+
+describe('getReviewSchedule', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('gets from /v1/review-schedule/:courseId', async () => {
+    mockApiRequest.mockResolvedValueOnce({ course_id: 'course-1', items: [] })
+
+    await getReviewSchedule('course-1')
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/v1/review-schedule/course-1')
   })
 })

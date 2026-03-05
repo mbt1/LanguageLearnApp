@@ -7,6 +7,7 @@ import type {
   CourseProgressResponse,
   ExerciseSubmitRequest,
   ExerciseSubmitResponse,
+  ReviewScheduleResponse,
   StudySessionResponse,
 } from './types'
 
@@ -47,4 +48,8 @@ export async function getAllProgress(): Promise<Record<string, CefrProgressItem[
     map[c.course_id] = c.levels
   }
   return map
+}
+
+export async function getReviewSchedule(courseId: string): Promise<ReviewScheduleResponse> {
+  return apiRequest<ReviewScheduleResponse>(`/v1/review-schedule/${courseId}`)
 }

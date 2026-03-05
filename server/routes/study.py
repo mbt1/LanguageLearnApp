@@ -24,6 +24,7 @@ from db.queries.progress import (
     get_prerequisite_difficulties_batch,
     get_progress,
     list_all_active_progress,
+    list_all_progress_detail,
     list_due_reviews,
     list_new_concepts,
     read_all_progress_summary,
@@ -44,9 +45,11 @@ from srs.scheduler import (
 from srs.schemas import (
     AllProgressResponse,
     CefrProgressItem,
+    ConceptProgressDetail,
     CourseProgressResponse,
     ReviewRequest,
     ReviewResponse,
+    ReviewScheduleResponse,
     StudySessionItem,
     StudySessionRequest,
     StudySessionResponse,
@@ -347,3 +350,41 @@ async def get_all_progress(
             for cid, levels in courses_map.items()
         ],
     )
+
+
+# ── GET /v1/review-schedule/{course_id} ──────────────────
+
+
+@router.get("/v1/review-schedule/{course_id}", response_model=ReviewScheduleResponse)
+async def get_review_schedule(
+    course_id: UUID,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    conn: Annotated[AsyncConnection, Depends(get_conn)],  # pyright: ignore[reportMissingTypeArgument]
+) -> ReviewScheduleResponse:
+    """Return full SRS detail for all concepts the user has started in a course."""
+    course = await get_course(conn, course_id=course_id)
+    if course is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+
+    rows = await list_all_progress_detail(
+        conn, user_id=current_user.user_id, course_id=course_id,
+    )
+    items = [
+        ConceptProgressDetail(
+            concept_id=row["concept_id"],
+            prompt=row["prompt"],
+            target=row["target"],
+            concept_type=row["concept_type"],
+            cefr_level=row["cefr_level"],
+            current_exercise_difficulty=row["current_exercise_difficulty"],
+            consecutive_correct=row["consecutive_correct"],
+            is_mastered=row["is_mastered"],
+            fsrs_state=row["fsrs_state"],
+            fsrs_stability=row["fsrs_stability"],
+            fsrs_difficulty=row["fsrs_difficulty"],
+            fsrs_due=row["fsrs_due"],
+            fsrs_last_review=row["fsrs_last_review"],
+        )
+        for row in rows
+    ]
+    return ReviewScheduleResponse(course_id=course_id, items=items)

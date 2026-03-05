@@ -11,6 +11,7 @@ import { RegisterPage } from '@/pages/RegisterPage'
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage'
 import { CourseListPage } from '@/pages/CourseListPage'
 import { LearnPage } from '@/pages/LearnPage'
+import { ReviewSchedulePage } from '@/pages/ReviewSchedulePage'
 import { SettingsPage } from '@/pages/SettingsPage'
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/" element={<CourseListPage />} />
             <Route path="/learn/:courseId" element={<LearnPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/review-schedule" element={<ReviewSchedulePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

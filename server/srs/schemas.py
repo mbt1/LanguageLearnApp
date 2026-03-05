@@ -104,3 +104,28 @@ class CourseProgressResponse(BaseModel):
 
 class AllProgressResponse(BaseModel):
     courses: list[CourseProgressResponse]
+
+
+# ── Review schedule ──────────────────────────────────────
+
+
+class ConceptProgressDetail(BaseModel):
+    """Full SRS detail for a single concept the user has started."""
+    concept_id: UUID
+    prompt: str
+    target: str
+    concept_type: ConceptType
+    cefr_level: CefrLevel
+    current_exercise_difficulty: ExerciseType
+    consecutive_correct: int
+    is_mastered: bool
+    fsrs_state: str | None = None
+    fsrs_stability: float | None = None
+    fsrs_difficulty: float | None = None
+    fsrs_due: datetime | None = None
+    fsrs_last_review: datetime | None = None
+
+
+class ReviewScheduleResponse(BaseModel):
+    course_id: UUID
+    items: list[ConceptProgressDetail]
