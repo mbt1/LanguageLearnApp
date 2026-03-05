@@ -2,7 +2,7 @@
 // Copyright 2026 LanguageLearn Contributors
 
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { getErrorMessage } from '@/api/client'
 import { submitExercise, studySession } from '@/api/study'
@@ -13,11 +13,14 @@ import { FeedbackPanel } from '@/components/exercises/FeedbackPanel'
 import { MultipleChoiceExercise } from '@/components/exercises/MultipleChoiceExercise'
 import { SessionSummary } from '@/components/exercises/SessionSummary'
 import { TypingExercise } from '@/components/exercises/TypingExercise'
+import { Button } from '@/components/ui/button'
 
 type State = 'loading' | 'exercise' | 'feedback' | 'summary' | 'error'
 
 export function LearnPage() {
   const { courseId } = useParams<{ courseId: string }>()
+  const [searchParams] = useSearchParams()
+  const conceptId = searchParams.get('conceptId')
   const navigate = useNavigate()
 
   const [state, setState] = useState<State>('loading')
@@ -31,7 +34,8 @@ export function LearnPage() {
     if (!courseId) return
     const sessionSize = parseInt(localStorage.getItem('sessionSize') ?? '20', 10)
 
-    studySession(courseId, sessionSize)
+    const conceptIds = conceptId ? [conceptId] : undefined
+    studySession(courseId, sessionSize, conceptIds)
       .then((s) => {
         setSession(s)
         if (s.items.length === 0) {
@@ -44,7 +48,7 @@ export function LearnPage() {
         setError(getErrorMessage(err, 'Failed to load session. Please try again.'))
         setState('error')
       })
-  }, [courseId])
+  }, [courseId, conceptId])
 
   async function handleAnswer(userAnswer: string) {
     const current = session?.items[index]
@@ -78,7 +82,11 @@ export function LearnPage() {
   }
 
   function handleFinish() {
-    void navigate('/')
+    void navigate(conceptId ? '/review-schedule' : '/')
+  }
+
+  function handleCancel() {
+    void navigate(conceptId ? '/review-schedule' : '/')
   }
 
   // Memoize MC options so they don't reshuffle on exercise→feedback transition
@@ -122,6 +130,11 @@ export function LearnPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground text-sm">{progress}</p>
+        {state === 'exercise' && (
+          <Button variant="ghost" size="sm" onClick={handleCancel}>
+            Cancel
+          </Button>
+        )}
       </div>
 
       {item.exercise_type === 'multiple_choice' && (

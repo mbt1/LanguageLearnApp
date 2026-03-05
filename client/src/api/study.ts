@@ -14,12 +14,14 @@ import type {
 export async function studySession(
   courseId: string,
   sessionSize?: number,
+  conceptIds?: string[],
 ): Promise<StudySessionResponse> {
   const resp = await apiRequest<StudySessionResponse>('/v1/study/session', {
     method: 'POST',
     body: JSON.stringify({
       course_id: courseId,
       ...(sessionSize !== undefined ? { session_size: sessionSize } : {}),
+      ...(conceptIds !== undefined ? { concept_ids: conceptIds } : {}),
     }),
   })
   invalidateCache('/v1/progress')

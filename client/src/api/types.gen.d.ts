@@ -529,7 +529,7 @@ export interface components {
         };
         /**
          * ConceptProgressDetail
-         * @description Full SRS detail for a single concept the user has started.
+         * @description Full SRS detail for a single concept (started or unstarted).
          */
         ConceptProgressDetail: {
             /**
@@ -543,11 +543,11 @@ export interface components {
             target: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
-            current_exercise_difficulty: components["schemas"]["ExerciseType"];
+            current_exercise_difficulty?: components["schemas"]["ExerciseType"] | null;
             /** Consecutive Correct */
-            consecutive_correct: number;
+            consecutive_correct?: number | null;
             /** Is Mastered */
-            is_mastered: boolean;
+            is_mastered?: boolean | null;
             /** Fsrs State */
             fsrs_state?: string | null;
             /** Fsrs Stability */
@@ -954,6 +954,11 @@ export interface components {
              * @default 20
              */
             session_size: number;
+            /**
+             * Concept Ids
+             * @description Optional list of specific concept IDs for a targeted session.
+             */
+            concept_ids?: string[] | null;
         };
         /** StudySessionResponse */
         StudySessionResponse: {

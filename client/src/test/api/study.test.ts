@@ -41,6 +41,17 @@ describe('studySession', () => {
       body: JSON.stringify({ course_id: 'course-abc', session_size: 10 }),
     })
   })
+
+  it('includes concept_ids when provided', async () => {
+    mockApiRequest.mockResolvedValueOnce({ items: [], total_due_reviews: 0, new_concepts_added: 0 })
+
+    await studySession('course-abc', undefined, ['concept-1', 'concept-2'])
+
+    expect(mockApiRequest).toHaveBeenCalledWith('/v1/study/session', {
+      method: 'POST',
+      body: JSON.stringify({ course_id: 'course-abc', concept_ids: ['concept-1', 'concept-2'] }),
+    })
+  })
 })
 
 describe('submitExercise', () => {

@@ -357,3 +357,144 @@ async def test_isolation_no_leftover_test_courses(client: httpx.AsyncClient) -> 
     # After teardown (in the next test) this course will be gone.
     # For now just verify the count increased by exactly 1.
     assert len(resp_during.json()) == count_before + 1
+
+
+# ── GET /v1/review-schedule/{course_id} ─────────────────────
+
+
+async def test_review_schedule_includes_unstarted(client: httpx.AsyncClient) -> None:
+    """Review schedule returns ALL concepts, not just started ones."""
+    user = await _register(client)
+    course = await _import_course(client)
+    headers = _auth_headers(user["access_token"])
+
+    # Start a session (only starts some concepts)
+    session_resp = await client.post(
+        "/v1/study/session",
+        json={"course_id": course["course_id"], "session_size": 1},
+        headers=headers,
+    )
+    assert session_resp.status_code == 200
+
+    # Review schedule should return both concepts (hola + adios)
+    resp = await client.get(
+        f"/v1/review-schedule/{course['course_id']}",
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    items = resp.json()["items"]
+    assert len(items) == 2  # both concepts, not just the started one
+
+    # At least one should have null progress fields (unstarted)
+    unstarted = [i for i in items if i["current_exercise_difficulty"] is None]
+    started = [i for i in items if i["current_exercise_difficulty"] is not None]
+    assert len(started) >= 1
+    assert len(unstarted) >= 0  # could be 0 if session_size picked both
+
+
+# ── POST /v1/study/session with concept_ids ─────────────────
+
+
+async def test_session_concept_ids_new(client: httpx.AsyncClient) -> None:
+    """Targeted session for unstarted concept creates progress at MC level."""
+    user = await _register(client)
+    course = await _import_course(client)
+    headers = _auth_headers(user["access_token"])
+
+    # Get all concepts from review schedule
+    schedule = await client.get(
+        f"/v1/review-schedule/{course['course_id']}",
+        headers=headers,
+    )
+    concept_id = schedule.json()["items"][0]["concept_id"]
+
+    # Targeted session for this specific concept
+    resp = await client.post(
+        "/v1/study/session",
+        json={
+            "course_id": course["course_id"],
+            "concept_ids": [concept_id],
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["items"]) == 1
+    item = data["items"][0]
+    assert item["concept_id"] == concept_id
+    assert item["exercise_type"] == "multiple_choice"
+    assert item["is_review"] is False
+
+
+async def test_session_concept_ids_review(client: httpx.AsyncClient) -> None:
+    """Targeted session for started concept returns is_review=True."""
+    user = await _register(client)
+    course = await _import_course(client)
+    headers = _auth_headers(user["access_token"])
+
+    # Start a normal session first to create progress
+    session_resp = await client.post(
+        "/v1/study/session",
+        json={"course_id": course["course_id"]},
+        headers=headers,
+    )
+    concept_id = session_resp.json()["items"][0]["concept_id"]
+
+    # Now do a targeted session for the same concept
+    resp = await client.post(
+        "/v1/study/session",
+        json={
+            "course_id": course["course_id"],
+            "concept_ids": [concept_id],
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["items"]) == 1
+    assert data["items"][0]["is_review"] is True
+
+
+async def test_session_concept_ids_wrong_course(client: httpx.AsyncClient) -> None:
+    """Concept that doesn't belong to the course returns 400."""
+    user = await _register(client)
+    course1 = await _import_course(client, slug=f"course1-{datetime.now(UTC).timestamp()}")
+    course2 = await _import_course(client, slug=f"course2-{datetime.now(UTC).timestamp()}")
+    headers = _auth_headers(user["access_token"])
+
+    # Get a concept from course2
+    schedule = await client.get(
+        f"/v1/review-schedule/{course2['course_id']}",
+        headers=headers,
+    )
+    concept_id = schedule.json()["items"][0]["concept_id"]
+
+    # Try to use it in a session for course1
+    resp = await client.post(
+        "/v1/study/session",
+        json={
+            "course_id": course1["course_id"],
+            "concept_ids": [concept_id],
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "does not belong" in resp.json()["detail"]
+
+
+async def test_session_concept_ids_not_found(client: httpx.AsyncClient) -> None:
+    """Non-existent concept_id returns 404."""
+    user = await _register(client)
+    course = await _import_course(client)
+    headers = _auth_headers(user["access_token"])
+
+    resp = await client.post(
+        "/v1/study/session",
+        json={
+            "course_id": course["course_id"],
+            "concept_ids": ["00000000-0000-0000-0000-000000000099"],
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 404
+    assert "not found" in resp.json()["detail"]

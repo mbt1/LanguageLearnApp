@@ -211,12 +211,17 @@ async def list_all_progress_detail(
     user_id: UUID,
     course_id: UUID,
 ) -> list[dict[str, Any]]:
-    """Fetch all progress rows for a user in a course, joined with concept data."""
+    """Fetch all concepts in a course with optional progress for the user."""
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
             SELECT
-                ucp.concept_id,
+                c.id AS concept_id,
+                c.prompt,
+                c.target,
+                c.concept_type,
+                c.cefr_level,
+                c.sequence,
                 ucp.current_exercise_difficulty,
                 ucp.consecutive_correct,
                 ucp.fsrs_state,
@@ -224,16 +229,11 @@ async def list_all_progress_detail(
                 ucp.fsrs_difficulty,
                 ucp.fsrs_due,
                 ucp.fsrs_last_review,
-                ucp.is_mastered,
-                c.prompt,
-                c.target,
-                c.concept_type,
-                c.cefr_level,
-                c.sequence
-            FROM user_concept_progress ucp
-            JOIN concepts c ON c.id = ucp.concept_id
-            WHERE ucp.user_id = %(user_id)s
-              AND c.course_id = %(course_id)s
+                ucp.is_mastered
+            FROM concepts c
+            LEFT JOIN user_concept_progress ucp
+                ON ucp.concept_id = c.id AND ucp.user_id = %(user_id)s
+            WHERE c.course_id = %(course_id)s
             ORDER BY c.cefr_level, c.sequence
             """,
             {"user_id": user_id, "course_id": course_id},

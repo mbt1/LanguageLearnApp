@@ -15,6 +15,7 @@ from content.schemas import CefrLevel, ConceptType, ExerciseType  # noqa: TC001
 class StudySessionRequest(BaseModel):
     course_id: UUID
     session_size: int = Field(default=20, ge=1, le=100)
+    concept_ids: list[UUID] | None = None
 
 
 class StudySessionItem(BaseModel):
@@ -110,15 +111,15 @@ class AllProgressResponse(BaseModel):
 
 
 class ConceptProgressDetail(BaseModel):
-    """Full SRS detail for a single concept the user has started."""
+    """Full SRS detail for a single concept (started or unstarted)."""
     concept_id: UUID
     prompt: str
     target: str
     concept_type: ConceptType
     cefr_level: CefrLevel
-    current_exercise_difficulty: ExerciseType
-    consecutive_correct: int
-    is_mastered: bool
+    current_exercise_difficulty: ExerciseType | None = None
+    consecutive_correct: int | None = None
+    is_mastered: bool | None = None
     fsrs_state: str | None = None
     fsrs_stability: float | None = None
     fsrs_difficulty: float | None = None

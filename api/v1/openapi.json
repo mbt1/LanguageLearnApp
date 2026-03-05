@@ -1153,14 +1153,35 @@
             "$ref": "#/components/schemas/CefrLevel"
           },
           "current_exercise_difficulty": {
-            "$ref": "#/components/schemas/ExerciseType"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExerciseType"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "consecutive_correct": {
-            "type": "integer",
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Consecutive Correct"
           },
           "is_mastered": {
-            "type": "boolean",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Is Mastered"
           },
           "fsrs_state": {
@@ -1227,13 +1248,10 @@
           "prompt",
           "target",
           "concept_type",
-          "cefr_level",
-          "current_exercise_difficulty",
-          "consecutive_correct",
-          "is_mastered"
+          "cefr_level"
         ],
         "title": "ConceptProgressDetail",
-        "description": "Full SRS detail for a single concept the user has started."
+        "description": "Full SRS detail for a single concept (started or unstarted)."
       },
       "ConceptSummary": {
         "properties": {
@@ -2238,6 +2256,21 @@
             "minimum": 1.0,
             "title": "Session Size",
             "default": 20
+          },
+          "concept_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concept Ids"
           }
         },
         "type": "object",

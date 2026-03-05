@@ -12,7 +12,7 @@ from psycopg import AsyncConnection
 
 from auth.dependencies import get_current_user
 from auth.schemas import CurrentUser  # noqa: TC001
-from content.schemas import CefrLevel, ExerciseType
+from content.schemas import CefrLevel, ConceptType, ExerciseType
 from dataclasses import replace
 
 from db.pool import get_conn
@@ -77,29 +77,73 @@ async def create_study_session(
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
 
-    # Fetch data for session building
-    due_reviews = await list_due_reviews(
-        conn, user_id=user_id, now=now, limit=request.session_size,
-    )
-    new_concepts = await list_new_concepts(
-        conn, user_id=user_id, course_id=course_id, limit=request.session_size,
-    )
-    all_active = await list_all_active_progress(conn, user_id=user_id, course_id=course_id)
+    if request.concept_ids is not None:
+        # ── Targeted session: specific concepts only ──
+        if len(request.concept_ids) > request.session_size:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Too many concept_ids for session_size",
+            )
+        items: list[SessionItem] = []
+        for cid in request.concept_ids:
+            concept = await get_concept(conn, concept_id=cid)
+            if concept is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Concept {cid} not found",
+                )
+            if concept["course_id"] != course_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Concept {cid} does not belong to course",
+                )
+            progress = await get_progress(conn, user_id=user_id, concept_id=cid)
+            if progress:
+                prereq_rows = await get_prerequisite_difficulties(
+                    conn, user_id=user_id, concept_id=cid,
+                )
+                prereq_types = [ExerciseType(r["current_exercise_difficulty"]) for r in prereq_rows]
+                ex_type = compute_capped_difficulty(
+                    ExerciseType(progress["current_exercise_difficulty"]), prereq_types,
+                )
+                items.append(SessionItem(
+                    concept_id=cid, exercise_type=ex_type, is_review=True,
+                    prompt=concept["prompt"], target=concept["target"],
+                    concept_type=ConceptType(concept["concept_type"]),
+                    cefr_level=CefrLevel(concept["cefr_level"]),
+                    explanation=concept.get("explanation"),
+                ))
+            else:
+                items.append(SessionItem(
+                    concept_id=cid, exercise_type=ExerciseType.multiple_choice,
+                    is_review=False,
+                    prompt=concept["prompt"], target=concept["target"],
+                    concept_type=ConceptType(concept["concept_type"]),
+                    cefr_level=CefrLevel(concept["cefr_level"]),
+                    explanation=concept.get("explanation"),
+                ))
+    else:
+        # ── Normal session: algorithmic selection ──
+        due_reviews = await list_due_reviews(
+            conn, user_id=user_id, now=now, limit=request.session_size,
+        )
+        new_concepts = await list_new_concepts(
+            conn, user_id=user_id, course_id=course_id, limit=request.session_size,
+        )
+        all_active = await list_all_active_progress(conn, user_id=user_id, course_id=course_id)
 
-    # Batch fetch prerequisite difficulties for due reviews
-    review_concept_ids = [r["concept_id"] for r in due_reviews]
-    prereq_map = await get_prerequisite_difficulties_batch(
-        conn, user_id=user_id, concept_ids=review_concept_ids,
-    )
+        review_concept_ids = [r["concept_id"] for r in due_reviews]
+        prereq_map = await get_prerequisite_difficulties_batch(
+            conn, user_id=user_id, concept_ids=review_concept_ids,
+        )
 
-    # Build session
-    items = build_session(
-        due_reviews=due_reviews,
-        new_concepts=new_concepts,
-        prereq_difficulties=prereq_map,
-        all_active_progress=all_active,
-        session_size=request.session_size,
-    )
+        items = build_session(
+            due_reviews=due_reviews,
+            new_concepts=new_concepts,
+            prereq_difficulties=prereq_map,
+            all_active_progress=all_active,
+            session_size=request.session_size,
+        )
 
     # Batch fetch exercise-specific data (distractors, sentence_template, exercise_id)
     exercise_keys = [(item.concept_id, item.exercise_type.value) for item in items]
@@ -138,9 +182,14 @@ async def create_study_session(
         )
     await conn.commit()
 
+    review_count = (
+        sum(1 for i in items if i.is_review)
+        if request.concept_ids is not None
+        else len(due_reviews)
+    )
     return StudySessionResponse(
         items=_items_to_response(items),
-        total_due_reviews=len(due_reviews),
+        total_due_reviews=review_count,
         new_concepts_added=len(new_items),
     )
 

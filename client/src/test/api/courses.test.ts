@@ -5,12 +5,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/api/client', () => ({
   apiRequest: vi.fn(),
+  cachedGet: vi.fn(),
+  invalidateCache: vi.fn(),
 }))
 
 import { listCourses } from '@/api/courses'
-import { apiRequest } from '@/api/client'
+import { cachedGet } from '@/api/client'
 
-const mockApiRequest = vi.mocked(apiRequest)
+const mockCachedGet = vi.mocked(cachedGet)
 
 describe('listCourses', () => {
   beforeEach(() => {
@@ -18,11 +20,11 @@ describe('listCourses', () => {
   })
 
   it('gets from /v1/courses', async () => {
-    mockApiRequest.mockResolvedValueOnce([])
+    mockCachedGet.mockResolvedValueOnce([])
 
     await listCourses()
 
-    expect(mockApiRequest).toHaveBeenCalledWith('/v1/courses')
+    expect(mockCachedGet).toHaveBeenCalledWith('/v1/courses')
   })
 
   it('returns the course list from the API', async () => {
@@ -36,7 +38,7 @@ describe('listCourses', () => {
         created_at: '2026-01-01T00:00:00Z',
       },
     ]
-    mockApiRequest.mockResolvedValueOnce(courses)
+    mockCachedGet.mockResolvedValueOnce(courses)
 
     const result = await listCourses()
 

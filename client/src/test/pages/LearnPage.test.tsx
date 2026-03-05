@@ -40,12 +40,16 @@ const mockResult = {
   mastery_changed: false,
 }
 
-function renderPage(courseId = 'course-1') {
+function renderPage(courseId = 'course-1', conceptId?: string) {
+  const path = conceptId
+    ? `/learn/${courseId}?conceptId=${conceptId}`
+    : `/learn/${courseId}`
   return render(
-    <MemoryRouter initialEntries={[`/learn/${courseId}`]}>
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/learn/:courseId" element={<LearnPage />} />
         <Route path="/" element={<div>courses page</div>} />
+        <Route path="/review-schedule" element={<div>review schedule page</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -137,5 +141,59 @@ describe('LearnPage', () => {
 
     expect(await screen.findByText('Translate: hello')).toBeInTheDocument()
     expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  it('passes conceptIds to studySession when conceptId query param set', async () => {
+    vi.mocked(studyApi.studySession).mockResolvedValue({
+      items: [mockItem],
+      total_due_reviews: 0,
+      new_concepts_added: 1,
+    })
+
+    renderPage('course-1', 'concept-42')
+
+    await screen.findByText("Choose 'hello'")
+    expect(studyApi.studySession).toHaveBeenCalledWith('course-1', 20, ['concept-42'])
+  })
+
+  it('shows cancel button during exercise state', async () => {
+    vi.mocked(studyApi.studySession).mockResolvedValue({
+      items: [mockItem],
+      total_due_reviews: 0,
+      new_concepts_added: 0,
+    })
+
+    renderPage()
+
+    await screen.findByText("Choose 'hello'")
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+  })
+
+  it('cancel navigates to review schedule for targeted session', async () => {
+    const user = userEvent.setup()
+    vi.mocked(studyApi.studySession).mockResolvedValue({
+      items: [mockItem],
+      total_due_reviews: 0,
+      new_concepts_added: 1,
+    })
+
+    renderPage('course-1', 'concept-42')
+
+    await user.click(await screen.findByRole('button', { name: /cancel/i }))
+    expect(screen.getByText('review schedule page')).toBeInTheDocument()
+  })
+
+  it('cancel navigates to home for normal session', async () => {
+    const user = userEvent.setup()
+    vi.mocked(studyApi.studySession).mockResolvedValue({
+      items: [mockItem],
+      total_due_reviews: 0,
+      new_concepts_added: 0,
+    })
+
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: /cancel/i }))
+    expect(screen.getByText('courses page')).toBeInTheDocument()
   })
 })

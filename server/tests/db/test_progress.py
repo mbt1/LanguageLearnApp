@@ -15,6 +15,7 @@ from db.queries.progress import (
     get_progress,
     get_progress_summary,
     list_all_active_progress,
+    list_all_progress_detail,
     list_due_reviews,
     list_new_concepts,
     upsert_progress,
@@ -288,3 +289,42 @@ async def test_get_progress_summary(
     assert row["total_concepts"] == 2
     assert row["mastered"] == 1
     assert row["seen"] == 1  # c2 defaults to multiple_choice, not mastered
+
+
+# ── list_all_progress_detail ─────────────────────────────────
+
+async def test_list_all_progress_detail_includes_unstarted(
+    db_conn: AsyncConnection, user: dict, course: dict,
+) -> None:
+    """LEFT JOIN returns all concepts, including those without progress."""
+    c1 = await create_concept(
+        db_conn, course_id=course["id"], concept_type="vocabulary",
+        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+    )
+    c2 = await create_concept(
+        db_conn, course_id=course["id"], concept_type="vocabulary",
+        cefr_level="A1", sequence=2, prompt="goodbye", target="adiós",
+    )
+    # Start c1 only
+    await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"])
+
+    rows = await list_all_progress_detail(
+        db_conn, user_id=user["id"], course_id=course["id"],
+    )
+    assert len(rows) == 2
+    by_id = {r["concept_id"]: r for r in rows}
+
+    # Started concept has progress fields populated
+    started = by_id[c1["id"]]
+    assert started["current_exercise_difficulty"] == "multiple_choice"
+    assert started["consecutive_correct"] == 0
+    assert started["is_mastered"] is False
+
+    # Unstarted concept has NULL progress fields
+    unstarted = by_id[c2["id"]]
+    assert unstarted["prompt"] == "goodbye"
+    assert unstarted["current_exercise_difficulty"] is None
+    assert unstarted["consecutive_correct"] is None
+    assert unstarted["is_mastered"] is None
+    assert unstarted["fsrs_state"] is None
+    assert unstarted["fsrs_due"] is None
