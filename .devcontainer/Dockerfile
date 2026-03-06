@@ -20,6 +20,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 # ---- Install all apt packages in one layer ----
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        imagemagick \
+        librsvg2-bin \
         nodejs \
         postgresql-client \
         powershell \
