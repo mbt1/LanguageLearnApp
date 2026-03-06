@@ -23,14 +23,16 @@ def _sample_course() -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "prompt": "hello",
-                "target": "hola",
+                "source_text": "hello",
+                "target_text": "hola",
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "Choose 'hello'",
-                        "correct_answer": "hola",
-                        "distractors": ["adiós", "gracias"],
+                        "ref": "hola-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "hola",
+                            "distractors_medium": ["adiós", "gracias"],
+                        },
                     }
                 ],
             },
@@ -39,15 +41,17 @@ def _sample_course() -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "prompt": "goodbye",
-                "target": "adiós",
+                "source_text": "goodbye",
+                "target_text": "adiós",
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "Choose 'goodbye'",
-                        "correct_answer": "adiós",
-                        "distractors": ["hola"],
+                        "ref": "adios-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "adiós",
+                            "distractors_medium": ["hola"],
+                        },
                     }
                 ],
             },

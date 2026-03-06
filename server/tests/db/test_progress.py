@@ -40,7 +40,7 @@ async def course(db_conn: AsyncConnection) -> dict[str, Any]:
 async def concept(db_conn: AsyncConnection, course: dict[str, Any]) -> dict[str, Any]:
     return await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        cefr_level="A1", sequence=1, ref="hello", source_text="hello", target_text="hola",
     )
 
 
@@ -50,8 +50,10 @@ async def test_upsert_progress_insert(
     progress = await upsert_progress(
         db_conn, user_id=user["id"], concept_id=concept["id"],
     )
-    assert progress["current_exercise_difficulty"] == "multiple_choice"
-    assert progress["consecutive_correct"] == 0
+    assert progress["forward_difficulty"] == "forward_mc"
+    assert progress["forward_consecutive_correct"] == 0
+    assert progress["reverse_difficulty"] == "reverse_mc"
+    assert progress["reverse_consecutive_correct"] == 0
     assert progress["is_mastered"] is False
     assert progress["fsrs_state"] is None
 
@@ -67,8 +69,10 @@ async def test_upsert_progress_update(
         db_conn,
         user_id=user["id"],
         concept_id=concept["id"],
-        current_exercise_difficulty="cloze",
-        consecutive_correct=3,
+        forward_difficulty="cloze",
+        forward_consecutive_correct=3,
+        reverse_difficulty="reverse_mc",
+        reverse_consecutive_correct=1,
         fsrs_state="learning",
         fsrs_step=1,
         fsrs_stability=2.5,
@@ -76,8 +80,10 @@ async def test_upsert_progress_update(
         fsrs_due=now + datetime.timedelta(days=1),
         fsrs_last_review=now,
     )
-    assert updated["current_exercise_difficulty"] == "cloze"
-    assert updated["consecutive_correct"] == 3
+    assert updated["forward_difficulty"] == "cloze"
+    assert updated["forward_consecutive_correct"] == 3
+    assert updated["reverse_difficulty"] == "reverse_mc"
+    assert updated["reverse_consecutive_correct"] == 1
     assert updated["fsrs_state"] == "learning"
     assert updated["fsrs_stability"] == pytest.approx(2.5)  # pyright: ignore[reportUnknownMemberType]
 
@@ -92,7 +98,7 @@ async def test_get_progress(
         db_conn, user_id=user["id"], concept_id=concept["id"],
     )
     assert progress is not None
-    assert progress["current_exercise_difficulty"] == "multiple_choice"
+    assert progress["forward_difficulty"] == "forward_mc"
 
 
 async def test_get_progress_not_found(
@@ -111,11 +117,11 @@ async def test_list_due_reviews(
     # Create two concepts — one due, one not
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        cefr_level="A1", sequence=1, ref="hello", source_text="hello", target_text="hola",
     )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="goodbye", target="adiós",
+        cefr_level="A1", sequence=2, ref="goodbye", source_text="goodbye", target_text="adios",
     )
     # c1 is due (past)
     await upsert_progress(
@@ -133,7 +139,7 @@ async def test_list_due_reviews(
     due = await list_due_reviews(db_conn, user_id=user["id"], now=now)
     assert len(due) == 1
     assert due[0]["concept_id"] == c1["id"]
-    assert due[0]["prompt"] == "hello"  # joined from concepts table
+    assert due[0]["source_text"] == "hello"  # joined from concepts table
 
 
 # ── get_prerequisite_difficulties ────────────────────────────
@@ -147,12 +153,12 @@ async def test_prerequisite_difficulties_no_prerequisites(
     assert rows == []
 
 
-async def test_prerequisite_difficulties_unstarted_defaults_to_multiple_choice(
+async def test_prerequisite_difficulties_unstarted_defaults_to_forward_mc(
     db_conn: AsyncConnection, user: dict, course: dict, concept: dict,
 ) -> None:
     prereq = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="bye", target="adiós",
+        cefr_level="A1", sequence=2, ref="bye", source_text="bye", target_text="adios",
     )
     await add_prerequisite(db_conn, concept_id=concept["id"], prerequisite_id=prereq["id"])
 
@@ -160,7 +166,8 @@ async def test_prerequisite_difficulties_unstarted_defaults_to_multiple_choice(
         db_conn, user_id=user["id"], concept_id=concept["id"],
     )
     assert len(rows) == 1
-    assert rows[0]["current_exercise_difficulty"] == "multiple_choice"
+    assert rows[0]["forward_difficulty"] == "forward_mc"
+    assert rows[0]["reverse_difficulty"] == "reverse_mc"
 
 
 async def test_prerequisite_difficulties_reflects_actual_progress(
@@ -168,18 +175,18 @@ async def test_prerequisite_difficulties_reflects_actual_progress(
 ) -> None:
     prereq = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="bye", target="adiós",
+        cefr_level="A1", sequence=2, ref="bye", source_text="bye", target_text="adios",
     )
     await add_prerequisite(db_conn, concept_id=concept["id"], prerequisite_id=prereq["id"])
     await upsert_progress(
         db_conn, user_id=user["id"], concept_id=prereq["id"],
-        current_exercise_difficulty="cloze",
+        forward_difficulty="cloze",
     )
 
     rows = await get_prerequisite_difficulties(
         db_conn, user_id=user["id"], concept_id=concept["id"],
     )
-    assert rows[0]["current_exercise_difficulty"] == "cloze"
+    assert rows[0]["forward_difficulty"] == "cloze"
 
 
 # ── get_prerequisite_difficulties_batch ──────────────────────
@@ -196,15 +203,15 @@ async def test_prerequisite_difficulties_batch_groups_by_concept(
 ) -> None:
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="a", target="a",
+        cefr_level="A1", sequence=1, ref="a", source_text="a", target_text="a",
     )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="b", target="b",
+        cefr_level="A1", sequence=2, ref="b", source_text="b", target_text="b",
     )
     child = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A2", sequence=1, prompt="c", target="c",
+        cefr_level="A2", sequence=1, ref="c", source_text="c", target_text="c",
     )
     await add_prerequisite(db_conn, concept_id=child["id"], prerequisite_id=c1["id"])
     await add_prerequisite(db_conn, concept_id=child["id"], prerequisite_id=c2["id"])
@@ -223,11 +230,11 @@ async def test_list_new_concepts_returns_unstarted(
 ) -> None:
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="a", target="a",
+        cefr_level="A1", sequence=1, ref="a", source_text="a", target_text="a",
     )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="b", target="b",
+        cefr_level="A1", sequence=2, ref="b", source_text="b", target_text="b",
     )
     # Start c1 but not c2
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"])
@@ -246,11 +253,11 @@ async def test_list_all_active_progress_excludes_null_due(
     now = datetime.datetime.now(tz=datetime.UTC)
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="a", target="a",
+        cefr_level="A1", sequence=1, ref="a", source_text="a", target_text="a",
     )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="b", target="b",
+        cefr_level="A1", sequence=2, ref="b", source_text="b", target_text="b",
     )
     # c1 has a due date, c2 does not
     await upsert_progress(
@@ -272,11 +279,11 @@ async def test_get_progress_summary(
 ) -> None:
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="a", target="a",
+        cefr_level="A1", sequence=1, ref="a", source_text="a", target_text="a",
     )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="b", target="b",
+        cefr_level="A1", sequence=2, ref="b", source_text="b", target_text="b",
     )
     # c1 mastered, c2 not
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"], is_mastered=True)
@@ -288,7 +295,7 @@ async def test_get_progress_summary(
     assert row["cefr_level"] == "A1"
     assert row["total_concepts"] == 2
     assert row["mastered"] == 1
-    assert row["seen"] == 1  # c2 defaults to multiple_choice, not mastered
+    assert row["seen"] == 1  # c2 defaults to forward_mc, not mastered
 
 
 # ── list_all_progress_detail ─────────────────────────────────
@@ -299,11 +306,11 @@ async def test_list_all_progress_detail_includes_unstarted(
     """LEFT JOIN returns all concepts, including those without progress."""
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        cefr_level="A1", sequence=1, ref="hello", source_text="hello", target_text="hola",
     )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="goodbye", target="adiós",
+        cefr_level="A1", sequence=2, ref="goodbye", source_text="goodbye", target_text="adios",
     )
     # Start c1 only
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"])
@@ -316,15 +323,19 @@ async def test_list_all_progress_detail_includes_unstarted(
 
     # Started concept has progress fields populated
     started = by_id[c1["id"]]
-    assert started["current_exercise_difficulty"] == "multiple_choice"
-    assert started["consecutive_correct"] == 0
+    assert started["forward_difficulty"] == "forward_mc"
+    assert started["forward_consecutive_correct"] == 0
+    assert started["reverse_difficulty"] == "reverse_mc"
+    assert started["reverse_consecutive_correct"] == 0
     assert started["is_mastered"] is False
 
     # Unstarted concept has NULL progress fields
     unstarted = by_id[c2["id"]]
-    assert unstarted["prompt"] == "goodbye"
-    assert unstarted["current_exercise_difficulty"] is None
-    assert unstarted["consecutive_correct"] is None
+    assert unstarted["source_text"] == "goodbye"
+    assert unstarted["forward_difficulty"] is None
+    assert unstarted["forward_consecutive_correct"] is None
+    assert unstarted["reverse_difficulty"] is None
+    assert unstarted["reverse_consecutive_correct"] is None
     assert unstarted["is_mastered"] is None
     assert unstarted["fsrs_state"] is None
     assert unstarted["fsrs_due"] is None

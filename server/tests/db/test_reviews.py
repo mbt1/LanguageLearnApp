@@ -29,7 +29,7 @@ async def course(db_conn: AsyncConnection) -> dict[str, Any]:
 async def concept(db_conn: AsyncConnection, course: dict[str, Any]) -> dict[str, Any]:
     return await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        cefr_level="A1", sequence=1, ref="hello", source_text="hello", target_text="hola",
     )
 
 
@@ -40,7 +40,7 @@ async def test_record_review(
         db_conn,
         user_id=user["id"],
         concept_id=concept["id"],
-        exercise_type="multiple_choice",
+        exercise_type="forward_mc",
         rating="good",
         correct=True,
         response="hola",
@@ -60,7 +60,7 @@ async def test_record_review_wrong_answer(
         db_conn,
         user_id=user["id"],
         concept_id=concept["id"],
-        exercise_type="typing",
+        exercise_type="forward_typing",
         rating="again",
         correct=False,
         response="holla",
@@ -75,7 +75,7 @@ async def test_get_review_history(
 ) -> None:
     await record_review(
         db_conn, user_id=user["id"], concept_id=concept["id"],
-        exercise_type="multiple_choice", rating="good", correct=True,
+        exercise_type="forward_mc", rating="good", correct=True,
     )
     await record_review(
         db_conn, user_id=user["id"], concept_id=concept["id"],
@@ -87,4 +87,4 @@ async def test_get_review_history(
     assert len(history) == 2
     # Both reviews are present (order may be non-deterministic when reviewed_at is equal)
     exercise_types = {h["exercise_type"] for h in history}
-    assert exercise_types == {"cloze", "multiple_choice"}
+    assert exercise_types == {"cloze", "forward_mc"}

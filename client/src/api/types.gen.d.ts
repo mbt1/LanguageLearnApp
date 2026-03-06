@@ -497,10 +497,10 @@ export interface components {
             cefr_level: components["schemas"]["CefrLevel"];
             /** Sequence */
             sequence: number;
-            /** Prompt */
-            prompt: string;
-            /** Target */
-            target: string;
+            /** Source Text */
+            source_text: string;
+            /** Target Text */
+            target_text: string;
             /** Explanation */
             explanation?: string | null;
             /** Prerequisites */
@@ -516,16 +516,16 @@ export interface components {
             cefr_level: components["schemas"]["CefrLevel"];
             /** Sequence */
             sequence: number;
-            /** Prompt */
-            prompt: string;
-            /** Target */
-            target: string;
+            /** Source Text */
+            source_text: string;
+            /** Target Text */
+            target_text: string;
             /** Explanation */
             explanation?: string | null;
             /** Prerequisites */
             prerequisites?: string[] | null;
             /** Exercises */
-            exercises: components["schemas"]["ExerciseImport"][];
+            exercises?: components["schemas"]["ExerciseImport"][];
         };
         /**
          * ConceptProgressDetail
@@ -537,15 +537,20 @@ export interface components {
              * Format: uuid
              */
             concept_id: string;
-            /** Prompt */
-            prompt: string;
-            /** Target */
-            target: string;
+            /** Source Text */
+            source_text: string;
+            /** Target Text */
+            target_text: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
-            current_exercise_difficulty?: components["schemas"]["ExerciseType"] | null;
-            /** Consecutive Correct */
-            consecutive_correct?: number | null;
+            /** Forward Difficulty */
+            forward_difficulty?: string | null;
+            /** Forward Consecutive Correct */
+            forward_consecutive_correct?: number | null;
+            /** Reverse Difficulty */
+            reverse_difficulty?: string | null;
+            /** Reverse Consecutive Correct */
+            reverse_consecutive_correct?: number | null;
             /** Is Mastered */
             is_mastered?: boolean | null;
             /** Fsrs State */
@@ -570,10 +575,10 @@ export interface components {
             cefr_level: components["schemas"]["CefrLevel"];
             /** Sequence */
             sequence: number;
-            /** Prompt */
-            prompt: string;
-            /** Target */
-            target: string;
+            /** Source Text */
+            source_text: string;
+            /** Target Text */
+            target_text: string;
         };
         /**
          * ConceptType
@@ -602,7 +607,10 @@ export interface components {
                 [key: string]: components["schemas"]["ConceptSummary"][];
             };
         };
-        /** CourseImport */
+        /**
+         * CourseImport
+         * @description Assembled course data (may come from a single JSON or a folder).
+         */
         CourseImport: {
             /** Slug */
             slug: string;
@@ -614,6 +622,8 @@ export interface components {
             target_language: string;
             /** Concepts */
             concepts: components["schemas"]["ConceptImport"][];
+            /** Standalone Exercises */
+            standalone_exercises?: components["schemas"]["ExerciseImport"][];
         };
         /** CourseImportResponse */
         CourseImportResponse: {
@@ -662,15 +672,16 @@ export interface components {
         DependencySource: "manual" | "auto";
         /** ExerciseImport */
         ExerciseImport: {
-            exercise_type: components["schemas"]["ExerciseType"];
-            /** Prompt */
-            prompt: string;
-            /** Correct Answer */
-            correct_answer: string;
-            /** Distractors */
-            distractors?: string[] | null;
-            /** Sentence Template */
-            sentence_template?: string | null;
+            /** Ref */
+            ref: string;
+            /** Exercise Type */
+            exercise_type: string;
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            };
+            /** Concept Refs */
+            concept_refs?: string[] | null;
         };
         /** ExerciseResponse */
         ExerciseResponse: {
@@ -679,15 +690,14 @@ export interface components {
              * Format: uuid
              */
             id: string;
-            exercise_type: components["schemas"]["ExerciseType"];
-            /** Prompt */
-            prompt: string;
-            /** Correct Answer */
-            correct_answer: string;
-            /** Distractors */
-            distractors?: string[] | null;
-            /** Sentence Template */
-            sentence_template?: string | null;
+            /** Exercise Type */
+            exercise_type: string;
+            /** Ref */
+            ref: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
         };
         /** ExerciseSubmitRequest */
         ExerciseSubmitRequest: {
@@ -712,9 +722,12 @@ export interface components {
             correct_answer: string;
             /** Normalized User Answer */
             normalized_user_answer: string;
-            new_exercise_difficulty: components["schemas"]["ExerciseType"];
-            /** Consecutive Correct */
-            consecutive_correct: number;
+            new_forward_difficulty: components["schemas"]["ExerciseType"];
+            /** Forward Consecutive Correct */
+            forward_consecutive_correct: number;
+            new_reverse_difficulty: components["schemas"]["ExerciseType"];
+            /** Reverse Consecutive Correct */
+            reverse_consecutive_correct: number;
             /** Is Mastered */
             is_mastered: boolean;
             /** Fsrs Due */
@@ -728,7 +741,7 @@ export interface components {
          * ExerciseType
          * @enum {string}
          */
-        ExerciseType: "multiple_choice" | "cloze" | "reverse_typing" | "typing";
+        ExerciseType: "forward_mc" | "reverse_mc" | "cloze" | "reverse_cloze" | "forward_typing" | "reverse_typing";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -831,10 +844,10 @@ export interface components {
              * Format: uuid
              */
             concept_id: string;
-            /** Prompt */
-            prompt: string;
-            /** Target */
-            target: string;
+            /** Source Text */
+            source_text: string;
+            /** Target Text */
+            target_text: string;
             cefr_level: components["schemas"]["CefrLevel"];
             source: components["schemas"]["DependencySource"];
         };
@@ -893,9 +906,12 @@ export interface components {
              * Format: uuid
              */
             concept_id: string;
-            new_exercise_difficulty: components["schemas"]["ExerciseType"];
-            /** Consecutive Correct */
-            consecutive_correct: number;
+            new_forward_difficulty: components["schemas"]["ExerciseType"];
+            /** Forward Consecutive Correct */
+            forward_consecutive_correct: number;
+            new_reverse_difficulty: components["schemas"]["ExerciseType"];
+            /** Reverse Consecutive Correct */
+            reverse_consecutive_correct: number;
             /** Is Mastered */
             is_mastered: boolean;
             /** Fsrs Due */
@@ -925,14 +941,18 @@ export interface components {
             exercise_type: components["schemas"]["ExerciseType"];
             /** Is Review */
             is_review: boolean;
-            /** Prompt */
-            prompt: string;
-            /** Target */
-            target: string;
+            /** Source Text */
+            source_text: string;
+            /** Target Text */
+            target_text: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
             /** Exercise Id */
             exercise_id?: string | null;
+            /** Exercise Data */
+            exercise_data?: {
+                [key: string]: unknown;
+            } | null;
             /** Correct Answer */
             correct_answer?: string | null;
             /** Distractors */
@@ -954,10 +974,7 @@ export interface components {
              * @default 20
              */
             session_size: number;
-            /**
-             * Concept Ids
-             * @description Optional list of specific concept IDs for a targeted session.
-             */
+            /** Concept Ids */
             concept_ids?: string[] | null;
         };
         /** StudySessionResponse */

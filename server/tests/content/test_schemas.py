@@ -36,10 +36,12 @@ class TestEnums:
 
     def test_exercise_types(self) -> None:
         assert set(ExerciseType) == {
-            ExerciseType.multiple_choice,
+            ExerciseType.forward_mc,
+            ExerciseType.reverse_mc,
             ExerciseType.cloze,
+            ExerciseType.reverse_cloze,
+            ExerciseType.forward_typing,
             ExerciseType.reverse_typing,
-            ExerciseType.typing,
         }
 
     def test_dependency_sources(self) -> None:
@@ -80,8 +82,8 @@ class TestConceptSummary:
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
             sequence=1,
-            prompt="hello",
-            target="hola",
+            source_text="hello",
+            target_text="hola",
         )
         assert s.cefr_level == CefrLevel.A1
 
@@ -92,8 +94,8 @@ class TestConceptSummary:
                 concept_type=ConceptType.vocabulary,
                 cefr_level="X9",  # pyright: ignore[reportArgumentType]
                 sequence=1,
-                prompt="hello",
-                target="hola",
+                source_text="hello",
+                target_text="hola",
             )
 
 
@@ -104,14 +106,14 @@ class TestConceptDetail:
             concept_type=ConceptType.grammar,
             cefr_level=CefrLevel.A2,
             sequence=1,
-            prompt="ser vs estar",
-            target="to be",
+            source_text="ser vs estar",
+            target_text="to be",
             explanation="Both mean 'to be' but...",
             prerequisites=[
                 PrerequisiteInfo(
                     concept_id=uuid4(),
-                    prompt="hello",
-                    target="hola",
+                    source_text="hello",
+                    target_text="hola",
                     cefr_level=CefrLevel.A1,
                     source=DependencySource.manual,
                 )
@@ -119,11 +121,9 @@ class TestConceptDetail:
             exercises=[
                 ExerciseResponse(
                     id=uuid4(),
-                    exercise_type=ExerciseType.multiple_choice,
-                    prompt="Choose 'to be'",
-                    correct_answer="ser",
-                    distractors=["ir", "hacer"],
-                    sentence_template=None,
+                    exercise_type="forward_mc",
+                    ref="ser-estar-mc-1",
+                    data={"correct_answer": "ser", "distractors_medium": ["ir", "hacer"]},
                 )
             ],
         )
@@ -136,8 +136,8 @@ class TestConceptDetail:
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
             sequence=1,
-            prompt="hello",
-            target="hola",
+            source_text="hello",
+            target_text="hola",
             explanation=None,
             prerequisites=[],
             exercises=[],
@@ -161,8 +161,8 @@ class TestCourseDetail:
                         concept_type=ConceptType.vocabulary,
                         cefr_level=CefrLevel.A1,
                         sequence=1,
-                        prompt="hello",
-                        target="hola",
+                        source_text="hello",
+                        target_text="hola",
                     )
                 ],
             },
@@ -175,30 +175,27 @@ class TestCourseDetail:
 
 
 class TestExerciseImport:
-    def test_valid_multiple_choice(self) -> None:
+    def test_valid_forward_mc(self) -> None:
         e = ExerciseImport(
-            exercise_type=ExerciseType.multiple_choice,
-            prompt="Choose 'hello'",
-            correct_answer="hola",
-            distractors=["adiós", "gracias"],
+            ref="hola-mc-1",
+            exercise_type="forward_mc",
+            data={"correct_answer": "hola", "distractors_medium": ["adiós", "gracias"]},
         )
-        assert e.distractors == ["adiós", "gracias"]
+        assert e.data["distractors_medium"] == ["adiós", "gracias"]
 
-    def test_valid_typing(self) -> None:
+    def test_valid_forward_typing(self) -> None:
         e = ExerciseImport(
-            exercise_type=ExerciseType.typing,
-            prompt="Type 'hello' in Spanish",
-            correct_answer="hola",
+            ref="hola-typing-1",
+            exercise_type="forward_typing",
+            data={"correct_answer": "hola"},
         )
-        assert e.distractors is None
-        assert e.sentence_template is None
+        assert e.ref == "hola-typing-1"
 
-    def test_missing_required(self) -> None:
+    def test_missing_required_ref(self) -> None:
         with pytest.raises(ValidationError):
             ExerciseImport(  # pyright: ignore[reportCallIssue]
-                exercise_type=ExerciseType.cloze,
-                # missing prompt
-                correct_answer="hola",
+                exercise_type="cloze",
+                data={"expected": "hola"},
             )
 
 
@@ -209,16 +206,15 @@ class TestConceptImport:
             concept_type=ConceptType.grammar,
             cefr_level=CefrLevel.A2,
             sequence=1,
-            prompt="ser vs estar",
-            target="to be",
+            source_text="ser vs estar",
+            target_text="to be",
             explanation="Both mean 'to be'...",
             prerequisites=["hola", "buenos-dias"],
             exercises=[
                 ExerciseImport(
-                    exercise_type=ExerciseType.multiple_choice,
-                    prompt="Choose the correct form",
-                    correct_answer="es",
-                    distractors=["está", "son"],
+                    ref="ser-estar-mc-1",
+                    exercise_type="forward_mc",
+                    data={"correct_answer": "es", "distractors_medium": ["está", "son"]},
                 )
             ],
         )
@@ -230,30 +226,30 @@ class TestConceptImport:
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
             sequence=1,
-            prompt="hello",
-            target="hola",
+            source_text="hello",
+            target_text="hola",
             exercises=[
                 ExerciseImport(
-                    exercise_type=ExerciseType.multiple_choice,
-                    prompt="Choose 'hello'",
-                    correct_answer="hola",
-                    distractors=["adiós"],
+                    ref="hola-mc-1",
+                    exercise_type="forward_mc",
+                    data={"correct_answer": "hola", "distractors_medium": ["adiós"]},
                 ),
             ],
         )
         assert c.prerequisites is None
 
-    def test_empty_exercises_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            ConceptImport(
-                ref="hola",
-                concept_type=ConceptType.vocabulary,
-                cefr_level=CefrLevel.A1,
-                sequence=1,
-                prompt="hello",
-                target="hola",
-                exercises=[],
-            )
+    def test_empty_exercises_allowed(self) -> None:
+        """Empty exercises list is now allowed (exercises are optional)."""
+        c = ConceptImport(
+            ref="hola",
+            concept_type=ConceptType.vocabulary,
+            cefr_level=CefrLevel.A1,
+            sequence=1,
+            source_text="hello",
+            target_text="hola",
+            exercises=[],
+        )
+        assert c.exercises == []
 
 
 class TestCourseImport:
@@ -269,14 +265,13 @@ class TestCourseImport:
                     concept_type=ConceptType.vocabulary,
                     cefr_level=CefrLevel.A1,
                     sequence=1,
-                    prompt="hello",
-                    target="hola",
+                    source_text="hello",
+                    target_text="hola",
                     exercises=[
                         ExerciseImport(
-                            exercise_type=ExerciseType.multiple_choice,
-                            prompt="Choose 'hello'",
-                            correct_answer="hola",
-                            distractors=["adiós"],
+                            ref="hola-mc-1",
+                            exercise_type="forward_mc",
+                            data={"correct_answer": "hola", "distractors_medium": ["adiós"]},
                         ),
                     ],
                 ),
@@ -306,14 +301,13 @@ class TestCourseImport:
                         concept_type=ConceptType.vocabulary,
                         cefr_level=CefrLevel.A1,
                         sequence=1,
-                        prompt="hello",
-                        target="hola",
+                        source_text="hello",
+                        target_text="hola",
                         exercises=[
                             ExerciseImport(
-                                exercise_type=ExerciseType.multiple_choice,
-                                prompt="Choose 'hello'",
-                                correct_answer="hola",
-                                distractors=["adiós"],
+                                ref="hola-mc-1",
+                                exercise_type="forward_mc",
+                                data={"correct_answer": "hola", "distractors_medium": ["adiós"]},
                             ),
                         ],
                     ),

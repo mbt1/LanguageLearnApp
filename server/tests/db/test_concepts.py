@@ -29,15 +29,16 @@ async def test_create_concept(db_conn: AsyncConnection, course: dict[str, Any]) 
     concept = await create_concept(
         db_conn,
         course_id=course["id"],
+        ref="hello-1",
         concept_type="vocabulary",
         cefr_level="A1",
         sequence=1,
-        prompt="hello",
-        target="hola",
+        source_text="hello",
+        target_text="hola",
         explanation="A common greeting",
     )
-    assert concept["prompt"] == "hello"
-    assert concept["target"] == "hola"
+    assert concept["source_text"] == "hello"
+    assert concept["target_text"] == "hola"
     assert concept["concept_type"] == "vocabulary"
     assert concept["cefr_level"] == "A1"
     assert concept["sequence"] == 1
@@ -45,40 +46,40 @@ async def test_create_concept(db_conn: AsyncConnection, course: dict[str, Any]) 
 
 async def test_get_concept(db_conn: AsyncConnection, course: dict[str, Any]) -> None:
     concept = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        db_conn, course_id=course["id"], ref="hello-1", concept_type="vocabulary",
+        cefr_level="A1", sequence=1, source_text="hello", target_text="hola",
     )
     found = await get_concept(db_conn, concept_id=concept["id"])
     assert found is not None
-    assert found["prompt"] == "hello"
+    assert found["source_text"] == "hello"
 
 
 async def test_list_concepts_by_course(db_conn: AsyncConnection, course: dict[str, Any]) -> None:
     await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, prompt="goodbye", target="adiós",
+        db_conn, course_id=course["id"], ref="goodbye-1", concept_type="vocabulary",
+        cefr_level="A1", sequence=2, source_text="goodbye", target_text="adiós",
     )
     await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        db_conn, course_id=course["id"], ref="hello-1", concept_type="vocabulary",
+        cefr_level="A1", sequence=1, source_text="hello", target_text="hola",
     )
     concepts = await list_concepts_by_course(db_conn, course_id=course["id"])
     assert len(concepts) == 2
     # Ordered by sequence
-    assert concepts[0]["prompt"] == "hello"
-    assert concepts[1]["prompt"] == "goodbye"
+    assert concepts[0]["source_text"] == "hello"
+    assert concepts[1]["source_text"] == "goodbye"
 
 
 async def test_list_concepts_filtered_by_level(
     db_conn: AsyncConnection, course: dict[str, Any],
 ) -> None:
     await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        db_conn, course_id=course["id"], ref="hello-1", concept_type="vocabulary",
+        cefr_level="A1", sequence=1, source_text="hello", target_text="hola",
     )
     await create_concept(
-        db_conn, course_id=course["id"], concept_type="grammar",
-        cefr_level="A2", sequence=1, prompt="past tense", target="pasado",
+        db_conn, course_id=course["id"], ref="past-tense-1", concept_type="grammar",
+        cefr_level="A2", sequence=1, source_text="past tense", target_text="pasado",
     )
     a1_concepts = await list_concepts_by_course(
         db_conn, course_id=course["id"], cefr_level="A1",
@@ -89,12 +90,12 @@ async def test_list_concepts_filtered_by_level(
 
 async def test_add_prerequisite(db_conn: AsyncConnection, course: dict[str, Any]) -> None:
     prereq = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        db_conn, course_id=course["id"], ref="hello-1", concept_type="vocabulary",
+        cefr_level="A1", sequence=1, source_text="hello", target_text="hola",
     )
     concept = await create_concept(
-        db_conn, course_id=course["id"], concept_type="grammar",
-        cefr_level="A1", sequence=2, prompt="greeting phrases", target="frases",
+        db_conn, course_id=course["id"], ref="greeting-1", concept_type="grammar",
+        cefr_level="A1", sequence=2, source_text="greeting phrases", target_text="frases",
     )
     link = await add_prerequisite(
         db_conn, concept_id=concept["id"], prerequisite_id=prereq["id"],
@@ -106,19 +107,19 @@ async def test_add_prerequisite(db_conn: AsyncConnection, course: dict[str, Any]
 
 async def test_get_prerequisites(db_conn: AsyncConnection, course: dict[str, Any]) -> None:
     prereq = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        db_conn, course_id=course["id"], ref="hello-1", concept_type="vocabulary",
+        cefr_level="A1", sequence=1, source_text="hello", target_text="hola",
     )
     concept = await create_concept(
-        db_conn, course_id=course["id"], concept_type="grammar",
-        cefr_level="A1", sequence=2, prompt="greeting phrases", target="frases",
+        db_conn, course_id=course["id"], ref="greeting-1", concept_type="grammar",
+        cefr_level="A1", sequence=2, source_text="greeting phrases", target_text="frases",
     )
     await add_prerequisite(
         db_conn, concept_id=concept["id"], prerequisite_id=prereq["id"],
     )
     prereqs = await get_prerequisites(db_conn, concept_id=concept["id"])
     assert len(prereqs) == 1
-    assert prereqs[0]["prompt"] == "hello"
+    assert prereqs[0]["source_text"] == "hello"
     assert prereqs[0]["source"] == "manual"
 
 
@@ -128,8 +129,8 @@ async def test_self_prerequisite_rejected(
     import psycopg.errors
 
     concept = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, prompt="hello", target="hola",
+        db_conn, course_id=course["id"], ref="hello-1", concept_type="vocabulary",
+        cefr_level="A1", sequence=1, source_text="hello", target_text="hola",
     )
     with pytest.raises(psycopg.errors.CheckViolation):
         await add_prerequisite(

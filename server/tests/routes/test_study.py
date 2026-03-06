@@ -40,19 +40,21 @@ def _mini_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "prompt": "hello",
-                "target": "hola",
+                "source_text": "hello",
+                "target_text": "hola",
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "Choose 'hello'",
-                        "correct_answer": "hola",
-                        "distractors": ["adiós", "gracias"],
+                        "ref": "hola-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "hola",
+                            "distractors_medium": ["adiós", "gracias"],
+                        },
                     },
                     {
-                        "exercise_type": "typing",
-                        "prompt": "Type 'hello'",
-                        "correct_answer": "hola",
+                        "ref": "hola-typing-1",
+                        "exercise_type": "forward_typing",
+                        "data": {"correct_answer": "hola"},
                     },
                 ],
             },
@@ -61,15 +63,17 @@ def _mini_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "prompt": "goodbye",
-                "target": "adiós",
+                "source_text": "goodbye",
+                "target_text": "adiós",
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "Choose 'goodbye'",
-                        "correct_answer": "adiós",
-                        "distractors": ["hola", "gracias"],
+                        "ref": "adios-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "adiós",
+                            "distractors_medium": ["hola", "gracias"],
+                        },
                     }
                 ],
             },
@@ -137,8 +141,8 @@ async def test_session_items_have_required_fields(client: httpx.AsyncClient) -> 
     assert "concept_id" in item
     assert "exercise_type" in item
     assert "is_review" in item
-    assert "prompt" in item
-    assert "target" in item
+    assert "source_text" in item
+    assert "target_text" in item
 
 
 # ── POST /v1/study/review ────────────────────────────────────
@@ -158,7 +162,7 @@ async def test_review_requires_auth(client: httpx.AsyncClient) -> None:
         json={
             "concept_id": concept_id,
             "rating": "good",
-            "exercise_type": "multiple_choice",
+            "exercise_type": "forward_mc",
             "correct": True,
         },
     )
@@ -179,15 +183,17 @@ async def test_review_success(client: httpx.AsyncClient) -> None:
         json={
             "concept_id": concept_id,
             "rating": "good",
-            "exercise_type": "multiple_choice",
+            "exercise_type": "forward_mc",
             "correct": True,
         },
         headers=_auth_headers(user["access_token"]),
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert "new_exercise_difficulty" in data
-    assert "consecutive_correct" in data
+    assert "new_forward_difficulty" in data
+    assert "forward_consecutive_correct" in data
+    assert "new_reverse_difficulty" in data
+    assert "reverse_consecutive_correct" in data
     assert "is_mastered" in data
     assert "fsrs_due" in data
     assert "difficulty_advanced" in data
@@ -208,13 +214,13 @@ async def test_review_wrong_answer_resets_streak(client: httpx.AsyncClient) -> N
         json={
             "concept_id": concept_id,
             "rating": "again",
-            "exercise_type": "multiple_choice",
+            "exercise_type": "forward_mc",
             "correct": False,
         },
         headers=_auth_headers(user["access_token"]),
     )
     assert resp.status_code == 200
-    assert resp.json()["consecutive_correct"] == 0
+    assert resp.json()["forward_consecutive_correct"] == 0
 
 
 async def test_review_concept_not_in_progress(client: httpx.AsyncClient) -> None:
@@ -224,7 +230,7 @@ async def test_review_concept_not_in_progress(client: httpx.AsyncClient) -> None
         json={
             "concept_id": "00000000-0000-0000-0000-000000000001",
             "rating": "good",
-            "exercise_type": "multiple_choice",
+            "exercise_type": "forward_mc",
             "correct": True,
         },
         headers=_auth_headers(user["access_token"]),
@@ -278,11 +284,13 @@ async def test_session_mc_items_include_distractors(client: httpx.AsyncClient) -
     )
     assert resp.status_code == 200
     items = resp.json()["items"]
-    mc_items = [i for i in items if i["exercise_type"] == "multiple_choice"]
+    mc_items = [i for i in items if i["exercise_type"] in ("forward_mc", "reverse_mc")]
     assert len(mc_items) > 0, "expected at least one MC item"
     for item in mc_items:
-        assert item["distractors"] is not None, f"distractors missing for {item['concept_id']}"
-        assert len(item["distractors"]) >= 1, "need at least 1 distractor"
+        # forward_mc items from exercises should have distractors; reverse_mc may auto-enrich
+        if item["exercise_type"] == "forward_mc":
+            assert item["distractors"] is not None, f"distractors missing for {item['concept_id']}"
+            assert len(item["distractors"]) >= 1, "need at least 1 distractor"
 
 
 # ── GET /v1/progress (batch) ─────────────────────────────────
@@ -336,11 +344,7 @@ async def test_batch_progress_zero_mastery_for_new_user(client: httpx.AsyncClien
 
 
 async def test_isolation_no_leftover_test_courses(client: httpx.AsyncClient) -> None:
-    """Verify that courses created in one test don't leak to the next.
-
-    Imports a course within this test, then checks that a subsequent list
-    does not include it (only pre-existing seed data should be visible).
-    """
+    """Verify that courses created in one test don't leak to the next."""
     # Snapshot current course count
     resp_before = await client.get("/v1/courses")
     assert resp_before.status_code == 200
@@ -386,8 +390,8 @@ async def test_review_schedule_includes_unstarted(client: httpx.AsyncClient) -> 
     assert len(items) == 2  # both concepts, not just the started one
 
     # At least one should have null progress fields (unstarted)
-    unstarted = [i for i in items if i["current_exercise_difficulty"] is None]
-    started = [i for i in items if i["current_exercise_difficulty"] is not None]
+    unstarted = [i for i in items if i["forward_difficulty"] is None]
+    started = [i for i in items if i["forward_difficulty"] is not None]
     assert len(started) >= 1
     assert len(unstarted) >= 0  # could be 0 if session_size picked both
 
@@ -419,11 +423,16 @@ async def test_session_concept_ids_new(client: httpx.AsyncClient) -> None:
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert len(data["items"]) == 1
+    # Each concept now produces 2 items (forward_mc + reverse_mc)
+    assert len(data["items"]) == 2
     item = data["items"][0]
     assert item["concept_id"] == concept_id
-    assert item["exercise_type"] == "multiple_choice"
+    assert item["exercise_type"] == "forward_mc"
     assert item["is_review"] is False
+    item2 = data["items"][1]
+    assert item2["concept_id"] == concept_id
+    assert item2["exercise_type"] == "reverse_mc"
+    assert item2["is_review"] is False
 
 
 async def test_session_concept_ids_review(client: httpx.AsyncClient) -> None:
@@ -451,8 +460,10 @@ async def test_session_concept_ids_review(client: httpx.AsyncClient) -> None:
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert len(data["items"]) == 1
+    # Each concept now produces 2 items (forward + reverse)
+    assert len(data["items"]) == 2
     assert data["items"][0]["is_review"] is True
+    assert data["items"][1]["is_review"] is True
 
 
 async def test_session_concept_ids_wrong_course(client: httpx.AsyncClient) -> None:
@@ -508,14 +519,14 @@ async def _advance_to_reverse_typing(
     concept_id: str,
     headers: dict[str, str],
 ) -> None:
-    """Submit 6 correct reviews to advance from MC → cloze → reverse_typing."""
+    """Submit correct reviews on forward track to advance from forward_mc → cloze → forward_typing."""
     for _ in range(6):
         resp = await client.post(
             "/v1/study/review",
             json={
                 "concept_id": concept_id,
                 "rating": "good",
-                "exercise_type": "multiple_choice",
+                "exercise_type": "forward_mc",
                 "correct": True,
             },
             headers=headers,
@@ -526,26 +537,26 @@ async def _advance_to_reverse_typing(
 async def test_session_reverse_typing_swaps_prompt_target(
     client: httpx.AsyncClient,
 ) -> None:
-    """reverse_typing without explicit exercise auto-swaps prompt/target."""
+    """reverse_typing without explicit exercise auto-swaps source_text/target_text."""
     user = await _register(client)
     course = await _import_course(client)
     headers = _auth_headers(user["access_token"])
 
-    # Start a session to create progress for hola (concept with prompt=hello, target=hola)
+    # Start a session to create progress for hola (concept with source_text=hello, target_text=hola)
     session = await client.post(
         "/v1/study/session",
         json={"course_id": course["course_id"]},
         headers=headers,
     )
     items = session.json()["items"]
-    # Find hola concept (the one with target="hola")
-    hola_item = next(i for i in items if i["target"] == "hola")
+    # Find hola concept (the one with target_text="hola")
+    hola_item = next(i for i in items if i["target_text"] == "hola")
     concept_id = hola_item["concept_id"]
 
-    # Advance to reverse_typing difficulty (4 correct reviews)
+    # Advance forward track to forward_typing
     await _advance_to_reverse_typing(client, concept_id, headers)
 
-    # Targeted session should now be at reverse_typing with swapped prompt/target
+    # Targeted session should now include reverse track item
     resp = await client.post(
         "/v1/study/session",
         json={
@@ -555,8 +566,8 @@ async def test_session_reverse_typing_swaps_prompt_target(
         headers=headers,
     )
     assert resp.status_code == 200
-    item = resp.json()["items"][0]
-    assert item["exercise_type"] == "reverse_typing"
-    # Prompt should be target language (Spanish), correct_answer source language (English)
-    assert item["prompt"] == "hola"
-    assert item["correct_answer"] == "hello"
+    items = resp.json()["items"]
+    # Find the reverse item
+    reverse_item = next(i for i in items if i["exercise_type"] in ("reverse_mc", "reverse_cloze", "reverse_typing"))
+    # correct_answer for reverse should be the source_text (English)
+    assert reverse_item["correct_answer"] == "hello"

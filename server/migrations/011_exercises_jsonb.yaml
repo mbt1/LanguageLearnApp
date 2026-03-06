@@ -1,0 +1,32 @@
+operations:
+  - sql:
+      up: |
+        ALTER TABLE exercises ADD COLUMN data jsonb NOT NULL DEFAULT '{}';
+        ALTER TABLE exercises ADD COLUMN ref text;
+        UPDATE exercises SET data = jsonb_build_object(
+          'prompt', prompt,
+          'correct_answer', correct_answer,
+          'distractors', COALESCE(to_jsonb(distractors), 'null'::jsonb),
+          'sentence_template', sentence_template
+        );
+        UPDATE exercises SET ref = exercise_type || '-' || LEFT(id::text, 8);
+        ALTER TABLE exercises ALTER COLUMN ref SET NOT NULL;
+        ALTER TABLE exercises DROP COLUMN prompt CASCADE;
+        ALTER TABLE exercises DROP COLUMN correct_answer CASCADE;
+        ALTER TABLE exercises DROP COLUMN distractors CASCADE;
+        ALTER TABLE exercises DROP COLUMN sentence_template CASCADE;
+        UPDATE exercises SET exercise_type = 'forward_mc' WHERE exercise_type = 'multiple_choice';
+        UPDATE exercises SET exercise_type = 'forward_typing' WHERE exercise_type = 'typing';
+      down: |
+        ALTER TABLE exercises ADD COLUMN prompt text;
+        ALTER TABLE exercises ADD COLUMN correct_answer text;
+        ALTER TABLE exercises ADD COLUMN distractors text[];
+        ALTER TABLE exercises ADD COLUMN sentence_template text;
+        UPDATE exercises SET
+          prompt = data->>'prompt',
+          correct_answer = data->>'correct_answer',
+          sentence_template = data->>'sentence_template';
+        ALTER TABLE exercises DROP COLUMN data;
+        ALTER TABLE exercises DROP COLUMN ref;
+        UPDATE exercises SET exercise_type = 'multiple_choice' WHERE exercise_type = 'forward_mc';
+        UPDATE exercises SET exercise_type = 'typing' WHERE exercise_type = 'forward_typing';

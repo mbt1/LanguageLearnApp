@@ -1,0 +1,17 @@
+operations:
+  - sql:
+      up: |
+        CREATE TABLE IF NOT EXISTS exercise_concepts (
+          exercise_id  uuid NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+          concept_id   uuid NOT NULL REFERENCES concepts(id) ON DELETE CASCADE,
+          is_primary   boolean NOT NULL DEFAULT true,
+          PRIMARY KEY (exercise_id, concept_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_exercise_concepts_concept ON exercise_concepts(concept_id, exercise_id);
+        INSERT INTO exercise_concepts (exercise_id, concept_id, is_primary)
+        SELECT id, concept_id, true FROM exercises WHERE concept_id IS NOT NULL
+        ON CONFLICT DO NOTHING;
+        ALTER TABLE exercises ALTER COLUMN concept_id DROP NOT NULL;
+      down: |
+        DROP TABLE IF EXISTS exercise_concepts CASCADE;
+        ALTER TABLE exercises ALTER COLUMN concept_id SET NOT NULL;

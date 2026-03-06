@@ -71,10 +71,6 @@ export function SettingsPage() {
     return () => mql.removeEventListener('change', onChange)
   }, [theme])
 
-  function cycleTheme() {
-    setTheme((prev) => THEMES[(THEMES.indexOf(prev) + 1) % THEMES.length])
-  }
-
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Settings</h1>

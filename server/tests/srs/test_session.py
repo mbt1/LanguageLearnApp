@@ -15,23 +15,26 @@ NOW = datetime(2026, 1, 1, tzinfo=UTC)
 def _make_progress(
     concept_id: UUID | None = None,
     *,
-    current_exercise_difficulty: str = "multiple_choice",
+    forward_difficulty: str = "forward_mc",
+    reverse_difficulty: str = "reverse_mc",
     fsrs_due: datetime | None = None,
-    prompt: str = "hello",
-    target: str = "hola",
+    source_text: str = "hello",
+    target_text: str = "hola",
     concept_type: str = "vocabulary",
     cefr_level: str = "A1",
 ) -> dict[str, Any]:
     """Build a fake due-review progress dict (as returned by list_due_reviews)."""
     return {
         "concept_id": concept_id or uuid4(),
-        "current_exercise_difficulty": current_exercise_difficulty,
+        "forward_difficulty": forward_difficulty,
+        "reverse_difficulty": reverse_difficulty,
+        "forward_consecutive_correct": 0,
+        "reverse_consecutive_correct": 0,
         "fsrs_due": fsrs_due or (NOW - timedelta(hours=1)),
-        "prompt": prompt,
-        "target": target,
+        "source_text": source_text,
+        "target_text": target_text,
         "concept_type": concept_type,
         "cefr_level": cefr_level,
-        "consecutive_correct": 0,
         "fsrs_state": "review",
         "fsrs_step": None,
         "fsrs_stability": 30.0,
@@ -51,8 +54,8 @@ def _make_concept(
     return {
         "id": concept_id or uuid4(),
         "course_id": uuid4(),
-        "prompt": f"prompt-{sequence}",
-        "target": f"target-{sequence}",
+        "source_text": f"source-{sequence}",
+        "target_text": f"target-{sequence}",
         "concept_type": "vocabulary",
         "cefr_level": cefr_level,
         "sequence": sequence,
@@ -66,10 +69,10 @@ class TestSessionItem:
     def test_is_review_field_preserved(self) -> None:
         item = SessionItem(
             concept_id=uuid4(),
-            exercise_type=ExerciseType.multiple_choice,
+            exercise_type=ExerciseType.forward_mc,
             is_review=True,
-            prompt="p",
-            target="t",
+            source_text="p",
+            target_text="t",
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
         )
@@ -100,8 +103,10 @@ class TestBuildSession:
             all_active_progress=[_make_progress(review_id)],
             session_size=20,
         )
+        # Reviews produce 2 items (forward + reverse), then new concepts
         assert result[0].concept_id == review_id
-        assert result[1].concept_id == new_id
+        assert result[1].concept_id == review_id
+        assert result[2].concept_id == new_id
 
     def test_session_size_respected(self) -> None:
         reviews = [_make_progress() for _ in range(25)]
@@ -122,7 +127,10 @@ class TestBuildSession:
             all_active_progress=[_make_progress()],
             session_size=20,
         )
+        # Each review concept produces 2 items (forward + reverse)
+        assert len(result) == 2
         assert result[0].is_review is True
+        assert result[1].is_review is True
 
     def test_new_concepts_flagged_not_is_review(self) -> None:
         result = build_session(
@@ -132,9 +140,12 @@ class TestBuildSession:
             all_active_progress=[],
             session_size=20,
         )
+        # Each new concept produces 2 items (forward_mc + reverse_mc)
+        assert len(result) == 2
         assert result[0].is_review is False
+        assert result[1].is_review is False
 
-    def test_new_concepts_use_multiple_choice(self) -> None:
+    def test_new_concepts_use_forward_and_reverse_mc(self) -> None:
         result = build_session(
             due_reviews=[],
             new_concepts=[_make_concept()],
@@ -142,20 +153,31 @@ class TestBuildSession:
             all_active_progress=[],
             session_size=20,
         )
-        assert result[0].exercise_type == ExerciseType.multiple_choice
+        assert result[0].exercise_type == ExerciseType.forward_mc
+        assert result[1].exercise_type == ExerciseType.reverse_mc
 
     def test_prerequisite_cap_applied_to_reviews(self) -> None:
         review_id = uuid4()
-        review = _make_progress(review_id, current_exercise_difficulty="typing")
+        review = _make_progress(
+            review_id,
+            forward_difficulty="forward_typing",
+            reverse_difficulty="reverse_typing",
+        )
         result = build_session(
             due_reviews=[review],
             new_concepts=[],
-            prereq_difficulties={review_id: ["multiple_choice"]},
+            prereq_difficulties={
+                review_id: [
+                    {"forward_difficulty": "forward_mc", "reverse_difficulty": "reverse_mc"},
+                ],
+            },
             all_active_progress=[review],
             session_size=20,
         )
-        # Capped by unmastered prerequisite
-        assert result[0].exercise_type == ExerciseType.multiple_choice
+        # Forward item capped by forward prerequisite
+        assert result[0].exercise_type == ExerciseType.forward_mc
+        # Reverse item capped by reverse prerequisite
+        assert result[1].exercise_type == ExerciseType.reverse_mc
 
     def test_throttling_at_full_load_adds_no_new(self) -> None:
         # 20 items already active → 100% load → no new concepts
@@ -179,7 +201,8 @@ class TestBuildSession:
             all_active_progress=[],
             session_size=20,
         )
-        assert len(result) == 5
+        # Each concept produces 2 items (forward_mc + reverse_mc)
+        assert len(result) == 10
 
     def test_due_reviews_not_throttled(self) -> None:
         # Even at 100% active load, due reviews still come through
@@ -192,6 +215,6 @@ class TestBuildSession:
             all_active_progress=active,
             session_size=20,
         )
-        # Reviews always included; new may be throttled
+        # Each review concept produces 2 items; reviews always included; new may be throttled
         review_count = sum(1 for item in result if item.is_review)
-        assert review_count == 5
+        assert review_count == 10  # 5 concepts * 2 items each

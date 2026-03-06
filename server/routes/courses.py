@@ -22,7 +22,6 @@ from content.schemas import (
     CourseResponse,
     DependencySource,
     ExerciseResponse,
-    ExerciseType,
     PrerequisiteInfo,
 )
 from db.pool import get_conn
@@ -57,8 +56,8 @@ def _concept_row_to_summary(row: dict[str, Any]) -> ConceptSummary:
         concept_type=ConceptType(row["concept_type"]),
         cefr_level=CefrLevel(row["cefr_level"]),
         sequence=row["sequence"],
-        prompt=row["prompt"],
-        target=row["target"],
+        source_text=row["source_text"],
+        target_text=row["target_text"],
     )
 
 
@@ -176,14 +175,14 @@ async def get_concept_detail(
         concept_type=ConceptType(concept["concept_type"]),
         cefr_level=CefrLevel(concept["cefr_level"]),
         sequence=concept["sequence"],
-        prompt=concept["prompt"],
-        target=concept["target"],
+        source_text=concept["source_text"],
+        target_text=concept["target_text"],
         explanation=concept["explanation"],
         prerequisites=[
             PrerequisiteInfo(
                 concept_id=p["id"],
-                prompt=p["prompt"],
-                target=p["target"],
+                source_text=p["source_text"],
+                target_text=p["target_text"],
                 cefr_level=CefrLevel(p["cefr_level"]),
                 source=DependencySource(p["source"]),
             )
@@ -192,11 +191,9 @@ async def get_concept_detail(
         exercises=[
             ExerciseResponse(
                 id=e["id"],
-                exercise_type=ExerciseType(e["exercise_type"]),
-                prompt=e["prompt"],
-                correct_answer=e["correct_answer"],
-                distractors=e["distractors"],
-                sentence_template=e["sentence_template"],
+                exercise_type=e["exercise_type"],
+                ref=e["ref"],
+                data=e["data"] or {},
             )
             for e in exercise_rows
         ],

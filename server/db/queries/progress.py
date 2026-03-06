@@ -34,8 +34,10 @@ async def upsert_progress(
     *,
     user_id: UUID,
     concept_id: UUID,
-    current_exercise_difficulty: str = "multiple_choice",
-    consecutive_correct: int = 0,
+    forward_difficulty: str = "forward_mc",
+    forward_consecutive_correct: int = 0,
+    reverse_difficulty: str = "reverse_mc",
+    reverse_consecutive_correct: int = 0,
     fsrs_state: str | None = None,
     fsrs_step: int | None = None,
     fsrs_stability: float | None = None,
@@ -49,18 +51,24 @@ async def upsert_progress(
         await cur.execute(
             """
             INSERT INTO user_concept_progress (
-                user_id, concept_id, current_exercise_difficulty, consecutive_correct,
+                user_id, concept_id,
+                forward_difficulty, forward_consecutive_correct,
+                reverse_difficulty, reverse_consecutive_correct,
                 fsrs_state, fsrs_step, fsrs_stability, fsrs_difficulty,
                 fsrs_due, fsrs_last_review, is_mastered
             ) VALUES (
-                %(user_id)s, %(concept_id)s, %(current_exercise_difficulty)s,
-                %(consecutive_correct)s, %(fsrs_state)s, %(fsrs_step)s,
+                %(user_id)s, %(concept_id)s,
+                %(forward_difficulty)s, %(forward_consecutive_correct)s,
+                %(reverse_difficulty)s, %(reverse_consecutive_correct)s,
+                %(fsrs_state)s, %(fsrs_step)s,
                 %(fsrs_stability)s, %(fsrs_difficulty)s, %(fsrs_due)s,
                 %(fsrs_last_review)s, %(is_mastered)s
             )
             ON CONFLICT (user_id, concept_id) DO UPDATE SET
-                current_exercise_difficulty = EXCLUDED.current_exercise_difficulty,
-                consecutive_correct = EXCLUDED.consecutive_correct,
+                forward_difficulty = EXCLUDED.forward_difficulty,
+                forward_consecutive_correct = EXCLUDED.forward_consecutive_correct,
+                reverse_difficulty = EXCLUDED.reverse_difficulty,
+                reverse_consecutive_correct = EXCLUDED.reverse_consecutive_correct,
                 fsrs_state = EXCLUDED.fsrs_state,
                 fsrs_step = EXCLUDED.fsrs_step,
                 fsrs_stability = EXCLUDED.fsrs_stability,
@@ -73,8 +81,10 @@ async def upsert_progress(
             {
                 "user_id": user_id,
                 "concept_id": concept_id,
-                "current_exercise_difficulty": current_exercise_difficulty,
-                "consecutive_correct": consecutive_correct,
+                "forward_difficulty": forward_difficulty,
+                "forward_consecutive_correct": forward_consecutive_correct,
+                "reverse_difficulty": reverse_difficulty,
+                "reverse_consecutive_correct": reverse_consecutive_correct,
                 "fsrs_state": fsrs_state,
                 "fsrs_step": fsrs_step,
                 "fsrs_stability": fsrs_stability,
@@ -100,7 +110,7 @@ async def list_due_reviews(
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
-            SELECT ucp.*, c.prompt, c.target, c.concept_type, c.cefr_level, c.explanation
+            SELECT ucp.*, c.source_text, c.target_text, c.concept_type, c.cefr_level, c.explanation
             FROM user_concept_progress ucp
             JOIN concepts c ON c.id = ucp.concept_id
             WHERE ucp.user_id = %(user_id)s
@@ -122,16 +132,15 @@ async def get_prerequisite_difficulties(
 ) -> list[dict[str, Any]]:
     """Fetch effective exercise difficulties for all prerequisites of a concept.
 
-    Unstarted prerequisites default to 'multiple_choice' via COALESCE.
+    Unstarted prerequisites default to 'forward_mc' / 'reverse_mc' via COALESCE.
     """
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
             SELECT
                 cp.prerequisite_id AS concept_id,
-                COALESCE(
-                    ucp.current_exercise_difficulty, 'multiple_choice'
-                ) AS current_exercise_difficulty
+                COALESCE(ucp.forward_difficulty, 'forward_mc') AS forward_difficulty,
+                COALESCE(ucp.reverse_difficulty, 'reverse_mc') AS reverse_difficulty
             FROM concept_prerequisites cp
             LEFT JOIN user_concept_progress ucp
                 ON ucp.concept_id = cp.prerequisite_id
@@ -151,7 +160,8 @@ async def get_prerequisite_difficulties_batch(
 ) -> dict[UUID, list[str]]:
     """Batch fetch prerequisite difficulties for multiple concepts.
 
-    Returns a mapping from concept_id to list of prerequisite difficulty strings.
+    Returns a mapping from concept_id to list of prerequisite difficulty dicts
+    with forward_difficulty and reverse_difficulty.
     """
     if not concept_ids:
         return {}
@@ -160,9 +170,8 @@ async def get_prerequisite_difficulties_batch(
             """
             SELECT
                 cp.concept_id,
-                COALESCE(
-                    ucp.current_exercise_difficulty, 'multiple_choice'
-                ) AS current_exercise_difficulty
+                COALESCE(ucp.forward_difficulty, 'forward_mc') AS forward_difficulty,
+                COALESCE(ucp.reverse_difficulty, 'reverse_mc') AS reverse_difficulty
             FROM concept_prerequisites cp
             LEFT JOIN user_concept_progress ucp
                 ON ucp.concept_id = cp.prerequisite_id
@@ -173,10 +182,10 @@ async def get_prerequisite_difficulties_batch(
         )
         rows = await cur.fetchall()
 
-    result: dict[UUID, list[str]] = {}
+    result: dict[UUID, list[dict[str, Any]]] = {}
     for row in rows:
         cid = row["concept_id"]
-        result.setdefault(cid, []).append(row["current_exercise_difficulty"])
+        result.setdefault(cid, []).append(row)
     return result
 
 
@@ -217,13 +226,15 @@ async def list_all_progress_detail(
             """
             SELECT
                 c.id AS concept_id,
-                c.prompt,
-                c.target,
+                c.source_text,
+                c.target_text,
                 c.concept_type,
                 c.cefr_level,
                 c.sequence,
-                ucp.current_exercise_difficulty,
-                ucp.consecutive_correct,
+                ucp.forward_difficulty,
+                ucp.forward_consecutive_correct,
+                ucp.reverse_difficulty,
+                ucp.reverse_consecutive_correct,
                 ucp.fsrs_state,
                 ucp.fsrs_stability,
                 ucp.fsrs_difficulty,
@@ -271,9 +282,10 @@ async def get_progress_summary(
 ) -> list[dict[str, Any]]:
     """Return stage counts per CEFR level for a user in a course.
 
-    Stages map to exercise difficulty progression:
-      not_started, seen (MC), familiar (cloze), practiced (rev_typing),
-      proficient (typing, not mastered), mastered.
+    Stages map to two-track difficulty progression:
+      not_started, seen (forward_mc), familiar (cloze),
+      practiced (fwd_typing, rev not done), proficient (both tracks maxed),
+      mastered.
     """
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
@@ -283,19 +295,21 @@ async def get_progress_summary(
                 COUNT(*) AS total_concepts,
                 COUNT(*) - COUNT(ucp.concept_id) AS not_started,
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'multiple_choice'
+                    WHERE ucp.forward_difficulty = 'forward_mc'
                       AND NOT ucp.is_mastered
                 ) AS seen,
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'cloze'
+                    WHERE ucp.forward_difficulty = 'cloze'
                       AND NOT ucp.is_mastered
                 ) AS familiar,
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'reverse_typing'
+                    WHERE ucp.forward_difficulty = 'forward_typing'
+                      AND ucp.reverse_difficulty != 'reverse_typing'
                       AND NOT ucp.is_mastered
                 ) AS practiced,
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'typing'
+                    WHERE ucp.forward_difficulty = 'forward_typing'
+                      AND ucp.reverse_difficulty = 'reverse_typing'
                       AND NOT ucp.is_mastered
                 ) AS proficient,
                 COUNT(ucp.concept_id) FILTER (
@@ -328,19 +342,21 @@ async def get_all_progress_summary(
                 COUNT(*) AS total_concepts,
                 COUNT(*) - COUNT(ucp.concept_id) AS not_started,
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'multiple_choice'
+                    WHERE ucp.forward_difficulty = 'forward_mc'
                       AND NOT ucp.is_mastered
                 ) AS seen,
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'cloze'
+                    WHERE ucp.forward_difficulty = 'cloze'
                       AND NOT ucp.is_mastered
                 ) AS familiar,
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'reverse_typing'
+                    WHERE ucp.forward_difficulty = 'forward_typing'
+                      AND ucp.reverse_difficulty != 'reverse_typing'
                       AND NOT ucp.is_mastered
                 ) AS practiced,
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'typing'
+                    WHERE ucp.forward_difficulty = 'forward_typing'
+                      AND ucp.reverse_difficulty = 'reverse_typing'
                       AND NOT ucp.is_mastered
                 ) AS proficient,
                 COUNT(ucp.concept_id) FILTER (
@@ -382,16 +398,18 @@ async def refresh_progress_summary(
                 COUNT(*),
                 COUNT(*) - COUNT(ucp.concept_id),
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'multiple_choice'
+                    WHERE ucp.forward_difficulty = 'forward_mc'
                       AND NOT ucp.is_mastered),
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'cloze'
+                    WHERE ucp.forward_difficulty = 'cloze'
                       AND NOT ucp.is_mastered),
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'reverse_typing'
+                    WHERE ucp.forward_difficulty = 'forward_typing'
+                      AND ucp.reverse_difficulty != 'reverse_typing'
                       AND NOT ucp.is_mastered),
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'typing'
+                    WHERE ucp.forward_difficulty = 'forward_typing'
+                      AND ucp.reverse_difficulty = 'reverse_typing'
                       AND NOT ucp.is_mastered),
                 COUNT(ucp.concept_id) FILTER (
                     WHERE ucp.is_mastered = true),
@@ -436,16 +454,18 @@ async def refresh_course_progress_summary(
                 COUNT(*),
                 COUNT(*) - COUNT(ucp.concept_id),
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'multiple_choice'
+                    WHERE ucp.forward_difficulty = 'forward_mc'
                       AND NOT ucp.is_mastered),
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'cloze'
+                    WHERE ucp.forward_difficulty = 'cloze'
                       AND NOT ucp.is_mastered),
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'reverse_typing'
+                    WHERE ucp.forward_difficulty = 'forward_typing'
+                      AND ucp.reverse_difficulty != 'reverse_typing'
                       AND NOT ucp.is_mastered),
                 COUNT(ucp.concept_id) FILTER (
-                    WHERE ucp.current_exercise_difficulty = 'typing'
+                    WHERE ucp.forward_difficulty = 'forward_typing'
+                      AND ucp.reverse_difficulty = 'reverse_typing'
                       AND NOT ucp.is_mastered),
                 COUNT(ucp.concept_id) FILTER (
                     WHERE ucp.is_mastered = true),

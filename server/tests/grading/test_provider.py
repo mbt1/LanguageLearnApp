@@ -10,7 +10,7 @@ from grading.schemas import GradingRequest, Verdict
 def _req(
     user_answer: str,
     correct_answer: str = "hola",
-    exercise_type: ExerciseType = ExerciseType.typing,
+    exercise_type: ExerciseType = ExerciseType.forward_typing,
 ) -> GradingRequest:
     return GradingRequest(
         exercise_type=exercise_type,
@@ -49,13 +49,13 @@ class TestExactMatchGrader:
 
     def test_multiple_choice_correct_option(self) -> None:
         result = self.grader.grade(
-            _req("hola", exercise_type=ExerciseType.multiple_choice),
+            _req("hola", exercise_type=ExerciseType.forward_mc),
         )
         assert result.verdict == Verdict.accept
 
     def test_multiple_choice_wrong_option(self) -> None:
         result = self.grader.grade(
-            _req("adiós", exercise_type=ExerciseType.multiple_choice),
+            _req("adiós", exercise_type=ExerciseType.forward_mc),
         )
         assert result.verdict == Verdict.reject
 

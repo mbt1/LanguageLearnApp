@@ -1014,13 +1014,13 @@
             "type": "integer",
             "title": "Sequence"
           },
-          "prompt": {
+          "source_text": {
             "type": "string",
-            "title": "Prompt"
+            "title": "Source Text"
           },
-          "target": {
+          "target_text": {
             "type": "string",
-            "title": "Target"
+            "title": "Target Text"
           },
           "explanation": {
             "anyOf": [
@@ -1054,8 +1054,8 @@
           "concept_type",
           "cefr_level",
           "sequence",
-          "prompt",
-          "target",
+          "source_text",
+          "target_text",
           "prerequisites",
           "exercises"
         ],
@@ -1077,13 +1077,13 @@
             "type": "integer",
             "title": "Sequence"
           },
-          "prompt": {
+          "source_text": {
             "type": "string",
-            "title": "Prompt"
+            "title": "Source Text"
           },
-          "target": {
+          "target_text": {
             "type": "string",
-            "title": "Target"
+            "title": "Target Text"
           },
           "explanation": {
             "anyOf": [
@@ -1115,7 +1115,6 @@
               "$ref": "#/components/schemas/ExerciseImport"
             },
             "type": "array",
-            "minItems": 1,
             "title": "Exercises"
           }
         },
@@ -1125,9 +1124,8 @@
           "concept_type",
           "cefr_level",
           "sequence",
-          "prompt",
-          "target",
-          "exercises"
+          "source_text",
+          "target_text"
         ],
         "title": "ConceptImport"
       },
@@ -1138,13 +1136,13 @@
             "format": "uuid",
             "title": "Concept Id"
           },
-          "prompt": {
+          "source_text": {
             "type": "string",
-            "title": "Prompt"
+            "title": "Source Text"
           },
-          "target": {
+          "target_text": {
             "type": "string",
-            "title": "Target"
+            "title": "Target Text"
           },
           "concept_type": {
             "$ref": "#/components/schemas/ConceptType"
@@ -1152,17 +1150,18 @@
           "cefr_level": {
             "$ref": "#/components/schemas/CefrLevel"
           },
-          "current_exercise_difficulty": {
+          "forward_difficulty": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/ExerciseType"
+                "type": "string"
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Forward Difficulty"
           },
-          "consecutive_correct": {
+          "forward_consecutive_correct": {
             "anyOf": [
               {
                 "type": "integer"
@@ -1171,7 +1170,29 @@
                 "type": "null"
               }
             ],
-            "title": "Consecutive Correct"
+            "title": "Forward Consecutive Correct"
+          },
+          "reverse_difficulty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverse Difficulty"
+          },
+          "reverse_consecutive_correct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverse Consecutive Correct"
           },
           "is_mastered": {
             "anyOf": [
@@ -1245,8 +1266,8 @@
         "type": "object",
         "required": [
           "concept_id",
-          "prompt",
-          "target",
+          "source_text",
+          "target_text",
           "concept_type",
           "cefr_level"
         ],
@@ -1270,13 +1291,13 @@
             "type": "integer",
             "title": "Sequence"
           },
-          "prompt": {
+          "source_text": {
             "type": "string",
-            "title": "Prompt"
+            "title": "Source Text"
           },
-          "target": {
+          "target_text": {
             "type": "string",
-            "title": "Target"
+            "title": "Target Text"
           }
         },
         "type": "object",
@@ -1285,8 +1306,8 @@
           "concept_type",
           "cefr_level",
           "sequence",
-          "prompt",
-          "target"
+          "source_text",
+          "target_text"
         ],
         "title": "ConceptSummary"
       },
@@ -1376,6 +1397,13 @@
             "type": "array",
             "minItems": 1,
             "title": "Concepts"
+          },
+          "standalone_exercises": {
+            "items": {
+              "$ref": "#/components/schemas/ExerciseImport"
+            },
+            "type": "array",
+            "title": "Standalone Exercises"
           }
         },
         "type": "object",
@@ -1386,7 +1414,8 @@
           "target_language",
           "concepts"
         ],
-        "title": "CourseImport"
+        "title": "CourseImport",
+        "description": "Assembled course data (may come from a single JSON or a folder)."
       },
       "CourseImportResponse": {
         "properties": {
@@ -1483,18 +1512,20 @@
       },
       "ExerciseImport": {
         "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
           "exercise_type": {
-            "$ref": "#/components/schemas/ExerciseType"
-          },
-          "prompt": {
             "type": "string",
-            "title": "Prompt"
+            "title": "Exercise Type"
           },
-          "correct_answer": {
-            "type": "string",
-            "title": "Correct Answer"
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
           },
-          "distractors": {
+          "concept_refs": {
             "anyOf": [
               {
                 "items": {
@@ -1506,25 +1537,13 @@
                 "type": "null"
               }
             ],
-            "title": "Distractors"
-          },
-          "sentence_template": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sentence Template"
+            "title": "Concept Refs"
           }
         },
         "type": "object",
         "required": [
-          "exercise_type",
-          "prompt",
-          "correct_answer"
+          "ref",
+          "exercise_type"
         ],
         "title": "ExerciseImport"
       },
@@ -1536,48 +1555,25 @@
             "title": "Id"
           },
           "exercise_type": {
-            "$ref": "#/components/schemas/ExerciseType"
-          },
-          "prompt": {
             "type": "string",
-            "title": "Prompt"
+            "title": "Exercise Type"
           },
-          "correct_answer": {
+          "ref": {
             "type": "string",
-            "title": "Correct Answer"
+            "title": "Ref"
           },
-          "distractors": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Distractors"
-          },
-          "sentence_template": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sentence Template"
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
           }
         },
         "type": "object",
         "required": [
           "id",
           "exercise_type",
-          "prompt",
-          "correct_answer"
+          "ref",
+          "data"
         ],
         "title": "ExerciseResponse"
       },
@@ -1641,12 +1637,19 @@
             "type": "string",
             "title": "Normalized User Answer"
           },
-          "new_exercise_difficulty": {
+          "new_forward_difficulty": {
             "$ref": "#/components/schemas/ExerciseType"
           },
-          "consecutive_correct": {
+          "forward_consecutive_correct": {
             "type": "integer",
-            "title": "Consecutive Correct"
+            "title": "Forward Consecutive Correct"
+          },
+          "new_reverse_difficulty": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "reverse_consecutive_correct": {
+            "type": "integer",
+            "title": "Reverse Consecutive Correct"
           },
           "is_mastered": {
             "type": "boolean",
@@ -1678,8 +1681,10 @@
           "correct",
           "correct_answer",
           "normalized_user_answer",
-          "new_exercise_difficulty",
-          "consecutive_correct",
+          "new_forward_difficulty",
+          "forward_consecutive_correct",
+          "new_reverse_difficulty",
+          "reverse_consecutive_correct",
           "is_mastered",
           "fsrs_due",
           "difficulty_advanced",
@@ -1690,10 +1695,12 @@
       "ExerciseType": {
         "type": "string",
         "enum": [
-          "multiple_choice",
+          "forward_mc",
+          "reverse_mc",
           "cloze",
-          "reverse_typing",
-          "typing"
+          "reverse_cloze",
+          "forward_typing",
+          "reverse_typing"
         ],
         "title": "ExerciseType"
       },
@@ -1921,13 +1928,13 @@
             "format": "uuid",
             "title": "Concept Id"
           },
-          "prompt": {
+          "source_text": {
             "type": "string",
-            "title": "Prompt"
+            "title": "Source Text"
           },
-          "target": {
+          "target_text": {
             "type": "string",
-            "title": "Target"
+            "title": "Target Text"
           },
           "cefr_level": {
             "$ref": "#/components/schemas/CefrLevel"
@@ -1939,8 +1946,8 @@
         "type": "object",
         "required": [
           "concept_id",
-          "prompt",
-          "target",
+          "source_text",
+          "target_text",
           "cefr_level",
           "source"
         ],
@@ -2077,12 +2084,19 @@
             "format": "uuid",
             "title": "Concept Id"
           },
-          "new_exercise_difficulty": {
+          "new_forward_difficulty": {
             "$ref": "#/components/schemas/ExerciseType"
           },
-          "consecutive_correct": {
+          "forward_consecutive_correct": {
             "type": "integer",
-            "title": "Consecutive Correct"
+            "title": "Forward Consecutive Correct"
+          },
+          "new_reverse_difficulty": {
+            "$ref": "#/components/schemas/ExerciseType"
+          },
+          "reverse_consecutive_correct": {
+            "type": "integer",
+            "title": "Reverse Consecutive Correct"
           },
           "is_mastered": {
             "type": "boolean",
@@ -2112,8 +2126,10 @@
         "type": "object",
         "required": [
           "concept_id",
-          "new_exercise_difficulty",
-          "consecutive_correct",
+          "new_forward_difficulty",
+          "forward_consecutive_correct",
+          "new_reverse_difficulty",
+          "reverse_consecutive_correct",
           "is_mastered",
           "fsrs_due",
           "difficulty_advanced",
@@ -2157,13 +2173,13 @@
             "type": "boolean",
             "title": "Is Review"
           },
-          "prompt": {
+          "source_text": {
             "type": "string",
-            "title": "Prompt"
+            "title": "Source Text"
           },
-          "target": {
+          "target_text": {
             "type": "string",
-            "title": "Target"
+            "title": "Target Text"
           },
           "concept_type": {
             "$ref": "#/components/schemas/ConceptType"
@@ -2182,6 +2198,18 @@
               }
             ],
             "title": "Exercise Id"
+          },
+          "exercise_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exercise Data"
           },
           "correct_answer": {
             "anyOf": [
@@ -2236,8 +2264,8 @@
           "concept_id",
           "exercise_type",
           "is_review",
-          "prompt",
-          "target",
+          "source_text",
+          "target_text",
           "concept_type",
           "cefr_level"
         ],

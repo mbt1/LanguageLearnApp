@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -25,10 +26,25 @@ class ConceptType(StrEnum):
 
 
 class ExerciseType(StrEnum):
-    multiple_choice = "multiple_choice"
+    forward_mc = "forward_mc"
+    reverse_mc = "reverse_mc"
     cloze = "cloze"
+    reverse_cloze = "reverse_cloze"
+    forward_typing = "forward_typing"
     reverse_typing = "reverse_typing"
-    typing = "typing"
+
+
+# Track classification helpers
+FORWARD_TYPES: frozenset[ExerciseType] = frozenset({
+    ExerciseType.forward_mc,
+    ExerciseType.cloze,
+    ExerciseType.forward_typing,
+})
+REVERSE_TYPES: frozenset[ExerciseType] = frozenset({
+    ExerciseType.reverse_mc,
+    ExerciseType.reverse_cloze,
+    ExerciseType.reverse_typing,
+})
 
 
 class DependencySource(StrEnum):
@@ -53,25 +69,23 @@ class ConceptSummary(BaseModel):
     concept_type: ConceptType
     cefr_level: CefrLevel
     sequence: int
-    prompt: str
-    target: str
+    source_text: str
+    target_text: str
 
 
 class PrerequisiteInfo(BaseModel):
     concept_id: UUID
-    prompt: str
-    target: str
+    source_text: str
+    target_text: str
     cefr_level: CefrLevel
     source: DependencySource
 
 
 class ExerciseResponse(BaseModel):
     id: UUID
-    exercise_type: ExerciseType
-    prompt: str
-    correct_answer: str
-    distractors: list[str] | None = None
-    sentence_template: str | None = None
+    exercise_type: str
+    ref: str
+    data: dict[str, Any]
 
 
 class ConceptDetail(BaseModel):
@@ -79,8 +93,8 @@ class ConceptDetail(BaseModel):
     concept_type: ConceptType
     cefr_level: CefrLevel
     sequence: int
-    prompt: str
-    target: str
+    source_text: str
+    target_text: str
     explanation: str | None = None
     prerequisites: list[PrerequisiteInfo]
     exercises: list[ExerciseResponse]
@@ -94,11 +108,10 @@ class CourseDetail(CourseResponse):
 
 
 class ExerciseImport(BaseModel):
-    exercise_type: ExerciseType
-    prompt: str
-    correct_answer: str
-    distractors: list[str] | None = None
-    sentence_template: str | None = None
+    ref: str
+    exercise_type: str  # not validated as ExerciseType — allows future types like mix_and_match
+    data: dict[str, Any] = Field(default_factory=dict)
+    concept_refs: list[str] | None = None  # for multi-concept exercises
 
 
 class ConceptImport(BaseModel):
@@ -106,19 +119,21 @@ class ConceptImport(BaseModel):
     concept_type: ConceptType
     cefr_level: CefrLevel
     sequence: int
-    prompt: str
-    target: str
+    source_text: str
+    target_text: str
     explanation: str | None = None
     prerequisites: list[str] | None = None
-    exercises: list[ExerciseImport] = Field(min_length=1)
+    exercises: list[ExerciseImport] = Field(default_factory=list)
 
 
 class CourseImport(BaseModel):
+    """Assembled course data (may come from a single JSON or a folder)."""
     slug: str
     title: str
     source_language: str
     target_language: str
     concepts: list[ConceptImport] = Field(min_length=1)
+    standalone_exercises: list[ExerciseImport] = Field(default_factory=list)
 
 
 class CourseImportResponse(BaseModel):

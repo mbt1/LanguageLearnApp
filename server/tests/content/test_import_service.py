@@ -15,7 +15,6 @@ from content.schemas import (
     ConceptType,
     CourseImport,
     ExerciseImport,
-    ExerciseType,
 )
 from db.queries.concepts import get_prerequisites, list_concepts_by_course
 from db.queries.courses import get_course
@@ -28,8 +27,8 @@ def _make_concept(
     concept_type: ConceptType = ConceptType.vocabulary,
     cefr_level: CefrLevel = CefrLevel.A1,
     sequence: int = 1,
-    prompt: str | None = None,
-    target: str | None = None,
+    source_text: str | None = None,
+    target_text: str | None = None,
     prerequisites: list[str] | None = None,
     exercises: list[ExerciseImport] | None = None,
 ) -> ConceptImport:
@@ -38,16 +37,18 @@ def _make_concept(
         concept_type=concept_type,
         cefr_level=cefr_level,
         sequence=sequence,
-        prompt=prompt or f"prompt-{ref}",
-        target=target or f"target-{ref}",
+        source_text=source_text or f"source-{ref}",
+        target_text=target_text or f"target-{ref}",
         prerequisites=prerequisites,
         exercises=exercises
         or [
             ExerciseImport(
-                exercise_type=ExerciseType.multiple_choice,
-                prompt=f"Choose '{ref}'",
-                correct_answer=f"target-{ref}",
-                distractors=["wrong1", "wrong2"],
+                ref=f"{ref}-mc-1",
+                exercise_type="forward_mc",
+                data={
+                    "correct_answer": f"target-{ref}",
+                    "distractors_medium": ["wrong1", "wrong2"],
+                },
             ),
         ],
     )
@@ -100,7 +101,7 @@ async def test_import_simple_course(db_conn: AsyncConnection[Any]) -> None:
     assert len(concepts) == 3
 
     # Find the como-estas concept and verify prerequisites
-    como = next(c for c in concepts if c["prompt"] == "prompt-como-estas")
+    como = next(c for c in concepts if c["source_text"] == "source-como-estas")
     prereqs = await get_prerequisites(db_conn, concept_id=como["id"])
     assert len(prereqs) == 2
 
@@ -114,19 +115,21 @@ async def test_import_with_exercises(db_conn: AsyncConnection[Any]) -> None:
                 concept_type=ConceptType.vocabulary,
                 cefr_level=CefrLevel.A1,
                 sequence=1,
-                prompt="hello",
-                target="hola",
+                source_text="hello",
+                target_text="hola",
                 exercises=[
                     ExerciseImport(
-                        exercise_type=ExerciseType.multiple_choice,
-                        prompt="Choose 'hello'",
-                        correct_answer="hola",
-                        distractors=["adiós", "gracias"],
+                        ref="hola-mc-1",
+                        exercise_type="forward_mc",
+                        data={
+                            "correct_answer": "hola",
+                            "distractors_medium": ["adiós", "gracias"],
+                        },
                     ),
                     ExerciseImport(
-                        exercise_type=ExerciseType.typing,
-                        prompt="Type 'hello' in Spanish",
-                        correct_answer="hola",
+                        ref="hola-typing-1",
+                        exercise_type="forward_typing",
+                        data={"correct_answer": "hola"},
                     ),
                 ],
             )

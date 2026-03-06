@@ -1,0 +1,26 @@
+operations:
+  - sql:
+      up: |
+        ALTER TABLE concepts ADD COLUMN ref text;
+        ALTER TABLE concepts ADD COLUMN source_text text;
+        ALTER TABLE concepts ADD COLUMN target_text text;
+        UPDATE concepts SET
+          ref = LOWER(REPLACE(prompt, ' ', '-')),
+          source_text = prompt,
+          target_text = target;
+        ALTER TABLE concepts ALTER COLUMN ref SET NOT NULL;
+        ALTER TABLE concepts ALTER COLUMN source_text SET NOT NULL;
+        ALTER TABLE concepts ALTER COLUMN target_text SET NOT NULL;
+        ALTER TABLE concepts ADD CONSTRAINT concepts_course_ref_key UNIQUE (course_id, ref);
+        ALTER TABLE concepts DROP COLUMN prompt CASCADE;
+        ALTER TABLE concepts DROP COLUMN target CASCADE;
+      down: |
+        ALTER TABLE concepts ADD COLUMN prompt text;
+        ALTER TABLE concepts ADD COLUMN target text;
+        UPDATE concepts SET prompt = source_text, target = target_text;
+        ALTER TABLE concepts ALTER COLUMN prompt SET NOT NULL;
+        ALTER TABLE concepts ALTER COLUMN target SET NOT NULL;
+        ALTER TABLE concepts DROP CONSTRAINT IF EXISTS concepts_course_ref_key;
+        ALTER TABLE concepts DROP COLUMN ref;
+        ALTER TABLE concepts DROP COLUMN source_text;
+        ALTER TABLE concepts DROP COLUMN target_text;

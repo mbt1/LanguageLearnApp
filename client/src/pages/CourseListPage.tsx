@@ -27,7 +27,7 @@ function StageBar({ item }: { item: CefrProgressItem }) {
   const segments: { key: string; bg: string; text: string; label: string; pct: number; cumulative: number }[] = []
   let cumulative = 0
   for (const { key, bg, label } of STAGES) {
-    const count = item[key]
+    const count = item[key as keyof CefrProgressItem] as number
     if (count === 0) continue
     cumulative += count
     const pct = (count / total) * 100
@@ -45,7 +45,7 @@ function StageBar({ item }: { item: CefrProgressItem }) {
             key={key}
             className={`${bg} flex items-center justify-end overflow-hidden transition-all`}
             style={{ width: `${pct}%` }}
-            title={`${label}: ${item[key]}`}
+            title={`${label}: ${item[key as keyof CefrProgressItem]}`}
           >
             <span className={`${text} px-1 text-[10px] leading-none`}>{cum}</span>
           </div>

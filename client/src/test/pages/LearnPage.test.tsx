@@ -17,12 +17,13 @@ import * as studyApi from '@/api/study'
 
 const mockItem = {
   concept_id: 'concept-1',
-  exercise_type: 'multiple_choice' as const,
+  exercise_type: 'forward_mc' as const,
   is_review: false,
-  prompt: "Choose 'hello'",
-  target: 'hola',
+  source_text: "hello",
+  target_text: 'hola',
   concept_type: 'vocabulary' as const,
   cefr_level: 'A1' as const,
+  correct_answer: 'hola',
   distractors: ['adiós', 'gracias'],
   sentence_template: null,
   explanation: null,
@@ -32,8 +33,10 @@ const mockResult = {
   correct: true,
   correct_answer: 'hola',
   normalized_user_answer: 'hola',
-  new_exercise_difficulty: 'multiple_choice' as const,
-  consecutive_correct: 1,
+  new_forward_difficulty: 'forward_mc' as const,
+  forward_consecutive_correct: 1,
+  new_reverse_difficulty: 'reverse_mc' as const,
+  reverse_consecutive_correct: 0,
   is_mastered: false,
   fsrs_due: null,
   difficulty_advanced: false,
@@ -77,7 +80,7 @@ describe('LearnPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText("Choose 'hello'")).toBeInTheDocument()
+    expect(await screen.findByText("hello")).toBeInTheDocument()
     // Options include target + distractors
     expect(screen.getByRole('button', { name: 'hola' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'adiós' })).toBeInTheDocument()
@@ -132,14 +135,14 @@ describe('LearnPage', () => {
 
   it('renders typing exercise for typing type', async () => {
     vi.mocked(studyApi.studySession).mockResolvedValue({
-      items: [{ ...mockItem, exercise_type: 'typing' as const, prompt: 'Translate: hello' }],
+      items: [{ ...mockItem, exercise_type: 'forward_typing' as const }],
       total_due_reviews: 1,
       new_concepts_added: 0,
     })
 
     renderPage()
 
-    expect(await screen.findByText('Translate: hello')).toBeInTheDocument()
+    expect(await screen.findByText('hello')).toBeInTheDocument()
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
@@ -152,7 +155,7 @@ describe('LearnPage', () => {
 
     renderPage('course-1', 'concept-42')
 
-    await screen.findByText("Choose 'hello'")
+    await screen.findByText("hello")
     expect(studyApi.studySession).toHaveBeenCalledWith('course-1', 20, ['concept-42'])
   })
 
@@ -165,7 +168,7 @@ describe('LearnPage', () => {
 
     renderPage()
 
-    await screen.findByText("Choose 'hello'")
+    await screen.findByText("hello")
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
   })
 

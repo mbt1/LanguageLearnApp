@@ -1,0 +1,10 @@
+operations:
+  - sql:
+      up: |
+        ALTER TYPE exercise_type ADD VALUE IF NOT EXISTS 'forward_mc';
+        ALTER TYPE exercise_type ADD VALUE IF NOT EXISTS 'reverse_mc';
+        ALTER TYPE exercise_type ADD VALUE IF NOT EXISTS 'reverse_cloze';
+        ALTER TYPE exercise_type ADD VALUE IF NOT EXISTS 'forward_typing';
+      down: |
+        -- Cannot remove enum values in PostgreSQL; no-op
+        SELECT 1;

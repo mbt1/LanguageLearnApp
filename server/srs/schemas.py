@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from typing import Any
+
 from content.schemas import CefrLevel, ConceptType, ExerciseType  # noqa: TC001
 
 # ── Study session ─────────────────────────────────────────
@@ -22,11 +24,12 @@ class StudySessionItem(BaseModel):
     concept_id: UUID
     exercise_type: ExerciseType
     is_review: bool
-    prompt: str
-    target: str
+    source_text: str
+    target_text: str
     concept_type: ConceptType
     cefr_level: CefrLevel
     exercise_id: UUID | None = None
+    exercise_data: dict[str, Any] | None = None
     correct_answer: str | None = None
     distractors: list[str] | None = None
     sentence_template: str | None = None
@@ -53,8 +56,10 @@ class ReviewRequest(BaseModel):
 
 class ReviewResponse(BaseModel):
     concept_id: UUID
-    new_exercise_difficulty: ExerciseType
-    consecutive_correct: int
+    new_forward_difficulty: ExerciseType
+    forward_consecutive_correct: int
+    new_reverse_difficulty: ExerciseType
+    reverse_consecutive_correct: int
     is_mastered: bool
     fsrs_due: datetime | None
     difficulty_advanced: bool
@@ -76,8 +81,10 @@ class ExerciseSubmitResponse(BaseModel):
     correct: bool
     correct_answer: str           # original (un-normalized) correct answer for display
     normalized_user_answer: str   # the string that was actually graded
-    new_exercise_difficulty: ExerciseType
-    consecutive_correct: int
+    new_forward_difficulty: ExerciseType
+    forward_consecutive_correct: int
+    new_reverse_difficulty: ExerciseType
+    reverse_consecutive_correct: int
     is_mastered: bool
     fsrs_due: datetime | None
     difficulty_advanced: bool
@@ -91,10 +98,10 @@ class CefrProgressItem(BaseModel):
     cefr_level: CefrLevel
     total_concepts: int
     not_started: int
-    seen: int        # at multiple_choice level
-    familiar: int    # at cloze level
-    practiced: int   # at reverse_typing level
-    proficient: int  # at typing level, not yet mastered
+    seen: int        # forward_mc level
+    familiar: int    # cloze level
+    practiced: int   # forward_typing, reverse not done
+    proficient: int  # both tracks maxed, not yet mastered
     mastered: int
 
 
@@ -113,12 +120,14 @@ class AllProgressResponse(BaseModel):
 class ConceptProgressDetail(BaseModel):
     """Full SRS detail for a single concept (started or unstarted)."""
     concept_id: UUID
-    prompt: str
-    target: str
+    source_text: str
+    target_text: str
     concept_type: ConceptType
     cefr_level: CefrLevel
-    current_exercise_difficulty: ExerciseType | None = None
-    consecutive_correct: int | None = None
+    forward_difficulty: str | None = None
+    forward_consecutive_correct: int | None = None
+    reverse_difficulty: str | None = None
+    reverse_consecutive_correct: int | None = None
     is_mastered: bool | None = None
     fsrs_state: str | None = None
     fsrs_stability: float | None = None

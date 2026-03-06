@@ -17,7 +17,7 @@ interface CourseSchedule {
   items: ConceptProgressDetail[]
 }
 
-type SortKey = 'prompt' | 'cefr_level' | 'stage' | 'due' | 'status'
+type SortKey = 'source_text' | 'cefr_level' | 'stage' | 'due' | 'status'
 type SortDir = 'asc' | 'desc'
 type StatusFilter = 'all' | 'not_started' | 'in_progress' | 'mastered'
 
@@ -39,21 +39,25 @@ function formatNum(n: number | null | undefined): string {
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  multiple_choice: 'MC',
+  forward_mc: 'Fwd MC',
+  reverse_mc: 'Rev MC',
   cloze: 'Cloze',
+  reverse_cloze: 'Rev Cloze',
+  forward_typing: 'Fwd Type',
   reverse_typing: 'Rev Type',
-  typing: 'Typing',
 }
 
 const STAGE_ORDER: Record<string, number> = {
-  multiple_choice: 0,
+  forward_mc: 0,
+  reverse_mc: 0,
   cloze: 1,
+  reverse_cloze: 1,
+  forward_typing: 2,
   reverse_typing: 2,
-  typing: 3,
 }
 
 function getStatus(item: ConceptProgressDetail): StatusFilter {
-  if (item.current_exercise_difficulty == null) return 'not_started'
+  if (item.forward_difficulty == null) return 'not_started'
   if (item.is_mastered) return 'mastered'
   return 'in_progress'
 }
@@ -95,16 +99,16 @@ function SortHeader({
 function compareItems(a: ConceptProgressDetail, b: ConceptProgressDetail, key: SortKey, dir: SortDir): number {
   let cmp = 0
   switch (key) {
-    case 'prompt':
-      cmp = a.prompt.localeCompare(b.prompt)
+    case 'source_text':
+      cmp = a.source_text.localeCompare(b.source_text)
       break
     case 'cefr_level':
       cmp = CEFR_LEVELS.indexOf(a.cefr_level as typeof CEFR_LEVELS[number])
            - CEFR_LEVELS.indexOf(b.cefr_level as typeof CEFR_LEVELS[number])
       break
     case 'stage':
-      cmp = (STAGE_ORDER[a.current_exercise_difficulty ?? ''] ?? -1)
-           - (STAGE_ORDER[b.current_exercise_difficulty ?? ''] ?? -1)
+      cmp = (STAGE_ORDER[a.forward_difficulty ?? ''] ?? -1)
+           - (STAGE_ORDER[b.forward_difficulty ?? ''] ?? -1)
       break
     case 'due': {
       const aTime = a.fsrs_due ? new Date(a.fsrs_due).getTime() : Infinity
@@ -123,7 +127,7 @@ function compareItems(a: ConceptProgressDetail, b: ConceptProgressDetail, key: S
 
 function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; courseId: string }) {
   const navigate = useNavigate()
-  const [sortKey, setSortKey] = useState<SortKey>('prompt')
+  const [sortKey, setSortKey] = useState<SortKey>('source_text')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [cefrFilter, setCefrFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
@@ -186,7 +190,7 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
         <table className="w-full text-sm">
           <thead>
             <tr className="text-muted-foreground border-b text-left">
-              <SortHeader label="Prompt" sortKey="prompt" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortHeader label="Source" sortKey="source_text" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
               <SortHeader label="CEFR" sortKey="cefr_level" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="pb-2 pr-3 font-medium">Type</th>
               <SortHeader label="Stage" sortKey="stage" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -201,17 +205,17 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
           </thead>
           <tbody>
             {filtered.map((item) => {
-              const isStarted = item.current_exercise_difficulty != null
+              const isStarted = item.forward_difficulty != null
               return (
                 <tr key={item.concept_id} className="border-b last:border-0">
-                  <td className="py-2 pr-3 font-medium">{item.prompt}</td>
+                  <td className="py-2 pr-3 font-medium">{item.source_text}</td>
                   <td className="py-2 pr-3">
                     <Badge variant="outline">{item.cefr_level}</Badge>
                   </td>
                   <td className="py-2 pr-3">{item.concept_type}</td>
                   <td className="py-2 pr-3">
                     {isStarted
-                      ? (STAGE_LABELS[item.current_exercise_difficulty!] ?? item.current_exercise_difficulty)
+                      ? `${STAGE_LABELS[item.forward_difficulty!] ?? item.forward_difficulty} / ${STAGE_LABELS[item.reverse_difficulty!] ?? item.reverse_difficulty}`
                       : '--'}
                   </td>
                   <td className="py-2 pr-3">
@@ -224,7 +228,7 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
                     )}
                   </td>
                   <td className="py-2 pr-3 text-center">
-                    {item.consecutive_correct ?? '--'}
+                    {isStarted ? `${item.forward_consecutive_correct ?? 0}/${item.reverse_consecutive_correct ?? 0}` : '--'}
                   </td>
                   <td className="whitespace-nowrap py-2 pr-3">
                     <DueStatus due={item.fsrs_due} />
@@ -298,7 +302,7 @@ export function ReviewSchedulePage() {
         Browse all concepts and their SRS progress.
       </p>
       {schedules.map(({ course, items }) => {
-        const started = items.filter((i) => i.current_exercise_difficulty != null).length
+        const started = items.filter((i) => i.forward_difficulty != null).length
         return (
           <Card key={course.id}>
             <CardHeader className="pb-2">

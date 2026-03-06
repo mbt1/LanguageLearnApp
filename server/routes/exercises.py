@@ -10,7 +10,7 @@ from psycopg import AsyncConnection
 
 from auth.dependencies import get_current_user
 from auth.schemas import CurrentUser  # noqa: TC001
-from content.schemas import ExerciseType
+from content.schemas import FORWARD_TYPES, ExerciseType
 from db.pool import get_conn
 from db.queries.concepts import get_concept
 from db.queries.exercises import get_exercise_by_id, get_exercise_by_type
@@ -43,31 +43,28 @@ async def submit_exercise(
     concept_id = request.concept_id
 
     # Fetch the specific exercise to get the correct answer
+    concept = await get_concept(conn, concept_id=concept_id)
+    if concept is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Concept {concept_id} not found.",
+        )
+
     if request.exercise_id:
         exercise = await get_exercise_by_id(conn, exercise_id=request.exercise_id)
     else:
         exercise = await get_exercise_by_type(
             conn, concept_id=concept_id, exercise_type=request.exercise_type.value,
         )
-    if exercise is None:
-        # Auto-generate correct_answer for typing exercises without explicit content
-        concept = await get_concept(conn, concept_id=concept_id)
-        if concept is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Concept {concept_id} not found.",
-            )
-        if request.exercise_type == ExerciseType.reverse_typing:
-            # Reverse direction: correct answer is source language (prompt)
-            exercise = {"correct_answer": concept["prompt"], "id": None}
-        elif request.exercise_type == ExerciseType.typing:
-            exercise = {"correct_answer": concept["target"], "id": None}
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Exercise not found (exercise_id={request.exercise_id}, "
-                f"concept_id={concept_id}, type={request.exercise_type.value}).",
-            )
+
+    # Resolve correct_answer from exercise JSONB data or concept
+    correct_answer = _resolve_correct_answer(request.exercise_type, exercise, concept)
+    if correct_answer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Cannot determine correct answer for exercise "
+            f"(concept_id={concept_id}, type={request.exercise_type.value}).",
+        )
 
     # Fetch current progress — 404 if not started
     progress = await get_progress(conn, user_id=user_id, concept_id=concept_id)
@@ -81,7 +78,7 @@ async def submit_exercise(
     grading_result = default_grader.grade(
         GradingRequest(
             exercise_type=request.exercise_type,
-            correct_answer=exercise["correct_answer"],
+            correct_answer=correct_answer,
             user_answer=request.user_answer,
         )
     )
@@ -101,27 +98,46 @@ async def submit_exercise(
     )
     review_result = process_review(card, rating, now)
 
-    # Advance exercise difficulty
-    old_difficulty = ExerciseType(progress["current_exercise_difficulty"])
-    new_difficulty, new_streak = advance_difficulty(
-        old_difficulty,
-        progress["consecutive_correct"],
-        correct,
-    )
+    # Determine which track this exercise belongs to
+    is_fwd = request.exercise_type in FORWARD_TYPES
+
+    # Advance exercise difficulty for the relevant track
+    if is_fwd:
+        old_difficulty = ExerciseType(progress["forward_difficulty"])
+        old_streak = progress["forward_consecutive_correct"]
+    else:
+        old_difficulty = ExerciseType(progress["reverse_difficulty"])
+        old_streak = progress["reverse_consecutive_correct"]
+
+    new_difficulty, new_streak = advance_difficulty(old_difficulty, old_streak, correct)
     difficulty_advanced = new_difficulty != old_difficulty
 
-    # Apply prerequisite cap
+    # Apply prerequisite cap for the relevant track
     prereq_rows = await get_prerequisite_difficulties(
         conn, user_id=user_id, concept_id=concept_id,
     )
-    prereq_types = [ExerciseType(r["current_exercise_difficulty"]) for r in prereq_rows]
+    diff_key = "forward_difficulty" if is_fwd else "reverse_difficulty"
+    prereq_types = [ExerciseType(r[diff_key]) for r in prereq_rows]
     capped_difficulty = compute_capped_difficulty(new_difficulty, prereq_types)
 
-    # Compute mastery
+    # Build final difficulty values
+    if is_fwd:
+        fwd_diff = capped_difficulty.value
+        fwd_streak = new_streak
+        rev_diff = progress["reverse_difficulty"]
+        rev_streak = progress["reverse_consecutive_correct"]
+    else:
+        fwd_diff = progress["forward_difficulty"]
+        fwd_streak = progress["forward_consecutive_correct"]
+        rev_diff = capped_difficulty.value
+        rev_streak = new_streak
+
+    # Compute mastery (requires both tracks at max)
     was_mastered = bool(progress["is_mastered"])
     regressed = check_mastery_regression(was_mastered, correct)
     new_mastery = compute_mastery(
-        current_difficulty=capped_difficulty,
+        forward_difficulty=fwd_diff,
+        reverse_difficulty=rev_diff,
         fsrs_stability=review_result.fsrs_stability,
         fsrs_state=review_result.fsrs_state,
     )
@@ -133,8 +149,10 @@ async def submit_exercise(
         conn,
         user_id=user_id,
         concept_id=concept_id,
-        current_exercise_difficulty=capped_difficulty.value,
-        consecutive_correct=new_streak,
+        forward_difficulty=fwd_diff,
+        forward_consecutive_correct=fwd_streak,
+        reverse_difficulty=rev_diff,
+        reverse_consecutive_correct=rev_streak,
         fsrs_state=review_result.fsrs_state,
         fsrs_step=review_result.fsrs_step,
         fsrs_stability=review_result.fsrs_stability,
@@ -154,24 +172,47 @@ async def submit_exercise(
         review_duration_ms=request.review_duration_ms,
     )
     # Refresh precalculated progress summary
-    concept = await get_concept(conn, concept_id=concept_id)
-    if concept:
-        await refresh_progress_summary(
-            conn,
-            user_id=user_id,
-            course_id=concept["course_id"],
-            cefr_level=concept["cefr_level"],
-        )
+    await refresh_progress_summary(
+        conn,
+        user_id=user_id,
+        course_id=concept["course_id"],
+        cefr_level=concept["cefr_level"],
+    )
     await conn.commit()
 
     return ExerciseSubmitResponse(
         correct=correct,
-        correct_answer=exercise["correct_answer"],
+        correct_answer=correct_answer,
         normalized_user_answer=grading_result.normalized_user_answer,
-        new_exercise_difficulty=capped_difficulty,
-        consecutive_correct=new_streak,
+        new_forward_difficulty=ExerciseType(fwd_diff),
+        forward_consecutive_correct=fwd_streak,
+        new_reverse_difficulty=ExerciseType(rev_diff),
+        reverse_consecutive_correct=rev_streak,
         is_mastered=is_mastered,
         fsrs_due=review_result.fsrs_due,
         difficulty_advanced=difficulty_advanced,
         mastery_changed=mastery_changed,
     )
+
+
+def _resolve_correct_answer(
+    exercise_type: ExerciseType,
+    exercise: dict | None,
+    concept: dict,
+) -> str | None:
+    """Extract the correct answer from exercise JSONB data or concept fields."""
+    if exercise is not None:
+        data = exercise.get("data") or {}
+        # Cloze exercises store expected in data
+        if exercise_type in (ExerciseType.cloze, ExerciseType.reverse_cloze):
+            return data.get("expected")
+        # Grammar exercises may have correct_answer in data
+        if data.get("correct_answer"):
+            return data["correct_answer"]
+
+    # Fall back to concept source/target text
+    if exercise_type in (ExerciseType.forward_mc, ExerciseType.cloze, ExerciseType.forward_typing):
+        return concept["target_text"]
+    if exercise_type in (ExerciseType.reverse_mc, ExerciseType.reverse_cloze, ExerciseType.reverse_typing):
+        return concept["source_text"]
+    return None

@@ -7,18 +7,22 @@ from srs.scheduler import MASTERY_STABILITY_THRESHOLD
 
 
 def compute_mastery(
-    current_difficulty: ExerciseType,
+    forward_difficulty: ExerciseType | str,
+    reverse_difficulty: ExerciseType | str,
     fsrs_stability: float | None,
     fsrs_state: str | None,
 ) -> bool:
     """Return True if all mastery criteria are satisfied.
 
     Mastery requires:
-    - Difficulty at typing level
-    - fsrs_state == "Review"
+    - Forward track at forward_typing
+    - Reverse track at reverse_typing
+    - fsrs_state == "review"
     - fsrs_stability >= MASTERY_STABILITY_THRESHOLD (180 days)
     """
-    if current_difficulty != ExerciseType.typing:
+    if str(forward_difficulty) != ExerciseType.forward_typing:
+        return False
+    if str(reverse_difficulty) != ExerciseType.reverse_typing:
         return False
     if fsrs_state != "review":
         return False

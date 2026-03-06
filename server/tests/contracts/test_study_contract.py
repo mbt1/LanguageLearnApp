@@ -38,14 +38,16 @@ def _mini_course() -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "prompt": "hello",
-                "target": "hola",
+                "source_text": "hello",
+                "target_text": "hola",
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "Choose 'hello'",
-                        "correct_answer": "hola",
-                        "distractors": ["adiós", "gracias"],
+                        "ref": "hola-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "hola",
+                            "distractors_medium": ["adiós", "gracias"],
+                        },
                     }
                 ],
             }
@@ -89,7 +91,7 @@ async def test_study_review_matches_spec(
         json={
             "concept_id": concept_id,
             "rating": "good",
-            "exercise_type": "multiple_choice",
+            "exercise_type": "forward_mc",
             "correct": True,
         },
         headers=_auth_headers(user["access_token"]),

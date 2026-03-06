@@ -2,15 +2,62 @@
 """Course import service — validates and persists a CourseImport payload."""
 from __future__ import annotations
 
+import json
 from collections import defaultdict, deque
+from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 from psycopg import AsyncConnection
 
-from content.schemas import CourseImport, CourseImportResponse
+from content.schemas import (
+    ConceptImport,
+    CourseImport,
+    CourseImportResponse,
+    ExerciseImport,
+)
 from db.queries.concepts import add_prerequisite, create_concept
 from db.queries.courses import create_course
-from db.queries.exercises import create_exercise
+from db.queries.exercises import create_exercise, create_exercise_concept
+
+
+def load_course_folder(folder: Path) -> CourseImport:
+    """Load a folder-based course into a CourseImport model.
+
+    Expected structure:
+      folder/__course__.json  — course metadata (slug, title, languages)
+      folder/*.json           — content files with {"concepts": [...]} and/or {"exercises": [...]}
+    """
+    meta_path = folder / "__course__.json"
+    if not meta_path.exists():
+        msg = f"Missing __course__.json in {folder}"
+        raise ValueError(msg)
+
+    meta: dict[str, Any] = json.loads(meta_path.read_text())
+
+    all_concepts: list[ConceptImport] = []
+    all_standalone_exercises: list[ExerciseImport] = []
+
+    for path in sorted(folder.glob("*.json")):
+        if path.name == "__course__.json":
+            continue
+        data: dict[str, Any] = json.loads(path.read_text())
+
+        if "concepts" in data:
+            for raw in data["concepts"]:
+                all_concepts.append(ConceptImport.model_validate(raw))
+        if "exercises" in data:
+            for raw in data["exercises"]:
+                all_standalone_exercises.append(ExerciseImport.model_validate(raw))
+
+    return CourseImport(
+        slug=meta["slug"],
+        title=meta["title"],
+        source_language=meta["source_language"],
+        target_language=meta["target_language"],
+        concepts=all_concepts,
+        standalone_exercises=all_standalone_exercises,
+    )
 
 
 async def import_course(
@@ -48,11 +95,12 @@ async def import_course(
         row = await create_concept(
             conn,
             course_id=course_id,
+            ref=concept_data.ref,
             concept_type=concept_data.concept_type.value,
             cefr_level=concept_data.cefr_level.value,
             sequence=concept_data.sequence,
-            prompt=concept_data.prompt,
-            target=concept_data.target,
+            source_text=concept_data.source_text,
+            target_text=concept_data.target_text,
             explanation=concept_data.explanation,
         )
         concept_id_val: UUID = row["id"]
@@ -68,18 +116,43 @@ async def import_course(
                     source="manual",
                 )
 
-        # Insert exercises
+        # Insert inline exercises (belong to this concept)
         for ex in concept_data.exercises:
-            await create_exercise(
+            ex_row = await create_exercise(
                 conn,
+                exercise_type=ex.exercise_type,
+                ref=ex.ref,
+                data=ex.data,
+            )
+            await create_exercise_concept(
+                conn,
+                exercise_id=ex_row["id"],
                 concept_id=concept_id_val,
-                exercise_type=ex.exercise_type.value,
-                prompt=ex.prompt,
-                correct_answer=ex.correct_answer,
-                distractors=ex.distractors,
-                sentence_template=ex.sentence_template,
+                is_primary=True,
             )
             exercises_created += 1
+
+    # Insert standalone exercises (multi-concept)
+    for ex in data.standalone_exercises:
+        ex_row = await create_exercise(
+            conn,
+            exercise_type=ex.exercise_type,
+            ref=ex.ref,
+            data=ex.data,
+        )
+        if ex.concept_refs:
+            for i, cref in enumerate(ex.concept_refs):
+                cid = ref_to_id.get(cref)
+                if cid is None:
+                    msg = f"Unknown concept ref '{cref}' in exercise '{ex.ref}'"
+                    raise ValueError(msg)
+                await create_exercise_concept(
+                    conn,
+                    exercise_id=ex_row["id"],
+                    concept_id=cid,
+                    is_primary=(i == 0),
+                )
+        exercises_created += 1
 
     return CourseImportResponse(
         course_id=course_id,

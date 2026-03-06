@@ -14,11 +14,12 @@ async def create_concept(
     conn: AsyncConnection,
     *,
     course_id: UUID,
+    ref: str,
     concept_type: str,
     cefr_level: str,
     sequence: int,
-    prompt: str,
-    target: str,
+    source_text: str,
+    target_text: str,
     explanation: str | None = None,
 ) -> dict[str, Any]:
     """Insert a new concept and return the created row."""
@@ -26,19 +27,21 @@ async def create_concept(
         await cur.execute(
             """
             INSERT INTO concepts
-                (course_id, concept_type, cefr_level, sequence, prompt, target, explanation)
+                (course_id, ref, concept_type, cefr_level, sequence,
+                 source_text, target_text, explanation)
             VALUES
-                (%(course_id)s, %(concept_type)s, %(cefr_level)s, %(sequence)s,
-                 %(prompt)s, %(target)s, %(explanation)s)
+                (%(course_id)s, %(ref)s, %(concept_type)s, %(cefr_level)s, %(sequence)s,
+                 %(source_text)s, %(target_text)s, %(explanation)s)
             RETURNING *
             """,
             {
                 "course_id": course_id,
+                "ref": ref,
                 "concept_type": concept_type,
                 "cefr_level": cefr_level,
                 "sequence": sequence,
-                "prompt": prompt,
-                "target": target,
+                "source_text": source_text,
+                "target_text": target_text,
                 "explanation": explanation,
             },
         )

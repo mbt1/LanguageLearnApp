@@ -23,14 +23,16 @@ def _sample_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "prompt": "hello",
-                "target": "hola",
+                "source_text": "hello",
+                "target_text": "hola",
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "Choose 'hello'",
-                        "correct_answer": "hola",
-                        "distractors": ["adiós", "gracias"],
+                        "ref": "hola-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "hola",
+                            "distractors_medium": ["adiós", "gracias"],
+                        },
                     }
                 ],
             },
@@ -39,15 +41,17 @@ def _sample_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "prompt": "goodbye",
-                "target": "adiós",
+                "source_text": "goodbye",
+                "target_text": "adiós",
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "Choose 'goodbye'",
-                        "correct_answer": "adiós",
-                        "distractors": ["hola", "gracias"],
+                        "ref": "adios-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "adiós",
+                            "distractors_medium": ["hola", "gracias"],
+                        },
                     }
                 ],
             },
@@ -56,21 +60,23 @@ def _sample_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "grammar",
                 "cefr_level": "A2",
                 "sequence": 1,
-                "prompt": "ser vs estar",
-                "target": "to be",
+                "source_text": "ser vs estar",
+                "target_text": "to be",
                 "explanation": "Both mean 'to be' but are used differently.",
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "Choose the correct form",
-                        "correct_answer": "es",
-                        "distractors": ["está", "son"],
+                        "ref": "ser-estar-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "es",
+                            "distractors_medium": ["está", "son"],
+                        },
                     },
                     {
-                        "exercise_type": "typing",
-                        "prompt": "Type 'he is tall'",
-                        "correct_answer": "él es alto",
+                        "ref": "ser-estar-typing-1",
+                        "exercise_type": "forward_typing",
+                        "data": {"correct_answer": "él es alto"},
                     },
                 ],
             },
@@ -139,15 +145,17 @@ async def test_import_course_circular_deps(
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "prompt": "a",
-                "target": "a",
+                "source_text": "a",
+                "target_text": "a",
                 "prerequisites": ["b"],
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "x",
-                        "correct_answer": "y",
-                        "distractors": ["z"],
+                        "ref": "a-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "y",
+                            "distractors_medium": ["z"],
+                        },
                     }
                 ],
             },
@@ -156,15 +164,17 @@ async def test_import_course_circular_deps(
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "prompt": "b",
-                "target": "b",
+                "source_text": "b",
+                "target_text": "b",
                 "prerequisites": ["a"],
                 "exercises": [
                     {
-                        "exercise_type": "multiple_choice",
-                        "prompt": "x",
-                        "correct_answer": "y",
-                        "distractors": ["z"],
+                        "ref": "b-mc-1",
+                        "exercise_type": "forward_mc",
+                        "data": {
+                            "correct_answer": "y",
+                            "distractors_medium": ["z"],
+                        },
                     }
                 ],
             },
@@ -246,14 +256,14 @@ async def test_get_concept_detail(client: httpx.AsyncClient) -> None:
     concepts_resp = await client.get(f"/v1/courses/{course_id}/concepts")
     concepts = concepts_resp.json()
     # Find "adios" which has prerequisite "hola"
-    adios = next(c for c in concepts if c["prompt"] == "goodbye")
+    adios = next(c for c in concepts if c["source_text"] == "goodbye")
 
     resp = await client.get(f"/v1/concepts/{adios['id']}")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["prompt"] == "goodbye"
+    assert data["source_text"] == "goodbye"
     assert len(data["prerequisites"]) == 1
-    assert data["prerequisites"][0]["prompt"] == "hello"
+    assert data["prerequisites"][0]["source_text"] == "hello"
     assert len(data["exercises"]) == 1
 
 

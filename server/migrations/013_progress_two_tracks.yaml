@@ -1,0 +1,45 @@
+operations:
+  - sql:
+      up: |
+        ALTER TABLE user_concept_progress
+          ADD COLUMN IF NOT EXISTS forward_difficulty text DEFAULT 'forward_mc',
+          ADD COLUMN IF NOT EXISTS forward_consecutive_correct integer DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS reverse_difficulty text DEFAULT 'reverse_mc',
+          ADD COLUMN IF NOT EXISTS reverse_consecutive_correct integer DEFAULT 0;
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'user_concept_progress'
+              AND column_name = 'current_exercise_difficulty'
+          ) THEN
+            UPDATE user_concept_progress SET
+              forward_difficulty = CASE current_exercise_difficulty::text
+                WHEN 'multiple_choice' THEN 'forward_mc'
+                WHEN 'cloze' THEN 'cloze'
+                WHEN 'reverse_typing' THEN 'reverse_typing'
+                WHEN 'typing' THEN 'forward_typing'
+                ELSE 'forward_mc'
+              END,
+              forward_consecutive_correct = consecutive_correct;
+            ALTER TABLE user_concept_progress DROP COLUMN current_exercise_difficulty CASCADE;
+            ALTER TABLE user_concept_progress DROP COLUMN consecutive_correct CASCADE;
+          END IF;
+        END $$;
+      down: |
+        ALTER TABLE user_concept_progress
+          ADD COLUMN current_exercise_difficulty exercise_type DEFAULT 'multiple_choice',
+          ADD COLUMN consecutive_correct integer DEFAULT 0;
+        UPDATE user_concept_progress SET
+          current_exercise_difficulty = CASE forward_difficulty
+            WHEN 'forward_mc' THEN 'multiple_choice'::exercise_type
+            WHEN 'cloze' THEN 'cloze'::exercise_type
+            WHEN 'forward_typing' THEN 'typing'::exercise_type
+            ELSE 'multiple_choice'::exercise_type
+          END,
+          consecutive_correct = forward_consecutive_correct;
+        ALTER TABLE user_concept_progress
+          DROP COLUMN forward_difficulty,
+          DROP COLUMN forward_consecutive_correct,
+          DROP COLUMN reverse_difficulty,
+          DROP COLUMN reverse_consecutive_correct;
