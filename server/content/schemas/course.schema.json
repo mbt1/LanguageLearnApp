@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://languagelearn.app/schemas/course.schema.json",
+  "title": "Course Header",
+  "description": "Metadata for a course directory (__course__.json).",
+  "type": "object",
+  "required": ["slug", "title", "source_language", "target_language"],
+  "additionalProperties": false,
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "URL-safe unique identifier for the course (e.g. 'en-es-basics')."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable course title."
+    },
+    "source_language": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}$",
+      "description": "ISO 639 language code for the learner's native language."
+    },
+    "target_language": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}$",
+      "description": "ISO 639 language code for the language being learned."
+    }
+  }
+}

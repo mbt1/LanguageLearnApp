@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://languagelearn.app/schemas/concept-file.schema.json",
+  "title": "Concept File",
+  "description": "Content file with concepts and/or exercises.",
+  "type": "object",
+  "additionalProperties": false,
+  "anyOf": [{ "required": ["concepts"] }, { "required": ["exercises"] }],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor support."
+    },
+    "concepts": {
+      "type": "array",
+      "description": "Concepts defined in this file.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/concept" }
+    },
+    "exercises": {
+      "type": "array",
+      "description": "Standalone exercises referencing concepts by ref.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/exercise" }
+    }
+  },
+
+  "$defs": {
+    "ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$",
+      "description": "Unique kebab-case reference within the course."
+    },
+
+    "cefrLevel": {
+      "type": "string",
+      "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
+      "description": "Common European Framework of Reference level."
+    },
+
+    "conceptType": {
+      "type": "string",
+      "enum": ["vocabulary", "grammar"]
+    },
+
+    "distractorPool": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+
+    "distractorPools": {
+      "type": "object",
+      "description": "Distractor pools by category. Flattened, deduplicated, and sampled at runtime.",
+      "additionalProperties": false,
+      "properties": {
+        "random": { "$ref": "#/$defs/distractorPool" },
+        "semantic": { "$ref": "#/$defs/distractorPool" },
+        "phonological": { "$ref": "#/$defs/distractorPool" },
+        "antonym": { "$ref": "#/$defs/distractorPool" }
+      },
+      "minProperties": 0
+    },
+
+    "exerciseData": {
+      "type": "object",
+      "description": "Exercise data for translate and cloze. Use ___ for gap(s) in cloze prompts.",
+      "required": ["prompt", "answers", "distractors"],
+      "additionalProperties": false,
+      "properties": {
+        "prompt": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Lines shown to the learner."
+        },
+        "answers": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          },
+          "minItems": 1,
+          "description": "Outer array = positions (one per gap, or one for translate). Inner array = accepted alternatives."
+        },
+        "distractors": { "$ref": "#/$defs/distractorPools" }
+      }
+    },
+
+    "matchData": {
+      "type": "object",
+      "description": "Match exercise data.",
+      "required": ["pairs", "distractors"],
+      "additionalProperties": false,
+      "properties": {
+        "pairs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["prompt", "answers"],
+            "additionalProperties": false,
+            "properties": {
+              "prompt": { "type": "string", "minLength": 1 },
+              "answers": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 },
+                "minItems": 1,
+                "description": "Accepted answers. First is primary/displayed."
+              }
+            }
+          }
+        },
+        "distractors": { "$ref": "#/$defs/distractorPools" }
+      }
+    },
+
+    "exercise": {
+      "type": "object",
+      "description": "A single exercise.",
+      "required": ["ref", "exercise_type", "data"],
+      "properties": {
+        "ref": { "$ref": "#/$defs/ref" },
+        "exercise_type": {
+          "type": "string",
+          "enum": ["translate", "cloze", "match"]
+        },
+        "reverse": {
+          "type": "boolean",
+          "default": false,
+          "description": "Indicates this exercise prompts in the target language."
+        },
+        "data": {
+          "type": "object",
+          "description": "Exercise payload."
+        },
+        "concept_refs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Refs of concepts this exercise covers."
+        },
+        "cefr_level": { "$ref": "#/$defs/cefrLevel" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "exercise_type": { "enum": ["translate", "cloze"] } } },
+          "then": { "properties": { "data": { "$ref": "#/$defs/exerciseData" } } }
+        },
+        {
+          "if": { "properties": { "exercise_type": { "const": "match" } } },
+          "then": { "properties": { "data": { "$ref": "#/$defs/matchData" } } }
+        }
+      ]
+    },
+
+    "concept": {
+      "type": "object",
+      "description": "A learnable concept (word, phrase, grammar rule).",
+      "required": [
+        "ref",
+        "concept_type",
+        "cefr_level",
+        "sequence",
+        "exercises"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ref": { "$ref": "#/$defs/ref" },
+        "concept_type": { "$ref": "#/$defs/conceptType" },
+        "cefr_level": { "$ref": "#/$defs/cefrLevel" },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Teaching order within the course."
+        },
+        "explanation": {
+          "type": ["string", "null"],
+          "description": "Markdown explanation shown after answering."
+        },
+        "prerequisites": {
+          "type": ["array", "null"],
+          "items": { "type": "string" },
+          "description": "Refs of concepts that must be learned first."
+        },
+        "exercises": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/exercise" },
+          "description": "Inline exercises for this concept."
+        }
+      }
+    }
+  }
+}
