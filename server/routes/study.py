@@ -58,6 +58,9 @@ from srs.session import SessionItem, build_session
 
 router = APIRouter(tags=["study"])
 
+# Number of distractors to select from pools for MC/cloze exercises.
+_NUM_DISTRACTORS = 3
+
 
 # ── POST /v1/study/session ────────────────────────────────────
 
@@ -112,14 +115,12 @@ async def create_study_session(
                 )
                 items.append(SessionItem(
                     concept_id=cid, exercise_type=fwd_type, is_review=True,
-                    source_text=concept["source_text"], target_text=concept["target_text"],
                     concept_type=ConceptType(concept["concept_type"]),
                     cefr_level=CefrLevel(concept["cefr_level"]),
                     explanation=concept.get("explanation"),
                 ))
                 items.append(SessionItem(
                     concept_id=cid, exercise_type=rev_type, is_review=True,
-                    source_text=concept["source_text"], target_text=concept["target_text"],
                     concept_type=ConceptType(concept["concept_type"]),
                     cefr_level=CefrLevel(concept["cefr_level"]),
                     explanation=concept.get("explanation"),
@@ -128,7 +129,6 @@ async def create_study_session(
                 items.append(SessionItem(
                     concept_id=cid, exercise_type=ExerciseType.forward_mc,
                     is_review=False,
-                    source_text=concept["source_text"], target_text=concept["target_text"],
                     concept_type=ConceptType(concept["concept_type"]),
                     cefr_level=CefrLevel(concept["cefr_level"]),
                     explanation=concept.get("explanation"),
@@ -136,7 +136,6 @@ async def create_study_session(
                 items.append(SessionItem(
                     concept_id=cid, exercise_type=ExerciseType.reverse_mc,
                     is_review=False,
-                    source_text=concept["source_text"], target_text=concept["target_text"],
                     concept_type=ConceptType(concept["concept_type"]),
                     cefr_level=CefrLevel(concept["cefr_level"]),
                     explanation=concept.get("explanation"),
@@ -174,8 +173,8 @@ async def create_study_session(
             ex = random.choice(exercises)  # noqa: S311
             enriched_items.append(_enrich_item(item, ex))
         else:
-            # Auto-generate for typing exercises without explicit content
-            enriched_items.append(_auto_enrich_item(item))
+            # No exercise found — skip (should not happen with well-formed content)
+            enriched_items.append(item)
     items = enriched_items
 
     # Create initial progress rows for new concepts added to session
@@ -224,52 +223,50 @@ def _row_to_progress_item(row: dict[str, Any]) -> CefrProgressItem:
     )
 
 
-def _enrich_item(item: SessionItem, ex: dict[str, Any]) -> SessionItem:
-    """Enrich a session item from a JSONB exercise row."""
-    data = ex.get("data") or {}
-    # Derive correct_answer and distractors from exercise data + concept
-    correct_answer = None
-    distractors = None
-    sentence_template = None
+def _select_distractors(distractor_pools: dict[str, list[str]], n: int = _NUM_DISTRACTORS) -> list[str]:
+    """Select N distractors from typed distractor pools.
 
-    ex_type = item.exercise_type
-    if ex_type in (ExerciseType.forward_mc, ExerciseType.reverse_mc):
-        if ex_type == ExerciseType.forward_mc:
-            correct_answer = data.get("correct_answer") or item.target_text
-        else:
-            correct_answer = data.get("correct_answer") or item.source_text
-        # Pick medium distractors as default
-        distractors = data.get("distractors_medium") or data.get("distractors_easy") or []
-    elif ex_type in (ExerciseType.cloze, ExerciseType.reverse_cloze):
-        sentence_template = data.get("gapped_sentence")
-        correct_answer = data.get("expected")
-        distractors = data.get("distractors_medium") or data.get("distractors_easy") or []
-    elif ex_type == ExerciseType.forward_typing:
-        correct_answer = data.get("correct_answer") or item.target_text
-    elif ex_type == ExerciseType.reverse_typing:
-        correct_answer = data.get("correct_answer") or item.source_text
+    Flattens all pools, deduplicates, shuffles, and picks up to N.
+    """
+    all_distractors: list[str] = []
+    seen: set[str] = set()
+    for pool in distractor_pools.values():
+        for d in pool:
+            if d not in seen:
+                seen.add(d)
+                all_distractors.append(d)
+    random.shuffle(all_distractors)
+    return all_distractors[:n]
+
+
+def _enrich_item(item: SessionItem, ex: dict[str, Any]) -> SessionItem:
+    """Enrich a session item from a JSONB exercise row.
+
+    New data format: {source, targets[], distractors: {pool_name: [...]}}
+    """
+    data = ex.get("data") or {}
+
+    # Extract prompt and correct answer from exercise data
+    prompt = data.get("source", "")
+    targets = data.get("targets", [])
+    correct_answer = targets[0] if targets else ""
+
+    # Select distractors for MC/cloze exercises
+    distractors = None
+    raw_distractors = data.get("distractors")
+    if raw_distractors and isinstance(raw_distractors, dict):
+        selected = _select_distractors(raw_distractors)
+        # Ensure correct answers don't appear as distractors
+        selected = [d for d in selected if d not in targets]
+        distractors = selected[:_NUM_DISTRACTORS] if selected else None
 
     return replace(
         item,
         exercise_id=ex["id"],
-        exercise_data=data,
+        prompt=prompt,
         correct_answer=correct_answer,
         distractors=distractors,
-        sentence_template=sentence_template,
     )
-
-
-def _auto_enrich_item(item: SessionItem) -> SessionItem:
-    """Auto-generate exercise data for typing exercises without stored exercises."""
-    if item.exercise_type == ExerciseType.forward_typing:
-        return replace(item, correct_answer=item.target_text)
-    if item.exercise_type == ExerciseType.reverse_typing:
-        return replace(item, correct_answer=item.source_text)
-    if item.exercise_type == ExerciseType.forward_mc:
-        return replace(item, correct_answer=item.target_text)
-    if item.exercise_type == ExerciseType.reverse_mc:
-        return replace(item, correct_answer=item.source_text)
-    return item
 
 
 def _items_to_response(items: list[SessionItem]) -> list[StudySessionItem]:
@@ -278,15 +275,12 @@ def _items_to_response(items: list[SessionItem]) -> list[StudySessionItem]:
             concept_id=item.concept_id,
             exercise_type=item.exercise_type,
             is_review=item.is_review,
-            source_text=item.source_text,
-            target_text=item.target_text,
             concept_type=item.concept_type,
             cefr_level=item.cefr_level,
             exercise_id=item.exercise_id,
-            exercise_data=item.exercise_data,
+            prompt=item.prompt,
             correct_answer=item.correct_answer,
             distractors=item.distractors,
-            sentence_template=item.sentence_template,
             explanation=item.explanation,
         )
         for item in items
@@ -510,8 +504,7 @@ async def get_review_schedule(
     items = [
         ConceptProgressDetail(
             concept_id=row["concept_id"],
-            source_text=row["source_text"],
-            target_text=row["target_text"],
+            ref=row["ref"],
             concept_type=row["concept_type"],
             cefr_level=row["cefr_level"],
             forward_difficulty=row["forward_difficulty"],

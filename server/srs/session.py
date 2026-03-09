@@ -18,15 +18,12 @@ class SessionItem:
     concept_id: UUID
     exercise_type: ExerciseType
     is_review: bool
-    source_text: str
-    target_text: str
     concept_type: ConceptType
     cefr_level: CefrLevel
     exercise_id: UUID | None = field(default=None)
-    exercise_data: dict[str, Any] | None = field(default=None)
-    correct_answer: str | None = field(default=None)
+    prompt: str = field(default="")
+    correct_answer: str = field(default="")
     distractors: list[str] | None = field(default=None)
-    sentence_template: str | None = field(default=None)
     explanation: str | None = field(default=None)
 
 
@@ -86,8 +83,6 @@ def build_session(
             concept_id=cid,
             exercise_type=fwd_type,
             is_review=True,
-            source_text=row["source_text"],
-            target_text=row["target_text"],
             concept_type=ConceptType(row["concept_type"]),
             cefr_level=CefrLevel(row["cefr_level"]),
             explanation=row.get("explanation"),
@@ -101,8 +96,6 @@ def build_session(
             concept_id=cid,
             exercise_type=rev_type,
             is_review=True,
-            source_text=row["source_text"],
-            target_text=row["target_text"],
             concept_type=ConceptType(row["concept_type"]),
             cefr_level=CefrLevel(row["cefr_level"]),
             explanation=row.get("explanation"),
@@ -122,8 +115,6 @@ def build_session(
                 concept_id=concept["id"],
                 exercise_type=ExerciseType.forward_mc,
                 is_review=False,
-                source_text=concept["source_text"],
-                target_text=concept["target_text"],
                 concept_type=ConceptType(concept["concept_type"]),
                 cefr_level=CefrLevel(concept["cefr_level"]),
                 explanation=concept.get("explanation"),
@@ -134,8 +125,6 @@ def build_session(
                 concept_id=concept["id"],
                 exercise_type=ExerciseType.reverse_mc,
                 is_review=False,
-                source_text=concept["source_text"],
-                target_text=concept["target_text"],
                 concept_type=ConceptType(concept["concept_type"]),
                 cefr_level=CefrLevel(concept["cefr_level"]),
                 explanation=concept.get("explanation"),

@@ -110,7 +110,7 @@ async def list_due_reviews(
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
-            SELECT ucp.*, c.source_text, c.target_text, c.concept_type, c.cefr_level, c.explanation
+            SELECT ucp.*, c.concept_type, c.cefr_level, c.explanation
             FROM user_concept_progress ucp
             JOIN concepts c ON c.id = ucp.concept_id
             WHERE ucp.user_id = %(user_id)s
@@ -226,8 +226,7 @@ async def list_all_progress_detail(
             """
             SELECT
                 c.id AS concept_id,
-                c.source_text,
-                c.target_text,
+                c.ref,
                 c.concept_type,
                 c.cefr_level,
                 c.sequence,

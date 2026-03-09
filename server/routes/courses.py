@@ -53,11 +53,10 @@ def _course_row_to_response(row: dict[str, Any]) -> CourseResponse:
 def _concept_row_to_summary(row: dict[str, Any]) -> ConceptSummary:
     return ConceptSummary(
         id=row["id"],
+        ref=row["ref"],
         concept_type=ConceptType(row["concept_type"]),
         cefr_level=CefrLevel(row["cefr_level"]),
         sequence=row["sequence"],
-        source_text=row["source_text"],
-        target_text=row["target_text"],
     )
 
 
@@ -172,17 +171,15 @@ async def get_concept_detail(
 
     return ConceptDetail(
         id=concept["id"],
+        ref=concept["ref"],
         concept_type=ConceptType(concept["concept_type"]),
         cefr_level=CefrLevel(concept["cefr_level"]),
         sequence=concept["sequence"],
-        source_text=concept["source_text"],
-        target_text=concept["target_text"],
         explanation=concept["explanation"],
         prerequisites=[
             PrerequisiteInfo(
                 concept_id=p["id"],
-                source_text=p["source_text"],
-                target_text=p["target_text"],
+                ref=p["ref"],
                 cefr_level=CefrLevel(p["cefr_level"]),
                 source=DependencySource(p["source"]),
             )

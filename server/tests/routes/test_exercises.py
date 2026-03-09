@@ -39,21 +39,25 @@ def _mini_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "source_text": "hello",
-                "target_text": "hola",
                 "exercises": [
                     {
                         "ref": "hola-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "hola",
-                            "distractors_medium": ["adiós", "gracias"],
+                            "source": "hello",
+                            "targets": ["hola"],
+                            "distractors": {"semantic": ["adiós", "gracias"], "random": []},
                         },
                     },
                     {
                         "ref": "hola-typing-1",
                         "exercise_type": "forward_typing",
-                        "data": {"correct_answer": "hola"},
+                        "data": {"source": "hello", "targets": ["hola"]},
+                    },
+                    {
+                        "ref": "hola-reverse-typing-1",
+                        "exercise_type": "reverse_typing",
+                        "data": {"source": "hola", "targets": ["hello"]},
                     },
                 ],
             },
@@ -62,15 +66,14 @@ def _mini_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "source_text": "goodbye",
-                "target_text": "adiós",
                 "exercises": [
                     {
                         "ref": "adios-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "adiós",
-                            "distractors_medium": ["hola", "gracias"],
+                            "source": "goodbye",
+                            "targets": ["adiós"],
+                            "distractors": {"semantic": ["hola", "gracias"], "random": []},
                         },
                     },
                 ],
@@ -254,10 +257,10 @@ async def test_submit_correct_advances_streak(client: httpx.AsyncClient) -> None
     assert resp.json()["forward_consecutive_correct"] == 1
 
 
-async def test_submit_exercise_type_without_explicit_exercise_falls_back(
+async def test_submit_exercise_type_without_explicit_exercise_returns_404(
     client: httpx.AsyncClient,
 ) -> None:
-    """Submitting an exercise type without an explicit exercise uses concept fallback."""
+    """Submitting an exercise type without an explicit exercise returns 404."""
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
     assert course_resp.status_code == 201
@@ -265,7 +268,7 @@ async def test_submit_exercise_type_without_explicit_exercise_falls_back(
 
     items = await _start_session(client, course_id, user["access_token"])
     concept_id = items[0]["concept_id"]
-    # Request cloze which doesn't have explicit exercise — falls back to target_text
+    # Request cloze which doesn't have explicit exercise — no fallback, returns 404
     resp = await client.post(
         "/v1/exercises/submit",
         json={
@@ -275,8 +278,7 @@ async def test_submit_exercise_type_without_explicit_exercise_falls_back(
         },
         headers=_auth_headers(user["access_token"]),
     )
-    assert resp.status_code == 200
-    assert resp.json()["correct"] is True
+    assert resp.status_code == 404
 
 
 async def test_submit_concept_without_progress(client: httpx.AsyncClient) -> None:
@@ -314,18 +316,18 @@ async def _advance_forward_track(
         assert resp.status_code == 200
 
 
-async def test_submit_reverse_typing_without_explicit_exercise(
+async def test_submit_reverse_typing(
     client: httpx.AsyncClient,
 ) -> None:
-    """reverse_typing with no DB exercise uses concept source_text as correct_answer."""
+    """reverse_typing uses exercise data targets as correct_answer."""
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
     assert course_resp.status_code == 201
     course_id = course_resp.json()["course_id"]
 
     items = await _start_session(client, course_id, user["access_token"])
-    # Find hola concept (source_text=hello, target_text=hola)
-    hola_item = next(i for i in items if i["target_text"] == "hola")
+    # Find hola concept (correct_answer="hola")
+    hola_item = next(i for i in items if i["correct_answer"] == "hola")
     concept_id = hola_item["concept_id"]
 
     # Advance forward track
@@ -357,7 +359,7 @@ async def test_submit_reverse_typing_wrong_answer(
     course_id = course_resp.json()["course_id"]
 
     items = await _start_session(client, course_id, user["access_token"])
-    hola_item = next(i for i in items if i["target_text"] == "hola")
+    hola_item = next(i for i in items if i["correct_answer"] == "hola")
     concept_id = hola_item["concept_id"]
 
     await _advance_forward_track(client, concept_id, user["access_token"])

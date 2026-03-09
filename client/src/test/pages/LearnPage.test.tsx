@@ -19,13 +19,11 @@ const mockItem = {
   concept_id: 'concept-1',
   exercise_type: 'forward_mc' as const,
   is_review: false,
-  source_text: "hello",
-  target_text: 'hola',
   concept_type: 'vocabulary' as const,
   cefr_level: 'A1' as const,
+  prompt: 'hello',
   correct_answer: 'hola',
   distractors: ['adiós', 'gracias'],
-  sentence_template: null,
   explanation: null,
 }
 

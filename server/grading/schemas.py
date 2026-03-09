@@ -17,7 +17,7 @@ class Verdict(StrEnum):
 @dataclass(frozen=True, slots=True)
 class GradingRequest:
     exercise_type: ExerciseType
-    correct_answer: str
+    correct_answers: list[str]
     user_answer: str
     language: str = field(default="default")  # hook for V2 language-specific normalizers
 

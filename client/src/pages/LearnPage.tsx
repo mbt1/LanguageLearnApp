@@ -91,12 +91,10 @@ export function LearnPage() {
 
   // Memoize MC options so they don't reshuffle on exercise→feedback transition
   const item = session?.items[index] ?? null
-  const isForward = item?.exercise_type === 'forward_mc' || item?.exercise_type === 'cloze' || item?.exercise_type === 'forward_typing'
-  const prompt = item ? (isForward ? item.source_text : item.target_text) : ''
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const mcOptions = useMemo(() => {
     if (!item || (item.exercise_type !== 'forward_mc' && item.exercise_type !== 'reverse_mc')) return []
-    const answer = item.correct_answer ?? (isForward ? item.target_text : item.source_text)
+    const answer = item.correct_answer
     return shuffled([...(item.distractors ?? []), answer])
   }, [index, session])
 
@@ -143,16 +141,16 @@ export function LearnPage() {
       {(item.exercise_type === 'forward_mc' || item.exercise_type === 'reverse_mc') && (
         <MultipleChoiceExercise
           key={index}
-          prompt={prompt}
+          prompt={item.prompt}
           options={mcOptions}
           onAnswer={(a) => void handleAnswer(a)}
           feedback={feedbackData ? { correct: feedbackData.correct, correctAnswer: feedbackData.correct_answer } : null}
         />
       )}
-      {(item.exercise_type === 'cloze' || item.exercise_type === 'reverse_cloze') && item.sentence_template && (
+      {(item.exercise_type === 'cloze' || item.exercise_type === 'reverse_cloze') && (
         <ClozeExercise
           key={index}
-          sentenceTemplate={item.sentence_template}
+          sentenceTemplate={item.prompt}
           onAnswer={(a) => void handleAnswer(a)}
           feedback={feedbackData ? { correct: feedbackData.correct } : null}
         />
@@ -160,7 +158,7 @@ export function LearnPage() {
       {(item.exercise_type === 'forward_typing' || item.exercise_type === 'reverse_typing') && (
         <TypingExercise
           key={index}
-          prompt={prompt}
+          prompt={item.prompt}
           onAnswer={(a) => void handleAnswer(a)}
           feedback={feedbackData ? { correct: feedbackData.correct } : null}
         />

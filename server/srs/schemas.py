@@ -7,8 +7,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from typing import Any
-
 from content.schemas import CefrLevel, ConceptType, ExerciseType  # noqa: TC001
 
 # ── Study session ─────────────────────────────────────────
@@ -24,15 +22,12 @@ class StudySessionItem(BaseModel):
     concept_id: UUID
     exercise_type: ExerciseType
     is_review: bool
-    source_text: str
-    target_text: str
     concept_type: ConceptType
     cefr_level: CefrLevel
     exercise_id: UUID | None = None
-    exercise_data: dict[str, Any] | None = None
-    correct_answer: str | None = None
+    prompt: str = ""
+    correct_answer: str = ""
     distractors: list[str] | None = None
-    sentence_template: str | None = None
     explanation: str | None = None
 
 
@@ -120,8 +115,7 @@ class AllProgressResponse(BaseModel):
 class ConceptProgressDetail(BaseModel):
     """Full SRS detail for a single concept (started or unstarted)."""
     concept_id: UUID
-    source_text: str
-    target_text: str
+    ref: str
     concept_type: ConceptType
     cefr_level: CefrLevel
     forward_difficulty: str | None = None

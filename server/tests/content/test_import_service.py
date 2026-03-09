@@ -27,8 +27,6 @@ def _make_concept(
     concept_type: ConceptType = ConceptType.vocabulary,
     cefr_level: CefrLevel = CefrLevel.A1,
     sequence: int = 1,
-    source_text: str | None = None,
-    target_text: str | None = None,
     prerequisites: list[str] | None = None,
     exercises: list[ExerciseImport] | None = None,
 ) -> ConceptImport:
@@ -37,8 +35,6 @@ def _make_concept(
         concept_type=concept_type,
         cefr_level=cefr_level,
         sequence=sequence,
-        source_text=source_text or f"source-{ref}",
-        target_text=target_text or f"target-{ref}",
         prerequisites=prerequisites,
         exercises=exercises
         or [
@@ -46,8 +42,9 @@ def _make_concept(
                 ref=f"{ref}-mc-1",
                 exercise_type="forward_mc",
                 data={
-                    "correct_answer": f"target-{ref}",
-                    "distractors_medium": ["wrong1", "wrong2"],
+                    "source": f"source-{ref}",
+                    "targets": [f"target-{ref}"],
+                    "distractors": {"random": ["wrong1", "wrong2"]},
                 },
             ),
         ],
@@ -101,7 +98,7 @@ async def test_import_simple_course(db_conn: AsyncConnection[Any]) -> None:
     assert len(concepts) == 3
 
     # Find the como-estas concept and verify prerequisites
-    como = next(c for c in concepts if c["source_text"] == "source-como-estas")
+    como = next(c for c in concepts if c["ref"] == "como-estas")
     prereqs = await get_prerequisites(db_conn, concept_id=como["id"])
     assert len(prereqs) == 2
 
@@ -115,21 +112,20 @@ async def test_import_with_exercises(db_conn: AsyncConnection[Any]) -> None:
                 concept_type=ConceptType.vocabulary,
                 cefr_level=CefrLevel.A1,
                 sequence=1,
-                source_text="hello",
-                target_text="hola",
                 exercises=[
                     ExerciseImport(
                         ref="hola-mc-1",
                         exercise_type="forward_mc",
                         data={
-                            "correct_answer": "hola",
-                            "distractors_medium": ["adiós", "gracias"],
+                            "source": "hello",
+                            "targets": ["hola"],
+                            "distractors": {"random": ["adiós", "gracias"]},
                         },
                     ),
                     ExerciseImport(
                         ref="hola-typing-1",
                         exercise_type="forward_typing",
-                        data={"correct_answer": "hola"},
+                        data={"source": "hello", "targets": ["hola"]},
                     ),
                 ],
             )

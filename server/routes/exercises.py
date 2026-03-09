@@ -57,9 +57,9 @@ async def submit_exercise(
             conn, concept_id=concept_id, exercise_type=request.exercise_type.value,
         )
 
-    # Resolve correct_answer from exercise JSONB data or concept
-    correct_answer = _resolve_correct_answer(request.exercise_type, exercise, concept)
-    if correct_answer is None:
+    # Resolve correct answers from exercise JSONB data
+    correct_answers = _resolve_correct_answers(exercise)
+    if not correct_answers:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Cannot determine correct answer for exercise "
@@ -78,7 +78,7 @@ async def submit_exercise(
     grading_result = default_grader.grade(
         GradingRequest(
             exercise_type=request.exercise_type,
-            correct_answer=correct_answer,
+            correct_answers=correct_answers,
             user_answer=request.user_answer,
         )
     )
@@ -182,7 +182,7 @@ async def submit_exercise(
 
     return ExerciseSubmitResponse(
         correct=correct,
-        correct_answer=correct_answer,
+        correct_answer=correct_answers[0],
         normalized_user_answer=grading_result.normalized_user_answer,
         new_forward_difficulty=ExerciseType(fwd_diff),
         forward_consecutive_correct=fwd_streak,
@@ -195,24 +195,15 @@ async def submit_exercise(
     )
 
 
-def _resolve_correct_answer(
-    exercise_type: ExerciseType,
-    exercise: dict | None,
-    concept: dict,
-) -> str | None:
-    """Extract the correct answer from exercise JSONB data or concept fields."""
-    if exercise is not None:
-        data = exercise.get("data") or {}
-        # Cloze exercises store expected in data
-        if exercise_type in (ExerciseType.cloze, ExerciseType.reverse_cloze):
-            return data.get("expected")
-        # Grammar exercises may have correct_answer in data
-        if data.get("correct_answer"):
-            return data["correct_answer"]
+def _resolve_correct_answers(exercise: dict | None) -> list[str] | None:
+    """Extract correct answers from exercise JSONB data.
 
-    # Fall back to concept source/target text
-    if exercise_type in (ExerciseType.forward_mc, ExerciseType.cloze, ExerciseType.forward_typing):
-        return concept["target_text"]
-    if exercise_type in (ExerciseType.reverse_mc, ExerciseType.reverse_cloze, ExerciseType.reverse_typing):
-        return concept["source_text"]
+    New format: data.targets is a list of accepted answers.
+    """
+    if exercise is None:
+        return None
+    data = exercise.get("data") or {}
+    targets = data.get("targets")
+    if targets and isinstance(targets, list):
+        return targets
     return None

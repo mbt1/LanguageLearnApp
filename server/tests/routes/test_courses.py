@@ -23,15 +23,14 @@ def _sample_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "source_text": "hello",
-                "target_text": "hola",
                 "exercises": [
                     {
                         "ref": "hola-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "hola",
-                            "distractors_medium": ["adiós", "gracias"],
+                            "source": "hello",
+                            "targets": ["hola"],
+                            "distractors": {"semantic": ["adiós", "gracias"], "random": []},
                         },
                     }
                 ],
@@ -41,16 +40,15 @@ def _sample_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "source_text": "goodbye",
-                "target_text": "adiós",
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
                         "ref": "adios-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "adiós",
-                            "distractors_medium": ["hola", "gracias"],
+                            "source": "goodbye",
+                            "targets": ["adiós"],
+                            "distractors": {"semantic": ["hola", "gracias"], "random": []},
                         },
                     }
                 ],
@@ -60,8 +58,6 @@ def _sample_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "grammar",
                 "cefr_level": "A2",
                 "sequence": 1,
-                "source_text": "ser vs estar",
-                "target_text": "to be",
                 "explanation": "Both mean 'to be' but are used differently.",
                 "prerequisites": ["hola"],
                 "exercises": [
@@ -69,14 +65,15 @@ def _sample_course(slug: str | None = None) -> dict[str, Any]:
                         "ref": "ser-estar-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "es",
-                            "distractors_medium": ["está", "son"],
+                            "source": "ser vs estar",
+                            "targets": ["es"],
+                            "distractors": {"semantic": ["está", "son"], "random": []},
                         },
                     },
                     {
                         "ref": "ser-estar-typing-1",
                         "exercise_type": "forward_typing",
-                        "data": {"correct_answer": "él es alto"},
+                        "data": {"source": "he is tall", "targets": ["él es alto"]},
                     },
                 ],
             },
@@ -145,16 +142,15 @@ async def test_import_course_circular_deps(
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "source_text": "a",
-                "target_text": "a",
                 "prerequisites": ["b"],
                 "exercises": [
                     {
                         "ref": "a-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "y",
-                            "distractors_medium": ["z"],
+                            "source": "x",
+                            "targets": ["y"],
+                            "distractors": {"semantic": ["z"], "random": []},
                         },
                     }
                 ],
@@ -164,16 +160,15 @@ async def test_import_course_circular_deps(
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "source_text": "b",
-                "target_text": "b",
                 "prerequisites": ["a"],
                 "exercises": [
                     {
                         "ref": "b-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "y",
-                            "distractors_medium": ["z"],
+                            "source": "x",
+                            "targets": ["y"],
+                            "distractors": {"semantic": ["z"], "random": []},
                         },
                     }
                 ],
@@ -256,14 +251,14 @@ async def test_get_concept_detail(client: httpx.AsyncClient) -> None:
     concepts_resp = await client.get(f"/v1/courses/{course_id}/concepts")
     concepts = concepts_resp.json()
     # Find "adios" which has prerequisite "hola"
-    adios = next(c for c in concepts if c["source_text"] == "goodbye")
+    adios = next(c for c in concepts if c["ref"] == "adios")
 
     resp = await client.get(f"/v1/concepts/{adios['id']}")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["source_text"] == "goodbye"
+    assert data["ref"] == "adios"
     assert len(data["prerequisites"]) == 1
-    assert data["prerequisites"][0]["source_text"] == "hello"
+    assert data["prerequisites"][0]["ref"] == "hola"
     assert len(data["exercises"]) == 1
 
 

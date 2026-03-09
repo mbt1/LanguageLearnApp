@@ -18,8 +18,6 @@ def _make_progress(
     forward_difficulty: str = "forward_mc",
     reverse_difficulty: str = "reverse_mc",
     fsrs_due: datetime | None = None,
-    source_text: str = "hello",
-    target_text: str = "hola",
     concept_type: str = "vocabulary",
     cefr_level: str = "A1",
 ) -> dict[str, Any]:
@@ -31,8 +29,6 @@ def _make_progress(
         "forward_consecutive_correct": 0,
         "reverse_consecutive_correct": 0,
         "fsrs_due": fsrs_due or (NOW - timedelta(hours=1)),
-        "source_text": source_text,
-        "target_text": target_text,
         "concept_type": concept_type,
         "cefr_level": cefr_level,
         "fsrs_state": "review",
@@ -54,8 +50,7 @@ def _make_concept(
     return {
         "id": concept_id or uuid4(),
         "course_id": uuid4(),
-        "source_text": f"source-{sequence}",
-        "target_text": f"target-{sequence}",
+        "ref": f"concept-{sequence}",
         "concept_type": "vocabulary",
         "cefr_level": cefr_level,
         "sequence": sequence,
@@ -71,8 +66,6 @@ class TestSessionItem:
             concept_id=uuid4(),
             exercise_type=ExerciseType.forward_mc,
             is_review=True,
-            source_text="p",
-            target_text="t",
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
         )

@@ -29,7 +29,7 @@ async def course(db_conn: AsyncConnection) -> dict[str, Any]:
 async def concept(db_conn: AsyncConnection, course: dict[str, Any]) -> dict[str, Any]:
     return await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="hello", source_text="hello", target_text="hola",
+        cefr_level="A1", sequence=1, ref="hello",
     )
 
 

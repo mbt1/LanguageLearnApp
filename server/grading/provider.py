@@ -13,15 +13,21 @@ class GradingProvider(Protocol):
 
 
 class ExactMatchGrader:
-    """V1 grader: normalize both sides, then compare exact strings."""
+    """V1 grader: normalize both sides, accept if any correct answer matches."""
 
     def grade(self, request: GradingRequest) -> GradingResult:
-        norm_expected = normalize(request.correct_answer)
         norm_actual = normalize(request.user_answer)
-        verdict = Verdict.accept if norm_expected == norm_actual else Verdict.reject
+        # Primary answer (first target) shown to user in feedback
+        primary = normalize(request.correct_answers[0]) if request.correct_answers else ""
+        # Check against all accepted answers
+        verdict = Verdict.reject
+        for answer in request.correct_answers:
+            if normalize(answer) == norm_actual:
+                verdict = Verdict.accept
+                break
         return GradingResult(
             verdict=verdict,
-            correct_answer=norm_expected,
+            correct_answer=primary,
             normalized_user_answer=norm_actual,
         )
 

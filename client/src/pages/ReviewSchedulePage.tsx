@@ -17,7 +17,8 @@ interface CourseSchedule {
   items: ConceptProgressDetail[]
 }
 
-type SortKey = 'source_text' | 'cefr_level' | 'stage' | 'due' | 'status'
+type SortKey = 'ref' | 'cefr_level' | 'stage' | 'due' | 'status'
+
 type SortDir = 'asc' | 'desc'
 type StatusFilter = 'all' | 'not_started' | 'in_progress' | 'mastered'
 
@@ -99,8 +100,8 @@ function SortHeader({
 function compareItems(a: ConceptProgressDetail, b: ConceptProgressDetail, key: SortKey, dir: SortDir): number {
   let cmp = 0
   switch (key) {
-    case 'source_text':
-      cmp = a.source_text.localeCompare(b.source_text)
+    case 'ref':
+      cmp = a.ref.localeCompare(b.ref)
       break
     case 'cefr_level':
       cmp = CEFR_LEVELS.indexOf(a.cefr_level as typeof CEFR_LEVELS[number])
@@ -127,7 +128,7 @@ function compareItems(a: ConceptProgressDetail, b: ConceptProgressDetail, key: S
 
 function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; courseId: string }) {
   const navigate = useNavigate()
-  const [sortKey, setSortKey] = useState<SortKey>('source_text')
+  const [sortKey, setSortKey] = useState<SortKey>('ref')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [cefrFilter, setCefrFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
@@ -190,7 +191,7 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
         <table className="w-full text-sm">
           <thead>
             <tr className="text-muted-foreground border-b text-left">
-              <SortHeader label="Source" sortKey="source_text" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortHeader label="Concept" sortKey="ref" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
               <SortHeader label="CEFR" sortKey="cefr_level" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="pb-2 pr-3 font-medium">Type</th>
               <SortHeader label="Stage" sortKey="stage" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -208,7 +209,7 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
               const isStarted = item.forward_difficulty != null
               return (
                 <tr key={item.concept_id} className="border-b last:border-0">
-                  <td className="py-2 pr-3 font-medium">{item.source_text}</td>
+                  <td className="py-2 pr-3 font-medium">{item.ref}</td>
                   <td className="py-2 pr-3">
                     <Badge variant="outline">{item.cefr_level}</Badge>
                   </td>

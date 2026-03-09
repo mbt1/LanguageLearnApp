@@ -1004,6 +1004,10 @@
             "format": "uuid",
             "title": "Id"
           },
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
           "concept_type": {
             "$ref": "#/components/schemas/ConceptType"
           },
@@ -1013,14 +1017,6 @@
           "sequence": {
             "type": "integer",
             "title": "Sequence"
-          },
-          "source_text": {
-            "type": "string",
-            "title": "Source Text"
-          },
-          "target_text": {
-            "type": "string",
-            "title": "Target Text"
           },
           "explanation": {
             "anyOf": [
@@ -1051,11 +1047,10 @@
         "type": "object",
         "required": [
           "id",
+          "ref",
           "concept_type",
           "cefr_level",
           "sequence",
-          "source_text",
-          "target_text",
           "prerequisites",
           "exercises"
         ],
@@ -1076,14 +1071,6 @@
           "sequence": {
             "type": "integer",
             "title": "Sequence"
-          },
-          "source_text": {
-            "type": "string",
-            "title": "Source Text"
-          },
-          "target_text": {
-            "type": "string",
-            "title": "Target Text"
           },
           "explanation": {
             "anyOf": [
@@ -1123,9 +1110,7 @@
           "ref",
           "concept_type",
           "cefr_level",
-          "sequence",
-          "source_text",
-          "target_text"
+          "sequence"
         ],
         "title": "ConceptImport"
       },
@@ -1136,13 +1121,9 @@
             "format": "uuid",
             "title": "Concept Id"
           },
-          "source_text": {
+          "ref": {
             "type": "string",
-            "title": "Source Text"
-          },
-          "target_text": {
-            "type": "string",
-            "title": "Target Text"
+            "title": "Ref"
           },
           "concept_type": {
             "$ref": "#/components/schemas/ConceptType"
@@ -1266,8 +1247,7 @@
         "type": "object",
         "required": [
           "concept_id",
-          "source_text",
-          "target_text",
+          "ref",
           "concept_type",
           "cefr_level"
         ],
@@ -1281,6 +1261,10 @@
             "format": "uuid",
             "title": "Id"
           },
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
           "concept_type": {
             "$ref": "#/components/schemas/ConceptType"
           },
@@ -1290,24 +1274,15 @@
           "sequence": {
             "type": "integer",
             "title": "Sequence"
-          },
-          "source_text": {
-            "type": "string",
-            "title": "Source Text"
-          },
-          "target_text": {
-            "type": "string",
-            "title": "Target Text"
           }
         },
         "type": "object",
         "required": [
           "id",
+          "ref",
           "concept_type",
           "cefr_level",
-          "sequence",
-          "source_text",
-          "target_text"
+          "sequence"
         ],
         "title": "ConceptSummary"
       },
@@ -1928,13 +1903,9 @@
             "format": "uuid",
             "title": "Concept Id"
           },
-          "source_text": {
+          "ref": {
             "type": "string",
-            "title": "Source Text"
-          },
-          "target_text": {
-            "type": "string",
-            "title": "Target Text"
+            "title": "Ref"
           },
           "cefr_level": {
             "$ref": "#/components/schemas/CefrLevel"
@@ -1946,8 +1917,7 @@
         "type": "object",
         "required": [
           "concept_id",
-          "source_text",
-          "target_text",
+          "ref",
           "cefr_level",
           "source"
         ],
@@ -2173,14 +2143,6 @@
             "type": "boolean",
             "title": "Is Review"
           },
-          "source_text": {
-            "type": "string",
-            "title": "Source Text"
-          },
-          "target_text": {
-            "type": "string",
-            "title": "Target Text"
-          },
           "concept_type": {
             "$ref": "#/components/schemas/ConceptType"
           },
@@ -2199,28 +2161,15 @@
             ],
             "title": "Exercise Id"
           },
-          "exercise_data": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Exercise Data"
+          "prompt": {
+            "type": "string",
+            "title": "Prompt",
+            "default": ""
           },
           "correct_answer": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correct Answer"
+            "type": "string",
+            "title": "Correct Answer",
+            "default": ""
           },
           "distractors": {
             "anyOf": [
@@ -2235,17 +2184,6 @@
               }
             ],
             "title": "Distractors"
-          },
-          "sentence_template": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sentence Template"
           },
           "explanation": {
             "anyOf": [
@@ -2264,8 +2202,6 @@
           "concept_id",
           "exercise_type",
           "is_review",
-          "source_text",
-          "target_text",
           "concept_type",
           "cefr_level"
         ],

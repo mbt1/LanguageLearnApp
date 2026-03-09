@@ -66,17 +66,15 @@ class CourseResponse(BaseModel):
 
 class ConceptSummary(BaseModel):
     id: UUID
+    ref: str
     concept_type: ConceptType
     cefr_level: CefrLevel
     sequence: int
-    source_text: str
-    target_text: str
 
 
 class PrerequisiteInfo(BaseModel):
     concept_id: UUID
-    source_text: str
-    target_text: str
+    ref: str
     cefr_level: CefrLevel
     source: DependencySource
 
@@ -90,11 +88,10 @@ class ExerciseResponse(BaseModel):
 
 class ConceptDetail(BaseModel):
     id: UUID
+    ref: str
     concept_type: ConceptType
     cefr_level: CefrLevel
     sequence: int
-    source_text: str
-    target_text: str
     explanation: str | None = None
     prerequisites: list[PrerequisiteInfo]
     exercises: list[ExerciseResponse]
@@ -119,8 +116,6 @@ class ConceptImport(BaseModel):
     concept_type: ConceptType
     cefr_level: CefrLevel
     sequence: int
-    source_text: str
-    target_text: str
     explanation: str | None = None
     prerequisites: list[str] | None = None
     exercises: list[ExerciseImport] = Field(default_factory=list)

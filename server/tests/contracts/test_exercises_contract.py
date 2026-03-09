@@ -38,15 +38,14 @@ def _mini_course() -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "source_text": "hello",
-                "target_text": "hola",
                 "exercises": [
                     {
                         "ref": "hola-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "hola",
-                            "distractors_medium": ["adiós", "gracias"],
+                            "source": "hello",
+                            "targets": ["hola"],
+                            "distractors": {"random": ["adiós", "gracias"]},
                         },
                     }
                 ],

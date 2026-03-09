@@ -9,12 +9,12 @@ from grading.schemas import GradingRequest, Verdict
 
 def _req(
     user_answer: str,
-    correct_answer: str = "hola",
+    correct_answers: list[str] | None = None,
     exercise_type: ExerciseType = ExerciseType.forward_typing,
 ) -> GradingRequest:
     return GradingRequest(
         exercise_type=exercise_type,
-        correct_answer=correct_answer,
+        correct_answers=correct_answers or ["hola"],
         user_answer=user_answer,
     )
 

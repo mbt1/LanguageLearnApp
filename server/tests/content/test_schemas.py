@@ -79,11 +79,10 @@ class TestConceptSummary:
     def test_valid(self) -> None:
         s = ConceptSummary(
             id=uuid4(),
+            ref="hola",
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
             sequence=1,
-            source_text="hello",
-            target_text="hola",
         )
         assert s.cefr_level == CefrLevel.A1
 
@@ -91,11 +90,10 @@ class TestConceptSummary:
         with pytest.raises(ValidationError):
             ConceptSummary(
                 id=uuid4(),
+                ref="hola",
                 concept_type=ConceptType.vocabulary,
                 cefr_level="X9",  # pyright: ignore[reportArgumentType]
                 sequence=1,
-                source_text="hello",
-                target_text="hola",
             )
 
 
@@ -103,17 +101,15 @@ class TestConceptDetail:
     def test_valid_with_prerequisites_and_exercises(self) -> None:
         detail = ConceptDetail(
             id=uuid4(),
+            ref="ser-estar",
             concept_type=ConceptType.grammar,
             cefr_level=CefrLevel.A2,
             sequence=1,
-            source_text="ser vs estar",
-            target_text="to be",
             explanation="Both mean 'to be' but...",
             prerequisites=[
                 PrerequisiteInfo(
                     concept_id=uuid4(),
-                    source_text="hello",
-                    target_text="hola",
+                    ref="hola",
                     cefr_level=CefrLevel.A1,
                     source=DependencySource.manual,
                 )
@@ -123,7 +119,7 @@ class TestConceptDetail:
                     id=uuid4(),
                     exercise_type="forward_mc",
                     ref="ser-estar-mc-1",
-                    data={"correct_answer": "ser", "distractors_medium": ["ir", "hacer"]},
+                    data={"source": "to be", "targets": ["ser"], "distractors": {"semantic": ["ir", "hacer"]}},
                 )
             ],
         )
@@ -133,11 +129,10 @@ class TestConceptDetail:
     def test_empty_prerequisites_and_exercises(self) -> None:
         detail = ConceptDetail(
             id=uuid4(),
+            ref="hola",
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
             sequence=1,
-            source_text="hello",
-            target_text="hola",
             explanation=None,
             prerequisites=[],
             exercises=[],
@@ -158,11 +153,10 @@ class TestCourseDetail:
                 CefrLevel.A1: [
                     ConceptSummary(
                         id=uuid4(),
+                        ref="hola",
                         concept_type=ConceptType.vocabulary,
                         cefr_level=CefrLevel.A1,
                         sequence=1,
-                        source_text="hello",
-                        target_text="hola",
                     )
                 ],
             },
@@ -179,15 +173,15 @@ class TestExerciseImport:
         e = ExerciseImport(
             ref="hola-mc-1",
             exercise_type="forward_mc",
-            data={"correct_answer": "hola", "distractors_medium": ["adiós", "gracias"]},
+            data={"source": "hello", "targets": ["hola"], "distractors": {"random": ["adiós", "gracias"]}},
         )
-        assert e.data["distractors_medium"] == ["adiós", "gracias"]
+        assert e.data["targets"] == ["hola"]
 
     def test_valid_forward_typing(self) -> None:
         e = ExerciseImport(
             ref="hola-typing-1",
             exercise_type="forward_typing",
-            data={"correct_answer": "hola"},
+            data={"source": "hello", "targets": ["hola"]},
         )
         assert e.ref == "hola-typing-1"
 
@@ -195,7 +189,7 @@ class TestExerciseImport:
         with pytest.raises(ValidationError):
             ExerciseImport(  # pyright: ignore[reportCallIssue]
                 exercise_type="cloze",
-                data={"expected": "hola"},
+                data={"source": "__ mundo", "targets": ["hola"]},
             )
 
 
@@ -206,15 +200,13 @@ class TestConceptImport:
             concept_type=ConceptType.grammar,
             cefr_level=CefrLevel.A2,
             sequence=1,
-            source_text="ser vs estar",
-            target_text="to be",
             explanation="Both mean 'to be'...",
             prerequisites=["hola", "buenos-dias"],
             exercises=[
                 ExerciseImport(
                     ref="ser-estar-mc-1",
                     exercise_type="forward_mc",
-                    data={"correct_answer": "es", "distractors_medium": ["está", "son"]},
+                    data={"source": "to be", "targets": ["es"], "distractors": {"semantic": ["está", "son"]}},
                 )
             ],
         )
@@ -226,13 +218,11 @@ class TestConceptImport:
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
             sequence=1,
-            source_text="hello",
-            target_text="hola",
             exercises=[
                 ExerciseImport(
                     ref="hola-mc-1",
                     exercise_type="forward_mc",
-                    data={"correct_answer": "hola", "distractors_medium": ["adiós"]},
+                    data={"source": "hello", "targets": ["hola"], "distractors": {"random": ["adiós"]}},
                 ),
             ],
         )
@@ -245,8 +235,6 @@ class TestConceptImport:
             concept_type=ConceptType.vocabulary,
             cefr_level=CefrLevel.A1,
             sequence=1,
-            source_text="hello",
-            target_text="hola",
             exercises=[],
         )
         assert c.exercises == []
@@ -265,13 +253,11 @@ class TestCourseImport:
                     concept_type=ConceptType.vocabulary,
                     cefr_level=CefrLevel.A1,
                     sequence=1,
-                    source_text="hello",
-                    target_text="hola",
                     exercises=[
                         ExerciseImport(
                             ref="hola-mc-1",
                             exercise_type="forward_mc",
-                            data={"correct_answer": "hola", "distractors_medium": ["adiós"]},
+                            data={"source": "hello", "targets": ["hola"], "distractors": {"random": ["adiós"]}},
                         ),
                     ],
                 ),
@@ -301,13 +287,11 @@ class TestCourseImport:
                         concept_type=ConceptType.vocabulary,
                         cefr_level=CefrLevel.A1,
                         sequence=1,
-                        source_text="hello",
-                        target_text="hola",
                         exercises=[
                             ExerciseImport(
                                 ref="hola-mc-1",
                                 exercise_type="forward_mc",
-                                data={"correct_answer": "hola", "distractors_medium": ["adiós"]},
+                                data={"source": "hello", "targets": ["hola"], "distractors": {"random": ["adiós"]}},
                             ),
                         ],
                     ),

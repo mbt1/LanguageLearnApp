@@ -40,8 +40,7 @@ async def course(db_conn: AsyncConnection) -> dict[str, Any]:
 async def concept(db_conn: AsyncConnection, course: dict[str, Any]) -> dict[str, Any]:
     return await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="hello", source_text="hello", target_text="hola",
-    )
+        cefr_level="A1", sequence=1, ref="hello",    )
 
 
 async def test_upsert_progress_insert(
@@ -117,12 +116,10 @@ async def test_list_due_reviews(
     # Create two concepts — one due, one not
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="hello", source_text="hello", target_text="hola",
-    )
+        cefr_level="A1", sequence=1, ref="hello",    )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="goodbye", source_text="goodbye", target_text="adios",
-    )
+        cefr_level="A1", sequence=2, ref="goodbye",    )
     # c1 is due (past)
     await upsert_progress(
         db_conn, user_id=user["id"], concept_id=c1["id"],
@@ -139,7 +136,6 @@ async def test_list_due_reviews(
     due = await list_due_reviews(db_conn, user_id=user["id"], now=now)
     assert len(due) == 1
     assert due[0]["concept_id"] == c1["id"]
-    assert due[0]["source_text"] == "hello"  # joined from concepts table
 
 
 # ── get_prerequisite_difficulties ────────────────────────────
@@ -158,8 +154,7 @@ async def test_prerequisite_difficulties_unstarted_defaults_to_forward_mc(
 ) -> None:
     prereq = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="bye", source_text="bye", target_text="adios",
-    )
+        cefr_level="A1", sequence=2, ref="bye",    )
     await add_prerequisite(db_conn, concept_id=concept["id"], prerequisite_id=prereq["id"])
 
     rows = await get_prerequisite_difficulties(
@@ -175,8 +170,7 @@ async def test_prerequisite_difficulties_reflects_actual_progress(
 ) -> None:
     prereq = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="bye", source_text="bye", target_text="adios",
-    )
+        cefr_level="A1", sequence=2, ref="bye",    )
     await add_prerequisite(db_conn, concept_id=concept["id"], prerequisite_id=prereq["id"])
     await upsert_progress(
         db_conn, user_id=user["id"], concept_id=prereq["id"],
@@ -203,16 +197,13 @@ async def test_prerequisite_difficulties_batch_groups_by_concept(
 ) -> None:
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="a", source_text="a", target_text="a",
-    )
+        cefr_level="A1", sequence=1, ref="a",    )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="b", source_text="b", target_text="b",
-    )
+        cefr_level="A1", sequence=2, ref="b",    )
     child = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A2", sequence=1, ref="c", source_text="c", target_text="c",
-    )
+        cefr_level="A2", sequence=1, ref="c",    )
     await add_prerequisite(db_conn, concept_id=child["id"], prerequisite_id=c1["id"])
     await add_prerequisite(db_conn, concept_id=child["id"], prerequisite_id=c2["id"])
 
@@ -230,12 +221,10 @@ async def test_list_new_concepts_returns_unstarted(
 ) -> None:
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="a", source_text="a", target_text="a",
-    )
+        cefr_level="A1", sequence=1, ref="a",    )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="b", source_text="b", target_text="b",
-    )
+        cefr_level="A1", sequence=2, ref="b",    )
     # Start c1 but not c2
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"])
 
@@ -253,12 +242,10 @@ async def test_list_all_active_progress_excludes_null_due(
     now = datetime.datetime.now(tz=datetime.UTC)
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="a", source_text="a", target_text="a",
-    )
+        cefr_level="A1", sequence=1, ref="a",    )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="b", source_text="b", target_text="b",
-    )
+        cefr_level="A1", sequence=2, ref="b",    )
     # c1 has a due date, c2 does not
     await upsert_progress(
         db_conn, user_id=user["id"], concept_id=c1["id"],
@@ -279,12 +266,10 @@ async def test_get_progress_summary(
 ) -> None:
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="a", source_text="a", target_text="a",
-    )
+        cefr_level="A1", sequence=1, ref="a",    )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="b", source_text="b", target_text="b",
-    )
+        cefr_level="A1", sequence=2, ref="b",    )
     # c1 mastered, c2 not
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"], is_mastered=True)
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c2["id"], is_mastered=False)
@@ -306,12 +291,10 @@ async def test_list_all_progress_detail_includes_unstarted(
     """LEFT JOIN returns all concepts, including those without progress."""
     c1 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="hello", source_text="hello", target_text="hola",
-    )
+        cefr_level="A1", sequence=1, ref="hello",    )
     c2 = await create_concept(
         db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="goodbye", source_text="goodbye", target_text="adios",
-    )
+        cefr_level="A1", sequence=2, ref="goodbye",    )
     # Start c1 only
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"])
 
@@ -331,7 +314,7 @@ async def test_list_all_progress_detail_includes_unstarted(
 
     # Unstarted concept has NULL progress fields
     unstarted = by_id[c2["id"]]
-    assert unstarted["source_text"] == "goodbye"
+    assert unstarted["ref"] == "goodbye"
     assert unstarted["forward_difficulty"] is None
     assert unstarted["forward_consecutive_correct"] is None
     assert unstarted["reverse_difficulty"] is None

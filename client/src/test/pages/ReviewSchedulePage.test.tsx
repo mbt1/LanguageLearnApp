@@ -29,8 +29,7 @@ const mockCourse = {
 
 const startedConcept = {
   concept_id: 'c1',
-  source_text: 'hello',
-  target_text: 'hola',
+  ref: 'hello',
   concept_type: 'vocabulary' as const,
   cefr_level: 'A1' as const,
   forward_difficulty: 'forward_mc',
@@ -47,8 +46,7 @@ const startedConcept = {
 
 const unstartedConcept = {
   concept_id: 'c2',
-  source_text: 'goodbye',
-  target_text: 'adiós',
+  ref: 'goodbye',
   concept_type: 'vocabulary' as const,
   cefr_level: 'A1' as const,
   forward_difficulty: null,

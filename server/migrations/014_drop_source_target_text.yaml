@@ -1,0 +1,8 @@
+operations:
+  - sql:
+      up: |
+        ALTER TABLE concepts DROP COLUMN source_text CASCADE;
+        ALTER TABLE concepts DROP COLUMN target_text CASCADE;
+      down: |
+        ALTER TABLE concepts ADD COLUMN IF NOT EXISTS source_text text NOT NULL DEFAULT '';
+        ALTER TABLE concepts ADD COLUMN IF NOT EXISTS target_text text NOT NULL DEFAULT '';

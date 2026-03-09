@@ -40,21 +40,34 @@ def _mini_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "source_text": "hello",
-                "target_text": "hola",
                 "exercises": [
                     {
                         "ref": "hola-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "hola",
-                            "distractors_medium": ["adiós", "gracias"],
+                            "source": "hello",
+                            "targets": ["hola"],
+                            "distractors": {"semantic": ["adiós", "gracias"], "random": []},
+                        },
+                    },
+                    {
+                        "ref": "hola-rev-mc-1",
+                        "exercise_type": "reverse_mc",
+                        "data": {
+                            "source": "hola",
+                            "targets": ["hello"],
+                            "distractors": {"semantic": ["goodbye", "thanks"], "random": []},
                         },
                     },
                     {
                         "ref": "hola-typing-1",
                         "exercise_type": "forward_typing",
-                        "data": {"correct_answer": "hola"},
+                        "data": {"source": "hello", "targets": ["hola"]},
+                    },
+                    {
+                        "ref": "hola-reverse-typing-1",
+                        "exercise_type": "reverse_typing",
+                        "data": {"source": "hola", "targets": ["hello"]},
                     },
                 ],
             },
@@ -63,16 +76,15 @@ def _mini_course(slug: str | None = None) -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "source_text": "goodbye",
-                "target_text": "adiós",
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
                         "ref": "adios-mc-1",
                         "exercise_type": "forward_mc",
                         "data": {
-                            "correct_answer": "adiós",
-                            "distractors_medium": ["hola", "gracias"],
+                            "source": "goodbye",
+                            "targets": ["adiós"],
+                            "distractors": {"semantic": ["hola", "gracias"], "random": []},
                         },
                     }
                 ],
@@ -141,8 +153,8 @@ async def test_session_items_have_required_fields(client: httpx.AsyncClient) -> 
     assert "concept_id" in item
     assert "exercise_type" in item
     assert "is_review" in item
-    assert "source_text" in item
-    assert "target_text" in item
+    assert "prompt" in item
+    assert "correct_answer" in item
 
 
 # ── POST /v1/study/review ────────────────────────────────────
@@ -537,20 +549,20 @@ async def _advance_to_reverse_typing(
 async def test_session_reverse_typing_swaps_prompt_target(
     client: httpx.AsyncClient,
 ) -> None:
-    """reverse_typing without explicit exercise auto-swaps source_text/target_text."""
+    """reverse_typing exercise returns correct_answer from exercise data targets."""
     user = await _register(client)
     course = await _import_course(client)
     headers = _auth_headers(user["access_token"])
 
-    # Start a session to create progress for hola (concept with source_text=hello, target_text=hola)
+    # Start a session to create progress for hola (concept with correct_answer=hola for forward)
     session = await client.post(
         "/v1/study/session",
         json={"course_id": course["course_id"]},
         headers=headers,
     )
     items = session.json()["items"]
-    # Find hola concept (the one with target_text="hola")
-    hola_item = next(i for i in items if i["target_text"] == "hola")
+    # Find hola concept (the one with correct_answer="hola")
+    hola_item = next(i for i in items if i["correct_answer"] == "hola")
     concept_id = hola_item["concept_id"]
 
     # Advance forward track to forward_typing

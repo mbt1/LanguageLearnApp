@@ -493,14 +493,12 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Ref */
+            ref: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
             /** Sequence */
             sequence: number;
-            /** Source Text */
-            source_text: string;
-            /** Target Text */
-            target_text: string;
             /** Explanation */
             explanation?: string | null;
             /** Prerequisites */
@@ -516,10 +514,6 @@ export interface components {
             cefr_level: components["schemas"]["CefrLevel"];
             /** Sequence */
             sequence: number;
-            /** Source Text */
-            source_text: string;
-            /** Target Text */
-            target_text: string;
             /** Explanation */
             explanation?: string | null;
             /** Prerequisites */
@@ -537,10 +531,8 @@ export interface components {
              * Format: uuid
              */
             concept_id: string;
-            /** Source Text */
-            source_text: string;
-            /** Target Text */
-            target_text: string;
+            /** Ref */
+            ref: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
             /** Forward Difficulty */
@@ -571,14 +563,12 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Ref */
+            ref: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
             /** Sequence */
             sequence: number;
-            /** Source Text */
-            source_text: string;
-            /** Target Text */
-            target_text: string;
         };
         /**
          * ConceptType
@@ -844,10 +834,8 @@ export interface components {
              * Format: uuid
              */
             concept_id: string;
-            /** Source Text */
-            source_text: string;
-            /** Target Text */
-            target_text: string;
+            /** Ref */
+            ref: string;
             cefr_level: components["schemas"]["CefrLevel"];
             source: components["schemas"]["DependencySource"];
         };
@@ -941,24 +929,22 @@ export interface components {
             exercise_type: components["schemas"]["ExerciseType"];
             /** Is Review */
             is_review: boolean;
-            /** Source Text */
-            source_text: string;
-            /** Target Text */
-            target_text: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
             /** Exercise Id */
             exercise_id?: string | null;
-            /** Exercise Data */
-            exercise_data?: {
-                [key: string]: unknown;
-            } | null;
-            /** Correct Answer */
-            correct_answer?: string | null;
+            /**
+             * Prompt
+             * @default
+             */
+            prompt: string;
+            /**
+             * Correct Answer
+             * @default
+             */
+            correct_answer: string;
             /** Distractors */
             distractors?: string[] | null;
-            /** Sentence Template */
-            sentence_template?: string | null;
             /** Explanation */
             explanation?: string | null;
         };

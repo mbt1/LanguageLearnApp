@@ -99,8 +99,6 @@ async def import_course(
             concept_type=concept_data.concept_type.value,
             cefr_level=concept_data.cefr_level.value,
             sequence=concept_data.sequence,
-            source_text=concept_data.source_text,
-            target_text=concept_data.target_text,
             explanation=concept_data.explanation,
         )
         concept_id_val: UUID = row["id"]
