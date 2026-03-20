@@ -21,12 +21,15 @@ class StudySessionRequest(BaseModel):
 class StudySessionItem(BaseModel):
     concept_id: UUID
     exercise_type: ExerciseType
+    difficulty: int
+    presentation: str
+    reverse: bool = False
     is_review: bool
     concept_type: ConceptType
     cefr_level: CefrLevel
     exercise_id: UUID | None = None
-    prompt: str = ""
-    correct_answer: str = ""
+    prompt: list[str] = Field(default_factory=list)
+    correct_answers: list[str] = Field(default_factory=list)
     distractors: list[str] | None = None
     explanation: str | None = None
 
@@ -44,6 +47,7 @@ class ReviewRequest(BaseModel):
     concept_id: UUID
     rating: str = Field(pattern=r"^(again|hard|good|easy)$")
     exercise_type: ExerciseType
+    difficulty: int
     response: str | None = None
     correct: bool
     review_duration_ms: int | None = None
@@ -51,13 +55,10 @@ class ReviewRequest(BaseModel):
 
 class ReviewResponse(BaseModel):
     concept_id: UUID
-    new_forward_difficulty: ExerciseType
-    forward_consecutive_correct: int
-    new_reverse_difficulty: ExerciseType
-    reverse_consecutive_correct: int
+    difficulty: int
+    peak_difficulty: int
     is_mastered: bool
     fsrs_due: datetime | None
-    difficulty_advanced: bool
     mastery_changed: bool
 
 
@@ -67,6 +68,7 @@ class ReviewResponse(BaseModel):
 class ExerciseSubmitRequest(BaseModel):
     concept_id: UUID
     exercise_type: ExerciseType
+    difficulty: int
     user_answer: str
     exercise_id: UUID | None = None
     review_duration_ms: int | None = None
@@ -74,15 +76,12 @@ class ExerciseSubmitRequest(BaseModel):
 
 class ExerciseSubmitResponse(BaseModel):
     correct: bool
-    correct_answer: str           # original (un-normalized) correct answer for display
-    normalized_user_answer: str   # the string that was actually graded
-    new_forward_difficulty: ExerciseType
-    forward_consecutive_correct: int
-    new_reverse_difficulty: ExerciseType
-    reverse_consecutive_correct: int
+    correct_answer: str
+    normalized_user_answer: str
+    difficulty: int
+    peak_difficulty: int
     is_mastered: bool
     fsrs_due: datetime | None
-    difficulty_advanced: bool
     mastery_changed: bool
 
 
@@ -93,10 +92,10 @@ class CefrProgressItem(BaseModel):
     cefr_level: CefrLevel
     total_concepts: int
     not_started: int
-    seen: int        # forward_mc level
-    familiar: int    # cloze level
-    practiced: int   # forward_typing, reverse not done
-    proficient: int  # both tracks maxed, not yet mastered
+    seen: int        # difficulty 10
+    familiar: int    # difficulty 20-30
+    practiced: int   # difficulty 40-50
+    proficient: int  # max difficulty, not yet mastered
     mastered: int
 
 
@@ -118,10 +117,7 @@ class ConceptProgressDetail(BaseModel):
     ref: str
     concept_type: ConceptType
     cefr_level: CefrLevel
-    forward_difficulty: str | None = None
-    forward_consecutive_correct: int | None = None
-    reverse_difficulty: str | None = None
-    reverse_consecutive_correct: int | None = None
+    peak_difficulty: int | None = None
     is_mastered: bool | None = None
     fsrs_state: str | None = None
     fsrs_stability: float | None = None

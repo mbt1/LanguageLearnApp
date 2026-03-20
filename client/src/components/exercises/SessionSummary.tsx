@@ -14,7 +14,6 @@ export function SessionSummary({ results, onFinish }: SessionSummaryProps) {
   const total = results.length
   const correct = results.filter((r) => r.correct).length
   const accuracyPct = total > 0 ? Math.round((correct / total) * 100) : 0
-  const advancedCount = results.filter((r) => r.difficulty_advanced).length
   const masteredCount = results.filter((r) => r.mastery_changed && r.is_mastered).length
 
   return (
@@ -35,13 +34,6 @@ export function SessionSummary({ results, onFinish }: SessionSummaryProps) {
             </p>
           </div>
         </div>
-
-        {advancedCount > 0 && (
-          <p className="text-sm">
-            <span className="font-medium">{advancedCount}</span>{' '}
-            {advancedCount === 1 ? 'concept' : 'concepts'} advanced to a harder exercise type.
-          </p>
-        )}
 
         {masteredCount > 0 && (
           <p className="text-sm">

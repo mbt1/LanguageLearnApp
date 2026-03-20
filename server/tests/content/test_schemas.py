@@ -36,12 +36,9 @@ class TestEnums:
 
     def test_exercise_types(self) -> None:
         assert set(ExerciseType) == {
-            ExerciseType.forward_mc,
-            ExerciseType.reverse_mc,
+            ExerciseType.translate,
             ExerciseType.cloze,
-            ExerciseType.reverse_cloze,
-            ExerciseType.forward_typing,
-            ExerciseType.reverse_typing,
+            ExerciseType.match,
         }
 
     def test_dependency_sources(self) -> None:

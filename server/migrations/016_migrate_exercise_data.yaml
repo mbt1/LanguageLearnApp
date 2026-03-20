@@ -1,0 +1,83 @@
+operations:
+  - sql:
+      up: |
+        -- 1. Set reverse flag from old exercise_type names
+        UPDATE exercises SET reverse = true
+        WHERE exercise_type IN ('reverse_mc', 'reverse_cloze', 'reverse_typing');
+
+        -- 2. Migrate exercise_type to new content-based values
+        UPDATE exercises SET exercise_type = 'translate'
+        WHERE exercise_type IN ('forward_mc', 'reverse_mc', 'forward_typing',
+                                'reverse_typing', 'multiple_choice', 'typing');
+        UPDATE exercises SET exercise_type = 'cloze'
+        WHERE exercise_type = 'reverse_cloze';
+        -- 'cloze' stays 'cloze', no update needed
+
+        -- 3. Migrate JSONB data: source/targets → prompt[]/answers[][]
+        UPDATE exercises SET data = jsonb_build_object(
+          'prompt', jsonb_build_array(data->>'source'),
+          'answers', jsonb_build_array(COALESCE(data->'targets', '[]'::jsonb)),
+          'distractors', COALESCE(data->'distractors', '{}'::jsonb)
+        )
+        WHERE data ? 'source';
+
+        -- 4. Compute peak_difficulty from old forward/reverse difficulty columns
+        DO $$
+        DECLARE
+          schema_name text;
+        BEGIN
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'user_concept_progress'
+              AND column_name = 'forward_difficulty'
+              AND table_schema = 'public'
+          ) THEN
+            UPDATE user_concept_progress SET peak_difficulty = GREATEST(
+              CASE forward_difficulty
+                WHEN 'forward_typing' THEN 50
+                WHEN 'cloze' THEN 30
+                ELSE 10
+              END,
+              CASE reverse_difficulty
+                WHEN 'reverse_typing' THEN 50
+                WHEN 'reverse_cloze' THEN 30
+                ELSE 10
+              END
+            );
+            -- Drop any pgroll versioned schema views that depend on these columns
+            FOR schema_name IN
+              SELECT nspname FROM pg_namespace WHERE nspname LIKE 'public_%'
+            LOOP
+              EXECUTE format('DROP SCHEMA IF EXISTS %I CASCADE', schema_name);
+            END LOOP;
+            ALTER TABLE user_concept_progress
+              DROP COLUMN forward_difficulty,
+              DROP COLUMN forward_consecutive_correct,
+              DROP COLUMN reverse_difficulty,
+              DROP COLUMN reverse_consecutive_correct;
+          END IF;
+        END $$;
+
+        -- 5. Migrate review_history exercise_type values
+        UPDATE review_history SET exercise_type = 'translate'
+        WHERE exercise_type IN ('forward_mc', 'reverse_mc', 'forward_typing',
+                                'reverse_typing', 'multiple_choice', 'typing');
+        UPDATE review_history SET exercise_type = 'cloze'
+        WHERE exercise_type = 'reverse_cloze';
+      down: |
+        ALTER TABLE user_concept_progress
+          ADD COLUMN IF NOT EXISTS forward_difficulty text DEFAULT 'forward_mc',
+          ADD COLUMN IF NOT EXISTS forward_consecutive_correct integer DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS reverse_difficulty text DEFAULT 'reverse_mc',
+          ADD COLUMN IF NOT EXISTS reverse_consecutive_correct integer DEFAULT 0;
+        UPDATE user_concept_progress SET
+          forward_difficulty = CASE
+            WHEN peak_difficulty >= 50 THEN 'forward_typing'
+            WHEN peak_difficulty >= 30 THEN 'cloze'
+            ELSE 'forward_mc'
+          END,
+          reverse_difficulty = CASE
+            WHEN peak_difficulty >= 50 THEN 'reverse_typing'
+            WHEN peak_difficulty >= 30 THEN 'reverse_cloze'
+            ELSE 'reverse_mc'
+          END;

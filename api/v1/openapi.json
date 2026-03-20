@@ -854,7 +854,7 @@
           "study"
         ],
         "summary": "Get Review Schedule",
-        "description": "Return full SRS detail for all concepts the user has started in a course.",
+        "description": "Return full SRS detail for all concepts in a course.",
         "operationId": "get_review_schedule_v1_review_schedule__course_id__get",
         "security": [
           {
@@ -1131,18 +1131,7 @@
           "cefr_level": {
             "$ref": "#/components/schemas/CefrLevel"
           },
-          "forward_difficulty": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Forward Difficulty"
-          },
-          "forward_consecutive_correct": {
+          "peak_difficulty": {
             "anyOf": [
               {
                 "type": "integer"
@@ -1151,29 +1140,7 @@
                 "type": "null"
               }
             ],
-            "title": "Forward Consecutive Correct"
-          },
-          "reverse_difficulty": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reverse Difficulty"
-          },
-          "reverse_consecutive_correct": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reverse Consecutive Correct"
+            "title": "Peak Difficulty"
           },
           "is_mastered": {
             "anyOf": [
@@ -1495,6 +1462,11 @@
             "type": "string",
             "title": "Exercise Type"
           },
+          "reverse": {
+            "type": "boolean",
+            "title": "Reverse",
+            "default": false
+          },
           "data": {
             "additionalProperties": true,
             "type": "object",
@@ -1562,6 +1534,10 @@
           "exercise_type": {
             "$ref": "#/components/schemas/ExerciseType"
           },
+          "difficulty": {
+            "type": "integer",
+            "title": "Difficulty"
+          },
           "user_answer": {
             "type": "string",
             "title": "User Answer"
@@ -1594,6 +1570,7 @@
         "required": [
           "concept_id",
           "exercise_type",
+          "difficulty",
           "user_answer"
         ],
         "title": "ExerciseSubmitRequest"
@@ -1612,19 +1589,13 @@
             "type": "string",
             "title": "Normalized User Answer"
           },
-          "new_forward_difficulty": {
-            "$ref": "#/components/schemas/ExerciseType"
-          },
-          "forward_consecutive_correct": {
+          "difficulty": {
             "type": "integer",
-            "title": "Forward Consecutive Correct"
+            "title": "Difficulty"
           },
-          "new_reverse_difficulty": {
-            "$ref": "#/components/schemas/ExerciseType"
-          },
-          "reverse_consecutive_correct": {
+          "peak_difficulty": {
             "type": "integer",
-            "title": "Reverse Consecutive Correct"
+            "title": "Peak Difficulty"
           },
           "is_mastered": {
             "type": "boolean",
@@ -1642,10 +1613,6 @@
             ],
             "title": "Fsrs Due"
           },
-          "difficulty_advanced": {
-            "type": "boolean",
-            "title": "Difficulty Advanced"
-          },
           "mastery_changed": {
             "type": "boolean",
             "title": "Mastery Changed"
@@ -1656,13 +1623,10 @@
           "correct",
           "correct_answer",
           "normalized_user_answer",
-          "new_forward_difficulty",
-          "forward_consecutive_correct",
-          "new_reverse_difficulty",
-          "reverse_consecutive_correct",
+          "difficulty",
+          "peak_difficulty",
           "is_mastered",
           "fsrs_due",
-          "difficulty_advanced",
           "mastery_changed"
         ],
         "title": "ExerciseSubmitResponse"
@@ -1670,12 +1634,9 @@
       "ExerciseType": {
         "type": "string",
         "enum": [
-          "forward_mc",
-          "reverse_mc",
+          "translate",
           "cloze",
-          "reverse_cloze",
-          "forward_typing",
-          "reverse_typing"
+          "match"
         ],
         "title": "ExerciseType"
       },
@@ -2011,6 +1972,10 @@
           "exercise_type": {
             "$ref": "#/components/schemas/ExerciseType"
           },
+          "difficulty": {
+            "type": "integer",
+            "title": "Difficulty"
+          },
           "response": {
             "anyOf": [
               {
@@ -2043,6 +2008,7 @@
           "concept_id",
           "rating",
           "exercise_type",
+          "difficulty",
           "correct"
         ],
         "title": "ReviewRequest"
@@ -2054,19 +2020,13 @@
             "format": "uuid",
             "title": "Concept Id"
           },
-          "new_forward_difficulty": {
-            "$ref": "#/components/schemas/ExerciseType"
-          },
-          "forward_consecutive_correct": {
+          "difficulty": {
             "type": "integer",
-            "title": "Forward Consecutive Correct"
+            "title": "Difficulty"
           },
-          "new_reverse_difficulty": {
-            "$ref": "#/components/schemas/ExerciseType"
-          },
-          "reverse_consecutive_correct": {
+          "peak_difficulty": {
             "type": "integer",
-            "title": "Reverse Consecutive Correct"
+            "title": "Peak Difficulty"
           },
           "is_mastered": {
             "type": "boolean",
@@ -2084,10 +2044,6 @@
             ],
             "title": "Fsrs Due"
           },
-          "difficulty_advanced": {
-            "type": "boolean",
-            "title": "Difficulty Advanced"
-          },
           "mastery_changed": {
             "type": "boolean",
             "title": "Mastery Changed"
@@ -2096,13 +2052,10 @@
         "type": "object",
         "required": [
           "concept_id",
-          "new_forward_difficulty",
-          "forward_consecutive_correct",
-          "new_reverse_difficulty",
-          "reverse_consecutive_correct",
+          "difficulty",
+          "peak_difficulty",
           "is_mastered",
           "fsrs_due",
-          "difficulty_advanced",
           "mastery_changed"
         ],
         "title": "ReviewResponse"
@@ -2139,6 +2092,19 @@
           "exercise_type": {
             "$ref": "#/components/schemas/ExerciseType"
           },
+          "difficulty": {
+            "type": "integer",
+            "title": "Difficulty"
+          },
+          "presentation": {
+            "type": "string",
+            "title": "Presentation"
+          },
+          "reverse": {
+            "type": "boolean",
+            "title": "Reverse",
+            "default": false
+          },
           "is_review": {
             "type": "boolean",
             "title": "Is Review"
@@ -2162,14 +2128,18 @@
             "title": "Exercise Id"
           },
           "prompt": {
-            "type": "string",
-            "title": "Prompt",
-            "default": ""
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Prompt"
           },
-          "correct_answer": {
-            "type": "string",
-            "title": "Correct Answer",
-            "default": ""
+          "correct_answers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Correct Answers"
           },
           "distractors": {
             "anyOf": [
@@ -2201,6 +2171,8 @@
         "required": [
           "concept_id",
           "exercise_type",
+          "difficulty",
+          "presentation",
           "is_review",
           "concept_type",
           "cefr_level"

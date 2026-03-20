@@ -32,10 +32,7 @@ const startedConcept = {
   ref: 'hello',
   concept_type: 'vocabulary' as const,
   cefr_level: 'A1' as const,
-  forward_difficulty: 'forward_mc',
-  forward_consecutive_correct: 3,
-  reverse_difficulty: 'reverse_mc',
-  reverse_consecutive_correct: 0,
+  peak_difficulty: 10,
   is_mastered: false,
   fsrs_state: 'review',
   fsrs_stability: 5.2,
@@ -49,10 +46,7 @@ const unstartedConcept = {
   ref: 'goodbye',
   concept_type: 'vocabulary' as const,
   cefr_level: 'A1' as const,
-  forward_difficulty: null,
-  forward_consecutive_correct: null,
-  reverse_difficulty: null,
-  reverse_consecutive_correct: null,
+  peak_difficulty: null,
   is_mastered: null,
   fsrs_state: null,
   fsrs_stability: null,
@@ -115,8 +109,7 @@ describe('ReviewSchedulePage', () => {
     expect(await screen.findByText('hello')).toBeInTheDocument()
     // A1 appears in both the badge and filter option; check the badge specifically
     expect(screen.getByText('A1', { selector: 'span' })).toBeInTheDocument()
-    expect(screen.getByText('Fwd MC / Rev MC')).toBeInTheDocument()
-    expect(screen.getByText('3/0')).toBeInTheDocument()
+    expect(screen.getByText('10')).toBeInTheDocument()
     expect(screen.getByText('5.2')).toBeInTheDocument()
     expect(screen.getByText('3.1')).toBeInTheDocument()
     expect(screen.getByText('1 / 1 started')).toBeInTheDocument()

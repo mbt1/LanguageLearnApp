@@ -4,8 +4,8 @@
 Simulates a user learning a small course over 30 days:
 - Each "day" requests a study session and submits reviews
 - 80% Good, 15% Hard, 5% Again ratings
-- Verifies FSRS intervals grow, prerequisite caps are respected,
-  difficulty advances with streak, and session_size is honoured.
+- Verifies FSRS intervals grow, difficulty progresses,
+  and session_size is honoured.
 """
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def _pick_rating(rng: random.Random) -> tuple[str, bool]:
 # ── Small test course ─────────────────────────────────────────
 
 def _sim_course() -> dict[str, Any]:
-    """A 5-concept course: hola → adios → gracias (hola prereq), gato, perro."""
+    """A 5-concept course with translate and cloze exercises."""
     return {
         "slug": f"sim-30day-{datetime.now(UTC).timestamp()}",
         "title": "30-Day Simulation Course",
@@ -81,20 +81,21 @@ def _sim_course() -> dict[str, Any]:
                 "sequence": 1,
                 "exercises": [
                     {
-                        "ref": "hola-fwd-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "hola-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "source": "hello",
-                            "targets": ["hola"],
+                            "prompt": ["hello"],
+                            "answers": [["hola"]],
                             "distractors": {"random": ["adiós", "gracias"]},
                         },
                     },
                     {
-                        "ref": "hola-rev-mc-1",
-                        "exercise_type": "reverse_mc",
+                        "ref": "hola-rev-translate-1",
+                        "exercise_type": "translate",
+                        "reverse": True,
                         "data": {
-                            "source": "hola",
-                            "targets": ["hello"],
+                            "prompt": ["hola"],
+                            "answers": [["hello"]],
                             "distractors": {"random": ["goodbye", "thanks"]},
                         },
                     },
@@ -102,19 +103,9 @@ def _sim_course() -> dict[str, Any]:
                         "ref": "hola-cloze-1",
                         "exercise_type": "cloze",
                         "data": {
-                            "source": "__ mundo",
-                            "targets": ["hola"],
+                            "prompt": ["__ mundo"],
+                            "answers": [["hola"]],
                         },
-                    },
-                    {
-                        "ref": "hola-fwd-typing-1",
-                        "exercise_type": "forward_typing",
-                        "data": {"source": "hello", "targets": ["hola"]},
-                    },
-                    {
-                        "ref": "hola-rev-typing-1",
-                        "exercise_type": "reverse_typing",
-                        "data": {"source": "hola", "targets": ["hello"]},
                     },
                 ],
             },
@@ -126,32 +117,23 @@ def _sim_course() -> dict[str, Any]:
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
-                        "ref": "adios-fwd-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "adios-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "source": "goodbye",
-                            "targets": ["adiós"],
+                            "prompt": ["goodbye"],
+                            "answers": [["adiós"]],
                             "distractors": {"random": ["hola", "gracias"]},
                         },
                     },
                     {
-                        "ref": "adios-rev-mc-1",
-                        "exercise_type": "reverse_mc",
+                        "ref": "adios-rev-translate-1",
+                        "exercise_type": "translate",
+                        "reverse": True,
                         "data": {
-                            "source": "adiós",
-                            "targets": ["goodbye"],
+                            "prompt": ["adiós"],
+                            "answers": [["goodbye"]],
                             "distractors": {"random": ["hello", "thanks"]},
                         },
-                    },
-                    {
-                        "ref": "adios-fwd-typing-1",
-                        "exercise_type": "forward_typing",
-                        "data": {"source": "goodbye", "targets": ["adiós"]},
-                    },
-                    {
-                        "ref": "adios-rev-typing-1",
-                        "exercise_type": "reverse_typing",
-                        "data": {"source": "adiós", "targets": ["goodbye"]},
                     },
                 ],
             },
@@ -163,32 +145,23 @@ def _sim_course() -> dict[str, Any]:
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
-                        "ref": "gracias-fwd-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "gracias-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "source": "thank you",
-                            "targets": ["gracias"],
+                            "prompt": ["thank you"],
+                            "answers": [["gracias"]],
                             "distractors": {"random": ["hola", "adiós"]},
                         },
                     },
                     {
-                        "ref": "gracias-rev-mc-1",
-                        "exercise_type": "reverse_mc",
+                        "ref": "gracias-rev-translate-1",
+                        "exercise_type": "translate",
+                        "reverse": True,
                         "data": {
-                            "source": "gracias",
-                            "targets": ["thank you", "thanks"],
+                            "prompt": ["gracias"],
+                            "answers": [["thank you", "thanks"]],
                             "distractors": {"random": ["hello", "goodbye"]},
                         },
-                    },
-                    {
-                        "ref": "gracias-fwd-typing-1",
-                        "exercise_type": "forward_typing",
-                        "data": {"source": "thank you", "targets": ["gracias"]},
-                    },
-                    {
-                        "ref": "gracias-rev-typing-1",
-                        "exercise_type": "reverse_typing",
-                        "data": {"source": "gracias", "targets": ["thank you", "thanks"]},
                     },
                 ],
             },
@@ -199,32 +172,23 @@ def _sim_course() -> dict[str, Any]:
                 "sequence": 4,
                 "exercises": [
                     {
-                        "ref": "gato-fwd-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "gato-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "source": "cat",
-                            "targets": ["gato"],
+                            "prompt": ["cat"],
+                            "answers": [["gato"]],
                             "distractors": {"random": ["perro", "pez"]},
                         },
                     },
                     {
-                        "ref": "gato-rev-mc-1",
-                        "exercise_type": "reverse_mc",
+                        "ref": "gato-rev-translate-1",
+                        "exercise_type": "translate",
+                        "reverse": True,
                         "data": {
-                            "source": "gato",
-                            "targets": ["cat"],
+                            "prompt": ["gato"],
+                            "answers": [["cat"]],
                             "distractors": {"random": ["dog", "fish"]},
                         },
-                    },
-                    {
-                        "ref": "gato-fwd-typing-1",
-                        "exercise_type": "forward_typing",
-                        "data": {"source": "cat", "targets": ["gato"]},
-                    },
-                    {
-                        "ref": "gato-rev-typing-1",
-                        "exercise_type": "reverse_typing",
-                        "data": {"source": "gato", "targets": ["cat"]},
                     },
                 ],
             },
@@ -235,32 +199,23 @@ def _sim_course() -> dict[str, Any]:
                 "sequence": 5,
                 "exercises": [
                     {
-                        "ref": "perro-fwd-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "perro-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "source": "dog",
-                            "targets": ["perro"],
+                            "prompt": ["dog"],
+                            "answers": [["perro"]],
                             "distractors": {"random": ["gato", "pez"]},
                         },
                     },
                     {
-                        "ref": "perro-rev-mc-1",
-                        "exercise_type": "reverse_mc",
+                        "ref": "perro-rev-translate-1",
+                        "exercise_type": "translate",
+                        "reverse": True,
                         "data": {
-                            "source": "perro",
-                            "targets": ["dog"],
+                            "prompt": ["perro"],
+                            "answers": [["dog"]],
                             "distractors": {"random": ["cat", "fish"]},
                         },
-                    },
-                    {
-                        "ref": "perro-fwd-typing-1",
-                        "exercise_type": "forward_typing",
-                        "data": {"source": "dog", "targets": ["perro"]},
-                    },
-                    {
-                        "ref": "perro-rev-typing-1",
-                        "exercise_type": "reverse_typing",
-                        "data": {"source": "perro", "targets": ["dog"]},
                     },
                 ],
             },
@@ -339,6 +294,7 @@ async def test_30_day_simulation(sim_client: httpx.AsyncClient) -> None:
                         "concept_id": item["concept_id"],
                         "rating": rating,
                         "exercise_type": item["exercise_type"],
+                        "difficulty": item["difficulty"],
                         "correct": correct,
                     },
                     headers=auth,

@@ -1,0 +1,18 @@
+operations:
+  - sql:
+      up: |
+        -- New exercise_type enum values for the simplified content model
+        ALTER TYPE exercise_type ADD VALUE IF NOT EXISTS 'translate';
+        ALTER TYPE exercise_type ADD VALUE IF NOT EXISTS 'match';
+
+        -- Direction flag on exercises (replaces encoding direction in exercise_type name)
+        ALTER TABLE exercises ADD COLUMN IF NOT EXISTS reverse boolean NOT NULL DEFAULT false;
+
+        -- Peak difficulty replaces forward/reverse difficulty tracking.
+        -- Difficulty is now derived from FSRS stability at serve time;
+        -- peak_difficulty provides a floor (can't drop more than one level).
+        ALTER TABLE user_concept_progress
+          ADD COLUMN IF NOT EXISTS peak_difficulty integer NOT NULL DEFAULT 10;
+      down: |
+        ALTER TABLE user_concept_progress DROP COLUMN IF EXISTS peak_difficulty;
+        ALTER TABLE exercises DROP COLUMN IF EXISTS reverse;

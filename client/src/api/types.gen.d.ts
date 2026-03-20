@@ -426,7 +426,7 @@ export interface paths {
         };
         /**
          * Get Review Schedule
-         * @description Return full SRS detail for all concepts the user has started in a course.
+         * @description Return full SRS detail for all concepts in a course.
          */
         get: operations["get_review_schedule_v1_review_schedule__course_id__get"];
         put?: never;
@@ -535,14 +535,8 @@ export interface components {
             ref: string;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
-            /** Forward Difficulty */
-            forward_difficulty?: string | null;
-            /** Forward Consecutive Correct */
-            forward_consecutive_correct?: number | null;
-            /** Reverse Difficulty */
-            reverse_difficulty?: string | null;
-            /** Reverse Consecutive Correct */
-            reverse_consecutive_correct?: number | null;
+            /** Peak Difficulty */
+            peak_difficulty?: number | null;
             /** Is Mastered */
             is_mastered?: boolean | null;
             /** Fsrs State */
@@ -666,6 +660,11 @@ export interface components {
             ref: string;
             /** Exercise Type */
             exercise_type: string;
+            /**
+             * Reverse
+             * @default false
+             */
+            reverse: boolean;
             /** Data */
             data?: {
                 [key: string]: unknown;
@@ -697,6 +696,8 @@ export interface components {
              */
             concept_id: string;
             exercise_type: components["schemas"]["ExerciseType"];
+            /** Difficulty */
+            difficulty: number;
             /** User Answer */
             user_answer: string;
             /** Exercise Id */
@@ -712,18 +713,14 @@ export interface components {
             correct_answer: string;
             /** Normalized User Answer */
             normalized_user_answer: string;
-            new_forward_difficulty: components["schemas"]["ExerciseType"];
-            /** Forward Consecutive Correct */
-            forward_consecutive_correct: number;
-            new_reverse_difficulty: components["schemas"]["ExerciseType"];
-            /** Reverse Consecutive Correct */
-            reverse_consecutive_correct: number;
+            /** Difficulty */
+            difficulty: number;
+            /** Peak Difficulty */
+            peak_difficulty: number;
             /** Is Mastered */
             is_mastered: boolean;
             /** Fsrs Due */
             fsrs_due: string | null;
-            /** Difficulty Advanced */
-            difficulty_advanced: boolean;
             /** Mastery Changed */
             mastery_changed: boolean;
         };
@@ -731,7 +728,7 @@ export interface components {
          * ExerciseType
          * @enum {string}
          */
-        ExerciseType: "forward_mc" | "reverse_mc" | "cloze" | "reverse_cloze" | "forward_typing" | "reverse_typing";
+        ExerciseType: "translate" | "cloze" | "match";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -880,6 +877,8 @@ export interface components {
             /** Rating */
             rating: string;
             exercise_type: components["schemas"]["ExerciseType"];
+            /** Difficulty */
+            difficulty: number;
             /** Response */
             response?: string | null;
             /** Correct */
@@ -894,18 +893,14 @@ export interface components {
              * Format: uuid
              */
             concept_id: string;
-            new_forward_difficulty: components["schemas"]["ExerciseType"];
-            /** Forward Consecutive Correct */
-            forward_consecutive_correct: number;
-            new_reverse_difficulty: components["schemas"]["ExerciseType"];
-            /** Reverse Consecutive Correct */
-            reverse_consecutive_correct: number;
+            /** Difficulty */
+            difficulty: number;
+            /** Peak Difficulty */
+            peak_difficulty: number;
             /** Is Mastered */
             is_mastered: boolean;
             /** Fsrs Due */
             fsrs_due: string | null;
-            /** Difficulty Advanced */
-            difficulty_advanced: boolean;
             /** Mastery Changed */
             mastery_changed: boolean;
         };
@@ -927,22 +922,25 @@ export interface components {
              */
             concept_id: string;
             exercise_type: components["schemas"]["ExerciseType"];
+            /** Difficulty */
+            difficulty: number;
+            /** Presentation */
+            presentation: string;
+            /**
+             * Reverse
+             * @default false
+             */
+            reverse: boolean;
             /** Is Review */
             is_review: boolean;
             concept_type: components["schemas"]["ConceptType"];
             cefr_level: components["schemas"]["CefrLevel"];
             /** Exercise Id */
             exercise_id?: string | null;
-            /**
-             * Prompt
-             * @default
-             */
-            prompt: string;
-            /**
-             * Correct Answer
-             * @default
-             */
-            correct_answer: string;
+            /** Prompt */
+            prompt?: string[];
+            /** Correct Answers */
+            correct_answers?: string[];
             /** Distractors */
             distractors?: string[] | null;
             /** Explanation */

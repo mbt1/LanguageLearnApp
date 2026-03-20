@@ -120,6 +120,7 @@ async def import_course(
                 conn,
                 exercise_type=ex.exercise_type,
                 ref=ex.ref,
+                reverse=ex.reverse,
                 data=ex.data,
             )
             await create_exercise_concept(
@@ -136,6 +137,7 @@ async def import_course(
             conn,
             exercise_type=ex.exercise_type,
             ref=ex.ref,
+            reverse=ex.reverse,
             data=ex.data,
         )
         if ex.concept_refs:

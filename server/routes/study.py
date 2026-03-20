@@ -12,7 +12,7 @@ from psycopg import AsyncConnection
 
 from auth.dependencies import get_current_user
 from auth.schemas import CurrentUser  # noqa: TC001
-from content.schemas import FORWARD_TYPES, CefrLevel, ConceptType, ExerciseType
+from content.schemas import CefrLevel, ConceptType
 from dataclasses import replace
 
 from db.pool import get_conn
@@ -20,8 +20,6 @@ from db.queries.concepts import get_concept
 from db.queries.courses import get_course, list_courses
 from db.queries.exercises import get_exercises_for_session
 from db.queries.progress import (
-    get_prerequisite_difficulties,
-    get_prerequisite_difficulties_batch,
     get_progress,
     list_all_active_progress,
     list_all_progress_detail,
@@ -34,9 +32,8 @@ from db.queries.progress import (
     upsert_progress,
 )
 from db.queries.reviews import record_review
-from srs.difficulty import advance_difficulty
+from srs.difficulty import derive_difficulty, difficulty_exercise_type, difficulty_presentation
 from srs.mastery import check_mastery_regression, compute_mastery
-from srs.prerequisite_cap import compute_capped_difficulty
 from srs.scheduler import (
     parse_rating,
     process_review,
@@ -102,44 +99,22 @@ async def create_study_session(
                 )
             progress = await get_progress(conn, user_id=user_id, concept_id=cid)
             if progress:
-                prereq_rows = await get_prerequisite_difficulties(
-                    conn, user_id=user_id, concept_id=cid,
+                difficulty = derive_difficulty(
+                    stability=progress.get("fsrs_stability"),
+                    peak_difficulty=progress.get("peak_difficulty", 10),
                 )
-                fwd_prereqs = [ExerciseType(r["forward_difficulty"]) for r in prereq_rows]
-                rev_prereqs = [ExerciseType(r["reverse_difficulty"]) for r in prereq_rows]
-                fwd_type = compute_capped_difficulty(
-                    ExerciseType(progress["forward_difficulty"]), fwd_prereqs,
-                )
-                rev_type = compute_capped_difficulty(
-                    ExerciseType(progress["reverse_difficulty"]), rev_prereqs,
-                )
-                items.append(SessionItem(
-                    concept_id=cid, exercise_type=fwd_type, is_review=True,
-                    concept_type=ConceptType(concept["concept_type"]),
-                    cefr_level=CefrLevel(concept["cefr_level"]),
-                    explanation=concept.get("explanation"),
-                ))
-                items.append(SessionItem(
-                    concept_id=cid, exercise_type=rev_type, is_review=True,
-                    concept_type=ConceptType(concept["concept_type"]),
-                    cefr_level=CefrLevel(concept["cefr_level"]),
-                    explanation=concept.get("explanation"),
-                ))
             else:
-                items.append(SessionItem(
-                    concept_id=cid, exercise_type=ExerciseType.forward_mc,
-                    is_review=False,
-                    concept_type=ConceptType(concept["concept_type"]),
-                    cefr_level=CefrLevel(concept["cefr_level"]),
-                    explanation=concept.get("explanation"),
-                ))
-                items.append(SessionItem(
-                    concept_id=cid, exercise_type=ExerciseType.reverse_mc,
-                    is_review=False,
-                    concept_type=ConceptType(concept["concept_type"]),
-                    cefr_level=CefrLevel(concept["cefr_level"]),
-                    explanation=concept.get("explanation"),
-                ))
+                difficulty = 10
+            items.append(SessionItem(
+                concept_id=cid,
+                exercise_type=difficulty_exercise_type(difficulty),
+                difficulty=difficulty,
+                presentation=difficulty_presentation(difficulty),
+                is_review=progress is not None,
+                concept_type=ConceptType(concept["concept_type"]),
+                cefr_level=CefrLevel(concept["cefr_level"]),
+                explanation=concept.get("explanation"),
+            ))
     else:
         # ── Normal session: algorithmic selection ──
         due_reviews = await list_due_reviews(
@@ -150,35 +125,27 @@ async def create_study_session(
         )
         all_active = await list_all_active_progress(conn, user_id=user_id, course_id=course_id)
 
-        review_concept_ids = [r["concept_id"] for r in due_reviews]
-        prereq_map = await get_prerequisite_difficulties_batch(
-            conn, user_id=user_id, concept_ids=review_concept_ids,
-        )
-
         items = build_session(
             due_reviews=due_reviews,
             new_concepts=new_concepts,
-            prereq_difficulties=prereq_map,
             all_active_progress=all_active,
             session_size=request.session_size,
         )
 
     # Batch fetch exercise-specific data from JSONB
-    exercise_keys = [(item.concept_id, item.exercise_type.value) for item in items]
+    exercise_keys = [(item.concept_id, item.exercise_type) for item in items]
     exercise_map = await get_exercises_for_session(conn, items=exercise_keys)
     enriched_items: list[SessionItem] = []
     for item in items:
-        exercises = exercise_map.get((item.concept_id, item.exercise_type.value))
+        exercises = exercise_map.get((item.concept_id, item.exercise_type))
         if exercises:
             ex = random.choice(exercises)  # noqa: S311
             enriched_items.append(_enrich_item(item, ex))
         else:
-            # No exercise found — skip (should not happen with well-formed content)
             enriched_items.append(item)
     items = enriched_items
 
     # Create initial progress rows for new concepts added to session
-    # (deduplicate by concept_id since each concept produces 2 items)
     new_concept_ids_seen: set[UUID] = set()
     new_items = [item for item in items if not item.is_review]
     for item in new_items:
@@ -240,31 +207,34 @@ def _select_distractors(distractor_pools: dict[str, list[str]], n: int = _NUM_DI
 
 
 def _enrich_item(item: SessionItem, ex: dict[str, Any]) -> SessionItem:
-    """Enrich a session item from a JSONB exercise row.
-
-    New data format: {source, targets[], distractors: {pool_name: [...]}}
-    """
+    """Enrich a session item from a JSONB exercise row."""
     data = ex.get("data") or {}
 
-    # Extract prompt and correct answer from exercise data
-    prompt = data.get("source", "")
-    targets = data.get("targets", [])
-    correct_answer = targets[0] if targets else ""
+    # New format: prompt is array, answers is array of arrays
+    prompt = data.get("prompt", [])
+    if isinstance(prompt, str):
+        prompt = [prompt]
+    answers = data.get("answers", [[]])
+    # Flatten alternatives for the first position
+    correct_answers = answers[0] if answers else []
+    if correct_answers and isinstance(correct_answers, str):
+        correct_answers = [correct_answers]
 
     # Select distractors for MC/cloze exercises
     distractors = None
     raw_distractors = data.get("distractors")
     if raw_distractors and isinstance(raw_distractors, dict):
         selected = _select_distractors(raw_distractors)
-        # Ensure correct answers don't appear as distractors
-        selected = [d for d in selected if d not in targets]
+        answer_set = set(correct_answers)
+        selected = [d for d in selected if d not in answer_set]
         distractors = selected[:_NUM_DISTRACTORS] if selected else None
 
     return replace(
         item,
         exercise_id=ex["id"],
+        reverse=ex.get("reverse", False),
         prompt=prompt,
-        correct_answer=correct_answer,
+        correct_answers=correct_answers,
         distractors=distractors,
     )
 
@@ -274,12 +244,15 @@ def _items_to_response(items: list[SessionItem]) -> list[StudySessionItem]:
         StudySessionItem(
             concept_id=item.concept_id,
             exercise_type=item.exercise_type,
+            difficulty=item.difficulty,
+            presentation=item.presentation,
+            reverse=item.reverse,
             is_review=item.is_review,
             concept_type=item.concept_type,
             cefr_level=item.cefr_level,
             exercise_id=item.exercise_id,
             prompt=item.prompt,
-            correct_answer=item.correct_answer,
+            correct_answers=item.correct_answers,
             distractors=item.distractors,
             explanation=item.explanation,
         )
@@ -322,46 +295,14 @@ async def submit_review(
     rating = parse_rating(request.rating)
     review_result = process_review(card, rating, now)
 
-    # Determine which track this exercise belongs to
-    is_fwd = request.exercise_type in FORWARD_TYPES
+    # Update peak difficulty on correct answer
+    old_peak = progress["peak_difficulty"]
+    new_peak = max(old_peak, request.difficulty) if request.correct else old_peak
 
-    # Advance exercise difficulty for the relevant track
-    if is_fwd:
-        old_difficulty = ExerciseType(progress["forward_difficulty"])
-        old_streak = progress["forward_consecutive_correct"]
-    else:
-        old_difficulty = ExerciseType(progress["reverse_difficulty"])
-        old_streak = progress["reverse_consecutive_correct"]
-
-    new_difficulty, new_streak = advance_difficulty(old_difficulty, old_streak, request.correct)
-    difficulty_advanced = new_difficulty != old_difficulty
-
-    # Apply prerequisite cap for the relevant track
-    prereq_rows = await get_prerequisite_difficulties(
-        conn, user_id=user_id, concept_id=concept_id,
-    )
-    diff_key = "forward_difficulty" if is_fwd else "reverse_difficulty"
-    prereq_types = [ExerciseType(r[diff_key]) for r in prereq_rows]
-    capped_difficulty = compute_capped_difficulty(new_difficulty, prereq_types)
-
-    # Build final difficulty values
-    if is_fwd:
-        fwd_diff = capped_difficulty.value
-        fwd_streak = new_streak
-        rev_diff = progress["reverse_difficulty"]
-        rev_streak = progress["reverse_consecutive_correct"]
-    else:
-        fwd_diff = progress["forward_difficulty"]
-        fwd_streak = progress["forward_consecutive_correct"]
-        rev_diff = capped_difficulty.value
-        rev_streak = new_streak
-
-    # Compute mastery (requires both tracks at max)
+    # Compute mastery
     was_mastered = bool(progress["is_mastered"])
     regressed = check_mastery_regression(was_mastered, request.correct)
     new_mastery = compute_mastery(
-        forward_difficulty=fwd_diff,
-        reverse_difficulty=rev_diff,
         fsrs_stability=review_result.fsrs_stability,
         fsrs_state=review_result.fsrs_state,
     )
@@ -373,10 +314,7 @@ async def submit_review(
         conn,
         user_id=user_id,
         concept_id=concept_id,
-        forward_difficulty=fwd_diff,
-        forward_consecutive_correct=fwd_streak,
-        reverse_difficulty=rev_diff,
-        reverse_consecutive_correct=rev_streak,
+        peak_difficulty=new_peak,
         fsrs_state=review_result.fsrs_state,
         fsrs_step=review_result.fsrs_step,
         fsrs_stability=review_result.fsrs_stability,
@@ -409,13 +347,13 @@ async def submit_review(
 
     return ReviewResponse(
         concept_id=concept_id,
-        new_forward_difficulty=ExerciseType(fwd_diff),
-        forward_consecutive_correct=fwd_streak,
-        new_reverse_difficulty=ExerciseType(rev_diff),
-        reverse_consecutive_correct=rev_streak,
+        difficulty=derive_difficulty(
+            stability=review_result.fsrs_stability,
+            peak_difficulty=new_peak,
+        ),
+        peak_difficulty=new_peak,
         is_mastered=is_mastered,
         fsrs_due=review_result.fsrs_due,
-        difficulty_advanced=difficulty_advanced,
         mastery_changed=mastery_changed,
     )
 
@@ -429,7 +367,6 @@ async def get_course_progress(
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
     conn: Annotated[AsyncConnection, Depends(get_conn)],  # pyright: ignore[reportMissingTypeArgument]
 ) -> CourseProgressResponse:
-    # Verify course exists
     course = await get_course(conn, course_id=course_id)
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
@@ -438,7 +375,6 @@ async def get_course_progress(
         conn, user_id=current_user.user_id, course_id=course_id,
     )
     if not rows:
-        # Lazy-fill cache for existing users who have never had it populated
         await refresh_course_progress_summary(
             conn, user_id=current_user.user_id, course_id=course_id,
         )
@@ -462,7 +398,6 @@ async def get_all_progress(
     rows = await read_all_progress_summary(conn, user_id=current_user.user_id)
 
     if not rows:
-        # Lazy-fill cache for existing users
         all_courses = await list_courses(conn)
         for c in all_courses:
             await refresh_course_progress_summary(
@@ -493,7 +428,7 @@ async def get_review_schedule(
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
     conn: Annotated[AsyncConnection, Depends(get_conn)],  # pyright: ignore[reportMissingTypeArgument]
 ) -> ReviewScheduleResponse:
-    """Return full SRS detail for all concepts the user has started in a course."""
+    """Return full SRS detail for all concepts in a course."""
     course = await get_course(conn, course_id=course_id)
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
@@ -507,10 +442,7 @@ async def get_review_schedule(
             ref=row["ref"],
             concept_type=row["concept_type"],
             cefr_level=row["cefr_level"],
-            forward_difficulty=row["forward_difficulty"],
-            forward_consecutive_correct=row["forward_consecutive_correct"],
-            reverse_difficulty=row["reverse_difficulty"],
-            reverse_consecutive_correct=row["reverse_consecutive_correct"],
+            peak_difficulty=row["peak_difficulty"],
             is_mastered=row["is_mastered"],
             fsrs_state=row["fsrs_state"],
             fsrs_stability=row["fsrs_stability"],

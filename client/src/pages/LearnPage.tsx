@@ -58,6 +58,7 @@ export function LearnPage() {
       const result = await submitExercise({
         concept_id: current.concept_id,
         exercise_type: current.exercise_type,
+        difficulty: current.difficulty,
         user_answer: userAnswer,
         ...(current.exercise_id ? { exercise_id: current.exercise_id } : {}),
       })
@@ -93,8 +94,8 @@ export function LearnPage() {
   const item = session?.items[index] ?? null
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const mcOptions = useMemo(() => {
-    if (!item || (item.exercise_type !== 'forward_mc' && item.exercise_type !== 'reverse_mc')) return []
-    const answer = item.correct_answer
+    if (!item || item.presentation !== 'mc') return []
+    const answer = item.correct_answers?.[0] ?? ''
     return shuffled([...(item.distractors ?? []), answer])
   }, [index, session])
 
@@ -138,7 +139,7 @@ export function LearnPage() {
         )}
       </div>
 
-      {(item.exercise_type === 'forward_mc' || item.exercise_type === 'reverse_mc') && (
+      {item.presentation === 'mc' && (
         <MultipleChoiceExercise
           key={index}
           prompt={item.prompt}
@@ -147,7 +148,7 @@ export function LearnPage() {
           feedback={feedbackData ? { correct: feedbackData.correct, correctAnswer: feedbackData.correct_answer } : null}
         />
       )}
-      {(item.exercise_type === 'cloze' || item.exercise_type === 'reverse_cloze') && (
+      {item.presentation === 'arrange' && (
         <ClozeExercise
           key={index}
           sentenceTemplate={item.prompt}
@@ -155,7 +156,7 @@ export function LearnPage() {
           feedback={feedbackData ? { correct: feedbackData.correct } : null}
         />
       )}
-      {(item.exercise_type === 'forward_typing' || item.exercise_type === 'reverse_typing') && (
+      {item.presentation === 'typing' && (
         <TypingExercise
           key={index}
           prompt={item.prompt}

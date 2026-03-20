@@ -17,12 +17,15 @@ import * as studyApi from '@/api/study'
 
 const mockItem = {
   concept_id: 'concept-1',
-  exercise_type: 'forward_mc' as const,
+  exercise_type: 'translate' as const,
+  difficulty: 10,
+  presentation: 'mc',
+  reverse: false,
   is_review: false,
   concept_type: 'vocabulary' as const,
   cefr_level: 'A1' as const,
-  prompt: 'hello',
-  correct_answer: 'hola',
+  prompt: ['hello'],
+  correct_answers: ['hola'],
   distractors: ['adiós', 'gracias'],
   explanation: null,
 }
@@ -31,13 +34,10 @@ const mockResult = {
   correct: true,
   correct_answer: 'hola',
   normalized_user_answer: 'hola',
-  new_forward_difficulty: 'forward_mc' as const,
-  forward_consecutive_correct: 1,
-  new_reverse_difficulty: 'reverse_mc' as const,
-  reverse_consecutive_correct: 0,
+  difficulty: 10,
+  peak_difficulty: 10,
   is_mastered: false,
   fsrs_due: null,
-  difficulty_advanced: false,
   mastery_changed: false,
 }
 
@@ -131,9 +131,9 @@ describe('LearnPage', () => {
     expect(await screen.findByText(/session complete/i)).toBeInTheDocument()
   })
 
-  it('renders typing exercise for typing type', async () => {
+  it('renders typing exercise for typing presentation', async () => {
     vi.mocked(studyApi.studySession).mockResolvedValue({
-      items: [{ ...mockItem, exercise_type: 'forward_typing' as const }],
+      items: [{ ...mockItem, presentation: 'typing', difficulty: 50 }],
       total_due_reviews: 1,
       new_concepts_added: 0,
     })

@@ -62,20 +62,18 @@ describe('submitExercise', () => {
   it('posts to /v1/exercises/submit with request body', async () => {
     const req = {
       concept_id: 'concept-1',
-      exercise_type: 'forward_mc' as const,
+      exercise_type: 'translate' as const,
+      difficulty: 10,
       user_answer: 'hola',
     }
     mockApiRequest.mockResolvedValueOnce({
       correct: true,
       correct_answer: 'hola',
       normalized_user_answer: 'hola',
-      new_forward_difficulty: 'forward_mc',
-      forward_consecutive_correct: 1,
-      new_reverse_difficulty: 'reverse_mc',
-      reverse_consecutive_correct: 0,
+      difficulty: 10,
+      peak_difficulty: 10,
       is_mastered: false,
       fsrs_due: null,
-      difficulty_advanced: false,
       mastery_changed: false,
     })
 

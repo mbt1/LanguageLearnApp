@@ -40,12 +40,12 @@ def _mini_course() -> dict[str, Any]:
                 "sequence": 1,
                 "exercises": [
                     {
-                        "ref": "hola-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "hola-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "source": "hello",
-                            "targets": ["hola"],
-                            "distractors": {"random": ["adiós", "gracias"]},
+                            "prompt": ["hello"],
+                            "answers": [["hola"]],
+                            "distractors": {"semantic": ["adiós", "gracias"]},
                         },
                     }
                 ],
@@ -73,7 +73,8 @@ async def test_exercise_submit_matches_spec(
         "/v1/exercises/submit",
         json={
             "concept_id": concept_id,
-            "exercise_type": "forward_mc",
+            "exercise_type": "translate",
+            "difficulty": 10,
             "user_answer": "hola",
         },
         headers=_auth_headers(user["access_token"]),

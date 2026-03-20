@@ -16,19 +16,21 @@ async def create_exercise(
     *,
     exercise_type: str,
     ref: str,
+    reverse: bool = False,
     data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Insert a new exercise and return the created row."""
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
-            INSERT INTO exercises (exercise_type, ref, data)
-            VALUES (%(exercise_type)s, %(ref)s, %(data)s)
+            INSERT INTO exercises (exercise_type, ref, reverse, data)
+            VALUES (%(exercise_type)s, %(ref)s, %(reverse)s, %(data)s)
             RETURNING *
             """,
             {
                 "exercise_type": exercise_type,
                 "ref": ref,
+                "reverse": reverse,
                 "data": json.dumps(data or {}),
             },
         )

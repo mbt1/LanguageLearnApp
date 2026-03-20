@@ -1,73 +1,75 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Exercise difficulty progression — pure Python, no DB imports.
+"""Difficulty derivation — pure Python, no DB imports.
 
-Two independent tracks:
-  Forward: forward_mc → cloze → forward_typing
-  Reverse: reverse_mc → reverse_cloze → reverse_typing
+Difficulty is derived from FSRS stability at serve time, not tracked as state.
+A peak_difficulty floor prevents regression beyond one level (10 points).
+
+Configuration is a sorted list of levels. Each level specifies:
+  - level:          integer difficulty (multiples of 10 for future expansion)
+  - exercise_type:  which content type to fetch (translate / cloze / match)
+  - presentation:   how the client should render (mc / arrange / typing)
+  - min_stability:  minimum FSRS stability (days) to unlock this level
 """
 from __future__ import annotations
 
-from content.schemas import FORWARD_TYPES, REVERSE_TYPES, ExerciseType
-
-FORWARD_ORDER: list[ExerciseType] = [
-    ExerciseType.forward_mc,
-    ExerciseType.cloze,
-    ExerciseType.forward_typing,
-]
-REVERSE_ORDER: list[ExerciseType] = [
-    ExerciseType.reverse_mc,
-    ExerciseType.reverse_cloze,
-    ExerciseType.reverse_typing,
+DIFFICULTY_CONFIG: list[dict] = [
+    {"level": 10, "exercise_type": "translate", "presentation": "mc",      "min_stability": 0.0},
+    {"level": 20, "exercise_type": "translate", "presentation": "arrange", "min_stability": 1.0},
+    {"level": 30, "exercise_type": "cloze",     "presentation": "mc",      "min_stability": 3.0},
+    {"level": 40, "exercise_type": "cloze",     "presentation": "typing",  "min_stability": 10.0},
+    {"level": 50, "exercise_type": "translate",  "presentation": "typing",  "min_stability": 30.0},
 ]
 
-# Combined lookup for prerequisite cap (forward first, then reverse)
-DIFFICULTY_ORDER: list[ExerciseType] = FORWARD_ORDER + REVERSE_ORDER
+MIN_DIFFICULTY = DIFFICULTY_CONFIG[0]["level"]
+MAX_DIFFICULTY = DIFFICULTY_CONFIG[-1]["level"]
+LEVEL_STEP = 10
 
-CONSECUTIVE_CORRECT_TO_ADVANCE = 3
-
-FORWARD_INDEX: dict[ExerciseType, int] = {d: i for i, d in enumerate(FORWARD_ORDER)}
-REVERSE_INDEX: dict[ExerciseType, int] = {d: i for i, d in enumerate(REVERSE_ORDER)}
-# Unified index for prerequisite cap — maps all types to a linear position
-DIFFICULTY_INDEX: dict[ExerciseType, int] = {d: i for i, d in enumerate(DIFFICULTY_ORDER)}
-_DIFFICULTY_INDEX = DIFFICULTY_INDEX  # internal alias
+# Pre-built lookup: level → config entry
+_LEVEL_MAP: dict[int, dict] = {entry["level"]: entry for entry in DIFFICULTY_CONFIG}
 
 
-def is_forward(exercise_type: ExerciseType) -> bool:
-    """Return True if the exercise type belongs to the forward track."""
-    return exercise_type in FORWARD_TYPES
+def derive_difficulty(
+    stability: float | None,
+    peak_difficulty: int = MIN_DIFFICULTY,
+) -> int:
+    """Compute the current difficulty level from FSRS stability.
 
-
-def is_reverse(exercise_type: ExerciseType) -> bool:
-    """Return True if the exercise type belongs to the reverse track."""
-    return exercise_type in REVERSE_TYPES
-
-
-def advance_difficulty(
-    current_difficulty: ExerciseType,
-    consecutive_correct: int,
-    correct: bool,  # noqa: FBT001
-) -> tuple[ExerciseType, int]:
-    """Compute new difficulty and streak after a review within a single track.
-
-    Returns (new_difficulty, new_consecutive_correct).
+    The derived level is the highest level whose min_stability threshold
+    is met.  A floor of ``peak_difficulty - LEVEL_STEP`` prevents the
+    learner from regressing more than one level below their best.
     """
-    if not correct:
-        return current_difficulty, 0
-
-    if is_forward(current_difficulty):
-        track_order = FORWARD_ORDER
-        track_index = FORWARD_INDEX
-    elif is_reverse(current_difficulty):
-        track_order = REVERSE_ORDER
-        track_index = REVERSE_INDEX
+    if stability is None or stability <= 0:
+        derived = MIN_DIFFICULTY
     else:
-        return current_difficulty, consecutive_correct + 1
+        derived = MIN_DIFFICULTY
+        for entry in DIFFICULTY_CONFIG:
+            if stability >= entry["min_stability"]:
+                derived = entry["level"]
+            else:
+                break
 
-    new_streak = consecutive_correct + 1
-    idx = track_index[current_difficulty]
-    is_max = idx >= len(track_order) - 1
+    floor = max(MIN_DIFFICULTY, peak_difficulty - LEVEL_STEP)
+    return max(derived, floor)
 
-    if new_streak >= CONSECUTIVE_CORRECT_TO_ADVANCE and not is_max:
-        return track_order[idx + 1], 0
 
-    return current_difficulty, new_streak
+def difficulty_exercise_type(level: int) -> str:
+    """Return the exercise_type string for a difficulty level."""
+    entry = _LEVEL_MAP.get(level)
+    if entry:
+        return entry["exercise_type"]
+    # Fall back to nearest level below
+    for entry in reversed(DIFFICULTY_CONFIG):
+        if entry["level"] <= level:
+            return entry["exercise_type"]
+    return DIFFICULTY_CONFIG[0]["exercise_type"]
+
+
+def difficulty_presentation(level: int) -> str:
+    """Return the presentation mode string for a difficulty level."""
+    entry = _LEVEL_MAP.get(level)
+    if entry:
+        return entry["presentation"]
+    for entry in reversed(DIFFICULTY_CONFIG):
+        if entry["level"] <= level:
+            return entry["presentation"]
+    return DIFFICULTY_CONFIG[0]["presentation"]

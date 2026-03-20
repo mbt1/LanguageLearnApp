@@ -27,7 +27,7 @@ def _auth_headers(token: str) -> dict[str, str]:
 
 
 def _mini_course(slug: str | None = None) -> dict[str, Any]:
-    """A 2-concept course with forward_mc and forward_typing exercises."""
+    """A 2-concept course with translate and cloze exercises."""
     return {
         "slug": slug or f"exercises-test-{datetime.now(UTC).timestamp()}",
         "title": "Exercise Test Course",
@@ -41,23 +41,19 @@ def _mini_course(slug: str | None = None) -> dict[str, Any]:
                 "sequence": 1,
                 "exercises": [
                     {
-                        "ref": "hola-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "hola-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "source": "hello",
-                            "targets": ["hola"],
-                            "distractors": {"semantic": ["adiós", "gracias"], "random": []},
+                            "prompt": ["hello"],
+                            "answers": [["hola"]],
+                            "distractors": {"semantic": ["adiós", "gracias"]},
                         },
                     },
                     {
-                        "ref": "hola-typing-1",
-                        "exercise_type": "forward_typing",
-                        "data": {"source": "hello", "targets": ["hola"]},
-                    },
-                    {
-                        "ref": "hola-reverse-typing-1",
-                        "exercise_type": "reverse_typing",
-                        "data": {"source": "hola", "targets": ["hello"]},
+                        "ref": "hola-reverse-1",
+                        "exercise_type": "translate",
+                        "reverse": True,
+                        "data": {"prompt": ["hola"], "answers": [["hello"]]},
                     },
                 ],
             },
@@ -68,12 +64,12 @@ def _mini_course(slug: str | None = None) -> dict[str, Any]:
                 "sequence": 2,
                 "exercises": [
                     {
-                        "ref": "adios-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "adios-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "source": "goodbye",
-                            "targets": ["adiós"],
-                            "distractors": {"semantic": ["hola", "gracias"], "random": []},
+                            "prompt": ["goodbye"],
+                            "answers": [["adiós"]],
+                            "distractors": {"semantic": ["hola", "gracias"]},
                         },
                     },
                 ],
@@ -104,28 +100,33 @@ async def test_submit_requires_auth(client: httpx.AsyncClient) -> None:
         "/v1/exercises/submit",
         json={
             "concept_id": "00000000-0000-0000-0000-000000000001",
-            "exercise_type": "forward_mc",
+            "exercise_type": "translate",
+            "difficulty": 10,
             "user_answer": "hola",
         },
     )
     assert resp.status_code == 401
 
 
-async def test_submit_correct_forward_mc(client: httpx.AsyncClient) -> None:
+async def test_submit_correct_answer(client: httpx.AsyncClient) -> None:
+    """Submit the first correct answer from the session item."""
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
     assert course_resp.status_code == 201
     course_id = course_resp.json()["course_id"]
 
     items = await _start_session(client, course_id, user["access_token"])
-    item = next(i for i in items if i["exercise_type"] == "forward_mc")
+    item = items[0]
+    correct_answer = item["correct_answers"][0]
 
     resp = await client.post(
         "/v1/exercises/submit",
         json={
             "concept_id": item["concept_id"],
-            "exercise_type": "forward_mc",
-            "user_answer": "hola",
+            "exercise_type": item["exercise_type"],
+            "difficulty": item["difficulty"],
+            "exercise_id": item["exercise_id"],
+            "user_answer": correct_answer,
         },
         headers=_auth_headers(user["access_token"]),
     )
@@ -134,61 +135,38 @@ async def test_submit_correct_forward_mc(client: httpx.AsyncClient) -> None:
     assert data["correct"] is True
     assert "correct_answer" in data
     assert "normalized_user_answer" in data
-    assert "new_forward_difficulty" in data
-    assert "forward_consecutive_correct" in data
-    assert "new_reverse_difficulty" in data
-    assert "reverse_consecutive_correct" in data
+    assert "difficulty" in data
+    assert "peak_difficulty" in data
     assert "is_mastered" in data
     assert "fsrs_due" in data
 
 
-async def test_submit_wrong_forward_mc_returns_correct_answer(
-    client: httpx.AsyncClient,
-) -> None:
+async def test_submit_wrong_answer(client: httpx.AsyncClient) -> None:
+    """Wrong answer returns correct=False and the correct answer."""
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
     assert course_resp.status_code == 201
     course_id = course_resp.json()["course_id"]
 
     items = await _start_session(client, course_id, user["access_token"])
-    item = next(i for i in items if i["exercise_type"] == "forward_mc")
+    item = items[0]
+    correct_answer = item["correct_answers"][0]
 
     resp = await client.post(
         "/v1/exercises/submit",
         json={
             "concept_id": item["concept_id"],
-            "exercise_type": "forward_mc",
-            "user_answer": "adiós",  # wrong
+            "exercise_type": item["exercise_type"],
+            "difficulty": item["difficulty"],
+            "exercise_id": item["exercise_id"],
+            "user_answer": "zzz_definitely_wrong",
         },
         headers=_auth_headers(user["access_token"]),
     )
     assert resp.status_code == 200
     data = resp.json()
     assert data["correct"] is False
-    assert data["correct_answer"] == "hola"
-
-
-async def test_submit_correct_forward_typing(client: httpx.AsyncClient) -> None:
-    user = await _register(client)
-    course_resp = await client.post("/v1/courses/import", json=_mini_course())
-    assert course_resp.status_code == 201
-    course_id = course_resp.json()["course_id"]
-
-    # Start session to initialize progress, then submit a typing answer
-    items = await _start_session(client, course_id, user["access_token"])
-    concept_id = items[0]["concept_id"]
-
-    resp = await client.post(
-        "/v1/exercises/submit",
-        json={
-            "concept_id": concept_id,
-            "exercise_type": "forward_typing",
-            "user_answer": "hola",
-        },
-        headers=_auth_headers(user["access_token"]),
-    )
-    assert resp.status_code == 200
-    assert resp.json()["correct"] is True
+    assert data["correct_answer"] == correct_answer
 
 
 async def test_submit_case_insensitive_accepted(client: httpx.AsyncClient) -> None:
@@ -198,14 +176,19 @@ async def test_submit_case_insensitive_accepted(client: httpx.AsyncClient) -> No
     course_id = course_resp.json()["course_id"]
 
     items = await _start_session(client, course_id, user["access_token"])
-    concept_id = items[0]["concept_id"]
+    item = items[0]
+    # Submit the correct answer with different casing
+    correct_answer = item["correct_answers"][0]
+    cased_answer = correct_answer[0].upper() + correct_answer[1:]
 
     resp = await client.post(
         "/v1/exercises/submit",
         json={
-            "concept_id": concept_id,
-            "exercise_type": "forward_typing",
-            "user_answer": "Hola",  # different case
+            "concept_id": item["concept_id"],
+            "exercise_type": item["exercise_type"],
+            "difficulty": item["difficulty"],
+            "exercise_id": item["exercise_id"],
+            "user_answer": cased_answer,
         },
         headers=_auth_headers(user["access_token"]),
     )
@@ -213,48 +196,30 @@ async def test_submit_case_insensitive_accepted(client: httpx.AsyncClient) -> No
     assert resp.json()["correct"] is True
 
 
-async def test_submit_wrong_answer_resets_streak(client: httpx.AsyncClient) -> None:
+async def test_submit_correct_peak_difficulty(client: httpx.AsyncClient) -> None:
+    """Correct answer records peak_difficulty >= submitted difficulty."""
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
     assert course_resp.status_code == 201
     course_id = course_resp.json()["course_id"]
 
     items = await _start_session(client, course_id, user["access_token"])
-    item = next(i for i in items if i["exercise_type"] == "forward_mc")
+    item = items[0]
 
     resp = await client.post(
         "/v1/exercises/submit",
         json={
             "concept_id": item["concept_id"],
-            "exercise_type": "forward_mc",
-            "user_answer": "adiós",  # wrong
+            "exercise_type": item["exercise_type"],
+            "difficulty": item["difficulty"],
+            "exercise_id": item["exercise_id"],
+            "user_answer": item["correct_answers"][0],
         },
         headers=_auth_headers(user["access_token"]),
     )
     assert resp.status_code == 200
-    assert resp.json()["forward_consecutive_correct"] == 0
-
-
-async def test_submit_correct_advances_streak(client: httpx.AsyncClient) -> None:
-    user = await _register(client)
-    course_resp = await client.post("/v1/courses/import", json=_mini_course())
-    assert course_resp.status_code == 201
-    course_id = course_resp.json()["course_id"]
-
-    items = await _start_session(client, course_id, user["access_token"])
-    item = next(i for i in items if i["exercise_type"] == "forward_mc")
-
-    resp = await client.post(
-        "/v1/exercises/submit",
-        json={
-            "concept_id": item["concept_id"],
-            "exercise_type": "forward_mc",
-            "user_answer": "hola",
-        },
-        headers=_auth_headers(user["access_token"]),
-    )
-    assert resp.status_code == 200
-    assert resp.json()["forward_consecutive_correct"] == 1
+    data = resp.json()
+    assert data["peak_difficulty"] >= 10
 
 
 async def test_submit_exercise_type_without_explicit_exercise_returns_404(
@@ -268,12 +233,13 @@ async def test_submit_exercise_type_without_explicit_exercise_returns_404(
 
     items = await _start_session(client, course_id, user["access_token"])
     concept_id = items[0]["concept_id"]
-    # Request cloze which doesn't have explicit exercise — no fallback, returns 404
+    # Request match which doesn't have explicit exercise — no fallback, returns 404
     resp = await client.post(
         "/v1/exercises/submit",
         json={
             "concept_id": concept_id,
-            "exercise_type": "cloze",
+            "exercise_type": "match",
+            "difficulty": 10,
             "user_answer": "hola",
         },
         headers=_auth_headers(user["access_token"]),
@@ -287,7 +253,8 @@ async def test_submit_concept_without_progress(client: httpx.AsyncClient) -> Non
         "/v1/exercises/submit",
         json={
             "concept_id": "00000000-0000-0000-0000-000000000001",
-            "exercise_type": "forward_mc",
+            "exercise_type": "translate",
+            "difficulty": 10,
             "user_answer": "hola",
         },
         headers=_auth_headers(user["access_token"]),
@@ -295,85 +262,27 @@ async def test_submit_concept_without_progress(client: httpx.AsyncClient) -> Non
     assert resp.status_code == 404
 
 
-async def _advance_forward_track(
-    client: httpx.AsyncClient,
-    concept_id: str,
-    token: str,
-) -> None:
-    """Submit 6 correct forward reviews to advance from forward_mc → cloze → forward_typing."""
-    headers = _auth_headers(token)
-    for _ in range(6):
-        resp = await client.post(
-            "/v1/study/review",
-            json={
-                "concept_id": concept_id,
-                "rating": "good",
-                "exercise_type": "forward_mc",
-                "correct": True,
-            },
-            headers=headers,
-        )
-        assert resp.status_code == 200
-
-
-async def test_submit_reverse_typing(
-    client: httpx.AsyncClient,
-) -> None:
-    """reverse_typing uses exercise data targets as correct_answer."""
+async def test_submit_with_exercise_id(client: httpx.AsyncClient) -> None:
+    """Submitting with exercise_id uses that specific exercise for grading."""
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
     assert course_resp.status_code == 201
     course_id = course_resp.json()["course_id"]
 
     items = await _start_session(client, course_id, user["access_token"])
-    # Find hola concept (correct_answer="hola")
-    hola_item = next(i for i in items if i["correct_answer"] == "hola")
-    concept_id = hola_item["concept_id"]
-
-    # Advance forward track
-    await _advance_forward_track(client, concept_id, user["access_token"])
-
-    # Submit reverse_typing answer: correct answer should be "hello" (source language)
-    resp = await client.post(
-        "/v1/exercises/submit",
-        json={
-            "concept_id": concept_id,
-            "exercise_type": "reverse_typing",
-            "user_answer": "hello",
-        },
-        headers=_auth_headers(user["access_token"]),
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["correct"] is True
-    assert data["correct_answer"] == "hello"
-
-
-async def test_submit_reverse_typing_wrong_answer(
-    client: httpx.AsyncClient,
-) -> None:
-    """Wrong answer for reverse_typing is rejected."""
-    user = await _register(client)
-    course_resp = await client.post("/v1/courses/import", json=_mini_course())
-    assert course_resp.status_code == 201
-    course_id = course_resp.json()["course_id"]
-
-    items = await _start_session(client, course_id, user["access_token"])
-    hola_item = next(i for i in items if i["correct_answer"] == "hola")
-    concept_id = hola_item["concept_id"]
-
-    await _advance_forward_track(client, concept_id, user["access_token"])
+    item = items[0]
+    assert item["exercise_id"] is not None
 
     resp = await client.post(
         "/v1/exercises/submit",
         json={
-            "concept_id": concept_id,
-            "exercise_type": "reverse_typing",
-            "user_answer": "hola",  # wrong — this is the Spanish word, not English
+            "concept_id": item["concept_id"],
+            "exercise_type": item["exercise_type"],
+            "difficulty": item["difficulty"],
+            "exercise_id": item["exercise_id"],
+            "user_answer": item["correct_answers"][0],
         },
         headers=_auth_headers(user["access_token"]),
     )
     assert resp.status_code == 200
-    data = resp.json()
-    assert data["correct"] is False
-    assert data["correct_answer"] == "hello"
+    assert resp.json()["correct"] is True

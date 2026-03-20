@@ -23,15 +23,14 @@ def _sample_course() -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "source_text": "hello",
-                "target_text": "hola",
                 "exercises": [
                     {
-                        "ref": "hola-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "hola-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "correct_answer": "hola",
-                            "distractors_medium": ["adiós", "gracias"],
+                            "prompt": ["hello"],
+                            "answers": [["hola"]],
+                            "distractors": {"semantic": ["adiós", "gracias"]},
                         },
                     }
                 ],
@@ -41,16 +40,15 @@ def _sample_course() -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 2,
-                "source_text": "goodbye",
-                "target_text": "adiós",
                 "prerequisites": ["hola"],
                 "exercises": [
                     {
-                        "ref": "adios-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "adios-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "correct_answer": "adiós",
-                            "distractors_medium": ["hola"],
+                            "prompt": ["goodbye"],
+                            "answers": [["adiós"]],
+                            "distractors": {"semantic": ["hola"]},
                         },
                     }
                 ],

@@ -38,15 +38,14 @@ def _mini_course() -> dict[str, Any]:
                 "concept_type": "vocabulary",
                 "cefr_level": "A1",
                 "sequence": 1,
-                "source_text": "hello",
-                "target_text": "hola",
                 "exercises": [
                     {
-                        "ref": "hola-mc-1",
-                        "exercise_type": "forward_mc",
+                        "ref": "hola-translate-1",
+                        "exercise_type": "translate",
                         "data": {
-                            "correct_answer": "hola",
-                            "distractors_medium": ["adiós", "gracias"],
+                            "prompt": ["hello"],
+                            "answers": [["hola"]],
+                            "distractors": {"semantic": ["adiós", "gracias"]},
                         },
                     }
                 ],
@@ -78,7 +77,6 @@ async def test_study_review_matches_spec(
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
     course_id = course_resp.json()["course_id"]
 
-    # Get a session first to initialize progress
     session_resp = await client.post(
         "/v1/study/session",
         json={"course_id": course_id},
@@ -91,7 +89,8 @@ async def test_study_review_matches_spec(
         json={
             "concept_id": concept_id,
             "rating": "good",
-            "exercise_type": "forward_mc",
+            "exercise_type": "translate",
+            "difficulty": 10,
             "correct": True,
         },
         headers=_auth_headers(user["access_token"]),

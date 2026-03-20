@@ -26,25 +26,9 @@ class ConceptType(StrEnum):
 
 
 class ExerciseType(StrEnum):
-    forward_mc = "forward_mc"
-    reverse_mc = "reverse_mc"
+    translate = "translate"
     cloze = "cloze"
-    reverse_cloze = "reverse_cloze"
-    forward_typing = "forward_typing"
-    reverse_typing = "reverse_typing"
-
-
-# Track classification helpers
-FORWARD_TYPES: frozenset[ExerciseType] = frozenset({
-    ExerciseType.forward_mc,
-    ExerciseType.cloze,
-    ExerciseType.forward_typing,
-})
-REVERSE_TYPES: frozenset[ExerciseType] = frozenset({
-    ExerciseType.reverse_mc,
-    ExerciseType.reverse_cloze,
-    ExerciseType.reverse_typing,
-})
+    match = "match"
 
 
 class DependencySource(StrEnum):
@@ -106,7 +90,8 @@ class CourseDetail(CourseResponse):
 
 class ExerciseImport(BaseModel):
     ref: str
-    exercise_type: str  # not validated as ExerciseType — allows future types like mix_and_match
+    exercise_type: str
+    reverse: bool = False
     data: dict[str, Any] = Field(default_factory=dict)
     concept_refs: list[str] | None = None  # for multi-concept exercises
 

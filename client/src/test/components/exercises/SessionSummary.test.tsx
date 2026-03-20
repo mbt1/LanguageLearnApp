@@ -13,13 +13,10 @@ function makeResult(overrides: Partial<ExerciseSubmitResponse> = {}): ExerciseSu
     correct: true,
     correct_answer: 'hola',
     normalized_user_answer: 'hola',
-    new_forward_difficulty: 'forward_mc',
-    forward_consecutive_correct: 1,
-    new_reverse_difficulty: 'reverse_mc',
-    reverse_consecutive_correct: 0,
+    difficulty: 10,
+    peak_difficulty: 10,
     is_mastered: false,
     fsrs_due: null,
-    difficulty_advanced: false,
     mastery_changed: false,
     ...overrides,
   }
@@ -41,17 +38,6 @@ describe('SessionSummary', () => {
     render(<SessionSummary results={results} onFinish={vi.fn()} />)
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.getByText(/concepts reviewed/i)).toBeInTheDocument()
-  })
-
-  it('shows difficulty advancement count', () => {
-    const results = [
-      makeResult({ difficulty_advanced: true }),
-      makeResult({ difficulty_advanced: true }),
-      makeResult({ difficulty_advanced: false }),
-    ]
-    render(<SessionSummary results={results} onFinish={vi.fn()} />)
-    // "2 concepts advanced to a harder exercise type."
-    expect(screen.getByText(/advanced to a harder exercise type/i)).toBeInTheDocument()
   })
 
   it('shows newly mastered count', () => {

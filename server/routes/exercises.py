@@ -10,12 +10,10 @@ from psycopg import AsyncConnection
 
 from auth.dependencies import get_current_user
 from auth.schemas import CurrentUser  # noqa: TC001
-from content.schemas import FORWARD_TYPES, ExerciseType
 from db.pool import get_conn
 from db.queries.concepts import get_concept
 from db.queries.exercises import get_exercise_by_id, get_exercise_by_type
 from db.queries.progress import (
-    get_prerequisite_difficulties,
     get_progress,
     refresh_progress_summary,
     upsert_progress,
@@ -23,9 +21,8 @@ from db.queries.progress import (
 from db.queries.reviews import record_review
 from grading.provider import default_grader
 from grading.schemas import GradingRequest, Verdict
-from srs.difficulty import advance_difficulty
+from srs.difficulty import derive_difficulty
 from srs.mastery import check_mastery_regression, compute_mastery
-from srs.prerequisite_cap import compute_capped_difficulty
 from srs.scheduler import Rating, process_review, reconstruct_card
 from srs.schemas import ExerciseSubmitRequest, ExerciseSubmitResponse
 
@@ -98,46 +95,14 @@ async def submit_exercise(
     )
     review_result = process_review(card, rating, now)
 
-    # Determine which track this exercise belongs to
-    is_fwd = request.exercise_type in FORWARD_TYPES
+    # Update peak difficulty on correct answer
+    old_peak = progress["peak_difficulty"]
+    new_peak = max(old_peak, request.difficulty) if correct else old_peak
 
-    # Advance exercise difficulty for the relevant track
-    if is_fwd:
-        old_difficulty = ExerciseType(progress["forward_difficulty"])
-        old_streak = progress["forward_consecutive_correct"]
-    else:
-        old_difficulty = ExerciseType(progress["reverse_difficulty"])
-        old_streak = progress["reverse_consecutive_correct"]
-
-    new_difficulty, new_streak = advance_difficulty(old_difficulty, old_streak, correct)
-    difficulty_advanced = new_difficulty != old_difficulty
-
-    # Apply prerequisite cap for the relevant track
-    prereq_rows = await get_prerequisite_difficulties(
-        conn, user_id=user_id, concept_id=concept_id,
-    )
-    diff_key = "forward_difficulty" if is_fwd else "reverse_difficulty"
-    prereq_types = [ExerciseType(r[diff_key]) for r in prereq_rows]
-    capped_difficulty = compute_capped_difficulty(new_difficulty, prereq_types)
-
-    # Build final difficulty values
-    if is_fwd:
-        fwd_diff = capped_difficulty.value
-        fwd_streak = new_streak
-        rev_diff = progress["reverse_difficulty"]
-        rev_streak = progress["reverse_consecutive_correct"]
-    else:
-        fwd_diff = progress["forward_difficulty"]
-        fwd_streak = progress["forward_consecutive_correct"]
-        rev_diff = capped_difficulty.value
-        rev_streak = new_streak
-
-    # Compute mastery (requires both tracks at max)
+    # Compute mastery
     was_mastered = bool(progress["is_mastered"])
     regressed = check_mastery_regression(was_mastered, correct)
     new_mastery = compute_mastery(
-        forward_difficulty=fwd_diff,
-        reverse_difficulty=rev_diff,
         fsrs_stability=review_result.fsrs_stability,
         fsrs_state=review_result.fsrs_state,
     )
@@ -149,10 +114,7 @@ async def submit_exercise(
         conn,
         user_id=user_id,
         concept_id=concept_id,
-        forward_difficulty=fwd_diff,
-        forward_consecutive_correct=fwd_streak,
-        reverse_difficulty=rev_diff,
-        reverse_consecutive_correct=rev_streak,
+        peak_difficulty=new_peak,
         fsrs_state=review_result.fsrs_state,
         fsrs_step=review_result.fsrs_step,
         fsrs_stability=review_result.fsrs_stability,
@@ -184,13 +146,13 @@ async def submit_exercise(
         correct=correct,
         correct_answer=correct_answers[0],
         normalized_user_answer=grading_result.normalized_user_answer,
-        new_forward_difficulty=ExerciseType(fwd_diff),
-        forward_consecutive_correct=fwd_streak,
-        new_reverse_difficulty=ExerciseType(rev_diff),
-        reverse_consecutive_correct=rev_streak,
+        difficulty=derive_difficulty(
+            stability=review_result.fsrs_stability,
+            peak_difficulty=new_peak,
+        ),
+        peak_difficulty=new_peak,
         is_mastered=is_mastered,
         fsrs_due=review_result.fsrs_due,
-        difficulty_advanced=difficulty_advanced,
         mastery_changed=mastery_changed,
     )
 
@@ -198,12 +160,17 @@ async def submit_exercise(
 def _resolve_correct_answers(exercise: dict | None) -> list[str] | None:
     """Extract correct answers from exercise JSONB data.
 
-    New format: data.targets is a list of accepted answers.
+    New format: data.answers is a list of lists (alternatives per position).
+    The first position's alternatives are the accepted answers.
     """
     if exercise is None:
         return None
     data = exercise.get("data") or {}
-    targets = data.get("targets")
-    if targets and isinstance(targets, list):
-        return targets
+    answers = data.get("answers")
+    if answers and isinstance(answers, list) and answers[0]:
+        first = answers[0]
+        if isinstance(first, str):
+            return [first]
+        if isinstance(first, list):
+            return first
     return None
