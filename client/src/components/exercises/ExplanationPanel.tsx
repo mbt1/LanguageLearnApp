@@ -18,7 +18,7 @@ export function ExplanationPanel({ explanation, defaultOpen = false }: Explanati
 
   return (
     <div className="mt-4">
-      <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)}>
+      <Button variant="ghost" size="sm" onClick={() => { setOpen((o) => !o); }}>
         {open ? 'Hide explanation' : 'Show explanation'}
       </Button>
       {open && (

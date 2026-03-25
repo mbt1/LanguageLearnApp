@@ -68,7 +68,7 @@ export function SettingsPage() {
       document.documentElement.classList.toggle('dark', mql.matches)
     }
     mql.addEventListener('change', onChange)
-    return () => mql.removeEventListener('change', onChange)
+    return () => { mql.removeEventListener('change', onChange); }
   }, [theme])
 
   return (
@@ -91,7 +91,7 @@ export function SettingsPage() {
               max={100}
               step={5}
               value={sessionSize}
-              onChange={(e) => setSessionSize(Number(e.target.value))}
+              onChange={(e) => { setSessionSize(Number(e.target.value)); }}
               className="w-48"
               aria-label="Session size"
             />
@@ -115,7 +115,7 @@ export function SettingsPage() {
                 key={t}
                 variant={theme === t ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setTheme(t)}
+                onClick={() => { setTheme(t); }}
                 aria-pressed={theme === t}
               >
                 {t === 'auto' ? 'Auto' : t === 'light' ? 'Light' : 'Dark'}
@@ -137,7 +137,7 @@ export function SettingsPage() {
           <Button
             variant="outline"
             aria-pressed={showReviewSchedule}
-            onClick={() => setShowReviewSchedule((prev) => !prev)}
+            onClick={() => { setShowReviewSchedule((prev) => !prev); }}
           >
             {showReviewSchedule ? 'Hide Review Schedule' : 'Show Review Schedule'}
           </Button>

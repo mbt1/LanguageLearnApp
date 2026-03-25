@@ -31,7 +31,7 @@ async def test_app_sim() -> AsyncGenerator[FastAPI, None]:
     """Test app for simulation — shared conn with no-op commit for isolation."""
     conn = await psycopg.AsyncConnection.connect(DATABASE_URL, autocommit=False)
 
-    async def _noop_commit() -> None:  # noqa: D401
+    async def _noop_commit() -> None:
         """Swallow commit — keeps everything inside one rollback-able txn."""
 
     conn.commit = _noop_commit  # type: ignore[method-assign]

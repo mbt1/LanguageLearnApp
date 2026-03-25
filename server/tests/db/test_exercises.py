@@ -8,7 +8,12 @@ from psycopg import AsyncConnection
 
 from db.queries.concepts import create_concept
 from db.queries.courses import create_course
-from db.queries.exercises import create_exercise, create_exercise_concept, get_exercise_by_type, get_exercises_for_concept
+from db.queries.exercises import (
+    create_exercise,
+    create_exercise_concept,
+    get_exercise_by_type,
+    get_exercises_for_concept,
+)
 
 
 @pytest.fixture
@@ -34,9 +39,15 @@ async def test_create_exercise_translate(
         db_conn,
         exercise_type="translate",
         ref="hello-translate",
-        data={"prompt": ["hello"], "answers": [["hola"]], "distractors": {"semantic": ["adios", "gracias", "por favor"]}},
+        data={
+            "prompt": ["hello"],
+            "answers": [["hola"]],
+            "distractors": {"semantic": ["adios", "gracias", "por favor"]},
+        },
     )
-    await create_exercise_concept(db_conn, exercise_id=exercise["id"], concept_id=concept["id"])
+    await create_exercise_concept(
+        db_conn, exercise_id=exercise["id"], concept_id=concept["id"],
+    )
     assert exercise["exercise_type"] == "translate"
     assert exercise["data"]["prompt"] == ["hello"]
     assert exercise["data"]["answers"] == [["hola"]]
@@ -78,7 +89,11 @@ async def test_get_exercises_for_concept(
 ) -> None:
     ex1 = await create_exercise(
         db_conn, exercise_type="translate", ref="hello-translate",
-        data={"prompt": ["hello"], "answers": [["hola"]], "distractors": {"semantic": ["a", "b", "c"]}},
+        data={
+            "prompt": ["hello"],
+            "answers": [["hola"]],
+            "distractors": {"semantic": ["a", "b", "c"]},
+        },
     )
     await create_exercise_concept(db_conn, exercise_id=ex1["id"], concept_id=concept["id"])
     ex2 = await create_exercise(

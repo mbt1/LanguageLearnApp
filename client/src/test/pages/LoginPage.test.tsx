@@ -10,6 +10,7 @@ import { LoginPage } from '@/pages/LoginPage'
 const mockUseAuth = vi.fn()
 
 vi.mock('@/auth/AuthContext', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   useAuth: () => mockUseAuth(),
 }))
 

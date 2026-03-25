@@ -19,7 +19,7 @@ export function NavShell() {
       setShowReviewSchedule(localStorage.getItem('showReviewSchedule') === 'true')
     }
     window.addEventListener('settings-changed', onSettingsChange)
-    return () => window.removeEventListener('settings-changed', onSettingsChange)
+    return () => { window.removeEventListener('settings-changed', onSettingsChange); }
   }, [])
 
   return (

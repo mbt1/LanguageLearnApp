@@ -26,7 +26,7 @@ class ConceptType(StrEnum):
 
 
 class ExerciseType(StrEnum):
-    translate = "translate"
+    translate = "translate"  # pyright: ignore[reportAssignmentType]
     cloze = "cloze"
     match = "match"
 
@@ -103,7 +103,9 @@ class ConceptImport(BaseModel):
     sequence: int
     explanation: str | None = None
     prerequisites: list[str] | None = None
-    exercises: list[ExerciseImport] = Field(default_factory=list)
+    exercises: list[ExerciseImport] = Field(  # pyright: ignore[reportUnknownVariableType]
+        default_factory=list,
+    )
 
 
 class CourseImport(BaseModel):
@@ -113,7 +115,9 @@ class CourseImport(BaseModel):
     source_language: str
     target_language: str
     concepts: list[ConceptImport] = Field(min_length=1)
-    standalone_exercises: list[ExerciseImport] = Field(default_factory=list)
+    standalone_exercises: list[ExerciseImport] = Field(  # pyright: ignore[reportUnknownVariableType]
+        default_factory=list,
+    )
 
 
 class CourseImportResponse(BaseModel):

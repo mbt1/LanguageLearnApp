@@ -24,8 +24,8 @@ class SessionItem:
     cefr_level: CefrLevel
     exercise_id: UUID | None = field(default=None)
     reverse: bool = field(default=False)
-    prompt: list[str] = field(default_factory=list)
-    correct_answers: list[str] = field(default_factory=list)
+    prompt: list[str] = field(default_factory=list)  # pyright: ignore[reportUnknownVariableType]
+    correct_answers: list[str] = field(default_factory=list)  # pyright: ignore[reportUnknownVariableType]
     distractors: list[str] | None = field(default=None)
     explanation: str | None = field(default=None)
 

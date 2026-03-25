@@ -69,7 +69,7 @@ describe('ReviewSchedulePage', () => {
   })
 
   it('shows loading state', () => {
-    vi.mocked(coursesApi.listCourses).mockReturnValue(new Promise(() => {}))
+    vi.mocked(coursesApi.listCourses).mockReturnValue(new Promise(() => { /* pending */ }))
 
     renderPage()
 
@@ -205,7 +205,7 @@ describe('ReviewSchedulePage', () => {
 
     // Filter to A1 via the CEFR select
     const cefrSelect = within(
-      screen.getByText('CEFR:').closest('label')!,
+      screen.getByText('CEFR:').closest('label') as HTMLElement,
     ).getByRole('combobox')
     fireEvent.change(cefrSelect, { target: { value: 'A1' } })
 
@@ -225,7 +225,7 @@ describe('ReviewSchedulePage', () => {
 
     // Filter to "Not started"
     const statusSelect = within(
-      screen.getByText('Status:').closest('label')!,
+      screen.getByText('Status:').closest('label') as HTMLElement,
     ).getByRole('combobox')
     fireEvent.change(statusSelect, { target: { value: 'not_started' } })
 

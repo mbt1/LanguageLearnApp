@@ -92,11 +92,12 @@ export function LearnPage() {
 
   // Memoize MC options so they don't reshuffle on exercise→feedback transition
   const item = session?.items[index] ?? null
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   const mcOptions = useMemo(() => {
-    if (!item || item.presentation !== 'mc') return []
+    if (item?.presentation !== 'mc') return []
     const answer = item.correct_answers?.[0] ?? ''
     return shuffled([...(item.distractors ?? []), answer])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, session])
 
   if (state === 'loading') {
@@ -124,6 +125,7 @@ export function LearnPage() {
   )
   const autoOpenExplanation = isGrammar && !hasSeenConceptBefore
 
+  const promptText = item.prompt?.join('\n') ?? ''
   const progress = session ? `${index + 1} / ${session.items.length}` : ''
   const showingFeedback = state === 'feedback' && lastResult !== null
   const feedbackData = showingFeedback ? lastResult : null
@@ -142,7 +144,7 @@ export function LearnPage() {
       {item.presentation === 'mc' && (
         <MultipleChoiceExercise
           key={index}
-          prompt={item.prompt}
+          prompt={promptText}
           options={mcOptions}
           onAnswer={(a) => void handleAnswer(a)}
           feedback={feedbackData ? { correct: feedbackData.correct, correctAnswer: feedbackData.correct_answer } : null}
@@ -151,7 +153,7 @@ export function LearnPage() {
       {item.presentation === 'arrange' && (
         <ClozeExercise
           key={index}
-          sentenceTemplate={item.prompt}
+          sentenceTemplate={promptText}
           onAnswer={(a) => void handleAnswer(a)}
           feedback={feedbackData ? { correct: feedbackData.correct } : null}
         />
@@ -159,7 +161,7 @@ export function LearnPage() {
       {item.presentation === 'typing' && (
         <TypingExercise
           key={index}
-          prompt={item.prompt}
+          prompt={promptText}
           onAnswer={(a) => void handleAnswer(a)}
           feedback={feedbackData ? { correct: feedbackData.correct } : null}
         />
@@ -186,7 +188,9 @@ function shuffled<T>(arr: T[]): T[] {
   const copy = [...arr]
   for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j]!, copy[i]!]
+    const tmp = copy[i]
+    copy[i] = copy[j] as T
+    copy[j] = tmp as T
   }
   return copy
 }

@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit",
     "format": "prettier --write .",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=2",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "format:check": "prettier --check .",

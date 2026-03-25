@@ -116,7 +116,11 @@ class TestConceptDetail:
                     id=uuid4(),
                     exercise_type="forward_mc",
                     ref="ser-estar-mc-1",
-                    data={"source": "to be", "targets": ["ser"], "distractors": {"semantic": ["ir", "hacer"]}},
+                    data={
+                        "source": "to be",
+                        "targets": ["ser"],
+                        "distractors": {"semantic": ["ir", "hacer"]},
+                    },
                 )
             ],
         )
@@ -170,7 +174,11 @@ class TestExerciseImport:
         e = ExerciseImport(
             ref="hola-mc-1",
             exercise_type="forward_mc",
-            data={"source": "hello", "targets": ["hola"], "distractors": {"random": ["adiós", "gracias"]}},
+            data={
+                "source": "hello",
+                "targets": ["hola"],
+                "distractors": {"random": ["adiós", "gracias"]},
+            },
         )
         assert e.data["targets"] == ["hola"]
 
@@ -203,7 +211,11 @@ class TestConceptImport:
                 ExerciseImport(
                     ref="ser-estar-mc-1",
                     exercise_type="forward_mc",
-                    data={"source": "to be", "targets": ["es"], "distractors": {"semantic": ["está", "son"]}},
+                    data={
+                        "source": "to be",
+                        "targets": ["es"],
+                        "distractors": {"semantic": ["está", "son"]},
+                    },
                 )
             ],
         )
@@ -219,7 +231,11 @@ class TestConceptImport:
                 ExerciseImport(
                     ref="hola-mc-1",
                     exercise_type="forward_mc",
-                    data={"source": "hello", "targets": ["hola"], "distractors": {"random": ["adiós"]}},
+                    data={
+                        "source": "hello",
+                        "targets": ["hola"],
+                        "distractors": {"random": ["adiós"]},
+                    },
                 ),
             ],
         )
@@ -254,7 +270,11 @@ class TestCourseImport:
                         ExerciseImport(
                             ref="hola-mc-1",
                             exercise_type="forward_mc",
-                            data={"source": "hello", "targets": ["hola"], "distractors": {"random": ["adiós"]}},
+                            data={
+                                "source": "hello",
+                                "targets": ["hola"],
+                                "distractors": {"random": ["adiós"]},
+                            },
                         ),
                     ],
                 ),
@@ -288,7 +308,13 @@ class TestCourseImport:
                             ExerciseImport(
                                 ref="hola-mc-1",
                                 exercise_type="forward_mc",
-                                data={"source": "hello", "targets": ["hola"], "distractors": {"random": ["adiós"]}},
+                                data={
+                                    "source": "hello",
+                                    "targets": ["hola"],
+                                    "distractors": {
+                                        "random": ["adiós"],
+                                    },
+                                },
                             ),
                         ],
                     ),

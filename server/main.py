@@ -2,7 +2,6 @@
 # Copyright 2026 LanguageLearn Contributors
 
 import logging
-
 from typing import Annotated
 
 from fastapi import Depends, FastAPI

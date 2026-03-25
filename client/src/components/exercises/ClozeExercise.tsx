@@ -43,7 +43,7 @@ export function ClozeExercise({ sentenceTemplate, onAnswer, feedback }: ClozeExe
             <Input
               ref={inputRef}
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(e) => { setValue(e.target.value); }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') submit()
               }}

@@ -218,7 +218,7 @@ async def test_resend_verification_requires_auth(client: httpx.AsyncClient) -> N
 async def test_register_logs_verification_email(
     client: httpx.AsyncClient, caplog: Any,
 ) -> None:
-    """Verification email URL must appear in application logs (regression for missing basicConfig)."""
+    """Verification email URL must appear in logs (regression)."""
     import logging
 
     email = f"logtest-{datetime.now(UTC).timestamp()}@example.com"

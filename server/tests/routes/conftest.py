@@ -25,7 +25,7 @@ async def test_app() -> AsyncGenerator[FastAPI, None]:
     """
     conn = await psycopg.AsyncConnection.connect(DATABASE_URL, autocommit=False)
 
-    async def _noop_commit() -> None:  # noqa: D401
+    async def _noop_commit() -> None:
         """Swallow commit — keeps everything inside one rollback-able txn."""
 
     conn.commit = _noop_commit  # type: ignore[method-assign]
@@ -35,7 +35,7 @@ async def test_app() -> AsyncGenerator[FastAPI, None]:
 
     app.dependency_overrides[get_conn] = _override_get_conn
     # Store connection on the app so tests can access it via test_conn fixture
-    app._test_conn = conn  # type: ignore[attr-defined]
+    app._test_conn = conn  # type: ignore[attr-defined]  # noqa: SLF001
     yield app
     app.dependency_overrides.clear()
     await conn.rollback()
@@ -45,7 +45,7 @@ async def test_app() -> AsyncGenerator[FastAPI, None]:
 @pytest.fixture
 async def test_conn(test_app: FastAPI) -> psycopg.AsyncConnection[Any]:
     """Return the shared test connection for direct DB queries in tests."""
-    return test_app._test_conn  # type: ignore[attr-defined]
+    return test_app._test_conn  # type: ignore[attr-defined]  # noqa: SLF001
 
 
 @pytest.fixture

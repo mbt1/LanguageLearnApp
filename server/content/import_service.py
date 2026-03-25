@@ -44,11 +44,13 @@ def load_course_folder(folder: Path) -> CourseImport:
         data: dict[str, Any] = json.loads(path.read_text())
 
         if "concepts" in data:
-            for raw in data["concepts"]:
-                all_concepts.append(ConceptImport.model_validate(raw))
+            all_concepts.extend(
+                ConceptImport.model_validate(raw) for raw in data["concepts"]
+            )
         if "exercises" in data:
-            for raw in data["exercises"]:
-                all_standalone_exercises.append(ExerciseImport.model_validate(raw))
+            all_standalone_exercises.extend(
+                ExerciseImport.model_validate(raw) for raw in data["exercises"]
+            )
 
     return CourseImport(
         slug=meta["slug"],

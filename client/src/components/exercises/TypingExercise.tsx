@@ -40,7 +40,7 @@ export function TypingExercise({ prompt, onAnswer, feedback }: TypingExercisePro
         <Input
           aria-label="Your answer"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => { setValue(e.target.value); }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') submit()
           }}

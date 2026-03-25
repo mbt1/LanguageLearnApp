@@ -72,7 +72,7 @@ function SortHeader({
   return (
     <th
       className="cursor-pointer select-none pb-2 pr-3 font-medium"
-      onClick={() => onSort(sortKey)}
+      onClick={() => { onSort(sortKey); }}
     >
       {label} {active ? (currentDir === 'asc' ? '\u25B2' : '\u25BC') : ''}
     </th>
@@ -86,8 +86,8 @@ function compareItems(a: ConceptProgressDetail, b: ConceptProgressDetail, key: S
       cmp = a.ref.localeCompare(b.ref)
       break
     case 'cefr_level':
-      cmp = CEFR_LEVELS.indexOf(a.cefr_level as typeof CEFR_LEVELS[number])
-           - CEFR_LEVELS.indexOf(b.cefr_level as typeof CEFR_LEVELS[number])
+      cmp = CEFR_LEVELS.indexOf(a.cefr_level)
+           - CEFR_LEVELS.indexOf(b.cefr_level)
       break
     case 'stage':
       cmp = (a.peak_difficulty ?? -1) - (b.peak_difficulty ?? -1)
@@ -145,7 +145,7 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
           CEFR:
           <select
             value={cefrFilter}
-            onChange={(e) => setCefrFilter(e.target.value)}
+            onChange={(e) => { setCefrFilter(e.target.value); }}
             className="border-input bg-background rounded border px-2 py-1 text-sm"
           >
             <option value="all">All</option>
@@ -158,7 +158,7 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
           Status:
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); }}
             className="border-input bg-background rounded border px-2 py-1 text-sm"
           >
             <option value="all">All</option>

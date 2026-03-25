@@ -64,7 +64,7 @@ describe('LearnPage', () => {
   })
 
   it('shows loading state initially', () => {
-    vi.mocked(studyApi.studySession).mockReturnValue(new Promise(() => {}))
+    vi.mocked(studyApi.studySession).mockReturnValue(new Promise(() => { /* pending */ }))
     renderPage()
     expect(screen.getByText(/loading session/i)).toBeInTheDocument()
   })

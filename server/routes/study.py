@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Annotated, Any
 from uuid import UUID
@@ -12,9 +13,7 @@ from psycopg import AsyncConnection
 
 from auth.dependencies import get_current_user
 from auth.schemas import CurrentUser  # noqa: TC001
-from content.schemas import CefrLevel, ConceptType
-from dataclasses import replace
-
+from content.schemas import CefrLevel, ConceptType, ExerciseType
 from db.pool import get_conn
 from db.queries.concepts import get_concept
 from db.queries.courses import get_course, list_courses
@@ -63,7 +62,7 @@ _NUM_DISTRACTORS = 3
 
 
 @router.post("/v1/study/session", response_model=StudySessionResponse)
-async def create_study_session(
+async def create_study_session(  # noqa: C901, PLR0912
     request: StudySessionRequest,
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
     conn: Annotated[AsyncConnection, Depends(get_conn)],  # pyright: ignore[reportMissingTypeArgument]
@@ -77,6 +76,7 @@ async def create_study_session(
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
 
+    due_reviews: list[dict[str, Any]] = []
     if request.concept_ids is not None:
         # ── Targeted session: specific concepts only ──
         if len(request.concept_ids) > request.session_size:
@@ -190,7 +190,9 @@ def _row_to_progress_item(row: dict[str, Any]) -> CefrProgressItem:
     )
 
 
-def _select_distractors(distractor_pools: dict[str, list[str]], n: int = _NUM_DISTRACTORS) -> list[str]:
+def _select_distractors(
+    distractor_pools: dict[str, list[str]], n: int = _NUM_DISTRACTORS,
+) -> list[str]:
     """Select N distractors from typed distractor pools.
 
     Flattens all pools, deduplicates, shuffles, and picks up to N.
@@ -208,22 +210,22 @@ def _select_distractors(distractor_pools: dict[str, list[str]], n: int = _NUM_DI
 
 def _enrich_item(item: SessionItem, ex: dict[str, Any]) -> SessionItem:
     """Enrich a session item from a JSONB exercise row."""
-    data = ex.get("data") or {}
+    data: dict[str, Any] = ex.get("data") or {}
 
     # New format: prompt is array, answers is array of arrays
-    prompt = data.get("prompt", [])
+    prompt: list[str] = data.get("prompt", [])
     if isinstance(prompt, str):
         prompt = [prompt]
-    answers = data.get("answers", [[]])
+    answers: list[list[str]] = data.get("answers", [[]])
     # Flatten alternatives for the first position
-    correct_answers = answers[0] if answers else []
+    correct_answers: list[str] = answers[0] if answers else []
     if correct_answers and isinstance(correct_answers, str):
         correct_answers = [correct_answers]
 
     # Select distractors for MC/cloze exercises
-    distractors = None
-    raw_distractors = data.get("distractors")
-    if raw_distractors and isinstance(raw_distractors, dict):
+    distractors: list[str] | None = None
+    raw_distractors: dict[str, list[str]] | None = data.get("distractors")
+    if raw_distractors:
         selected = _select_distractors(raw_distractors)
         answer_set = set(correct_answers)
         selected = [d for d in selected if d not in answer_set]
@@ -243,7 +245,7 @@ def _items_to_response(items: list[SessionItem]) -> list[StudySessionItem]:
     return [
         StudySessionItem(
             concept_id=item.concept_id,
-            exercise_type=item.exercise_type,
+            exercise_type=ExerciseType(item.exercise_type),
             difficulty=item.difficulty,
             presentation=item.presentation,
             reverse=item.reverse,

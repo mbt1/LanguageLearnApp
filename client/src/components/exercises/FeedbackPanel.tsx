@@ -25,7 +25,7 @@ export function FeedbackPanel({
       }
     }
     window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
+    return () => { window.removeEventListener('keydown', handleKey); }
   }, [onNext])
 
   return (

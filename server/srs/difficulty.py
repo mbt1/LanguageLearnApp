@@ -12,7 +12,17 @@ Configuration is a sorted list of levels. Each level specifies:
 """
 from __future__ import annotations
 
-DIFFICULTY_CONFIG: list[dict] = [
+from typing import TypedDict
+
+
+class DifficultyEntry(TypedDict):
+    level: int
+    exercise_type: str
+    presentation: str
+    min_stability: float
+
+
+DIFFICULTY_CONFIG: list[DifficultyEntry] = [
     {"level": 10, "exercise_type": "translate", "presentation": "mc",      "min_stability": 0.0},
     {"level": 20, "exercise_type": "translate", "presentation": "arrange", "min_stability": 1.0},
     {"level": 30, "exercise_type": "cloze",     "presentation": "mc",      "min_stability": 3.0},
@@ -25,7 +35,9 @@ MAX_DIFFICULTY = DIFFICULTY_CONFIG[-1]["level"]
 LEVEL_STEP = 10
 
 # Pre-built lookup: level → config entry
-_LEVEL_MAP: dict[int, dict] = {entry["level"]: entry for entry in DIFFICULTY_CONFIG}
+_LEVEL_MAP: dict[int, DifficultyEntry] = {
+    entry["level"]: entry for entry in DIFFICULTY_CONFIG
+}
 
 
 def derive_difficulty(

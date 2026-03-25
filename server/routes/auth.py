@@ -10,8 +10,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from psycopg import AsyncConnection
 from psycopg.errors import UniqueViolation
 
-logger = logging.getLogger(__name__)
-
 from auth.config import get_config
 from auth.dependencies import get_current_user
 from auth.email import get_email_provider
@@ -42,6 +40,8 @@ from db.queries.auth_tokens import (
     revoke_refresh_token,
 )
 from db.queries.users import create_user, get_user_by_email, get_user_by_id
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
 

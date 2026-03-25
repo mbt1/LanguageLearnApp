@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from psycopg import AsyncConnection
@@ -157,7 +157,9 @@ async def submit_exercise(
     )
 
 
-def _resolve_correct_answers(exercise: dict | None) -> list[str] | None:
+def _resolve_correct_answers(
+    exercise: dict[str, Any] | None,
+) -> list[str] | None:
     """Extract correct answers from exercise JSONB data.
 
     New format: data.answers is a list of lists (alternatives per position).
@@ -165,12 +167,12 @@ def _resolve_correct_answers(exercise: dict | None) -> list[str] | None:
     """
     if exercise is None:
         return None
-    data = exercise.get("data") or {}
-    answers = data.get("answers")
-    if answers and isinstance(answers, list) and answers[0]:
-        first = answers[0]
+    data: dict[str, Any] = exercise.get("data") or {}
+    answers: list[Any] | None = data.get("answers")
+    if answers and answers[0]:
+        first: Any = answers[0]
         if isinstance(first, str):
             return [first]
         if isinstance(first, list):
-            return first
+            return list(map(str, first))
     return None

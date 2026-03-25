@@ -62,7 +62,7 @@ export function MultipleChoiceExercise({ prompt, options, onAnswer, feedback }: 
             aria-label={option}
             variant={buttonVariant(option)}
             disabled={selected !== null}
-            onClick={() => handleSelect(option)}
+            onClick={() => { handleSelect(option); }}
             className={`h-auto min-h-10 py-2 text-left ${buttonColor(option)}`}
           >
             {option}
