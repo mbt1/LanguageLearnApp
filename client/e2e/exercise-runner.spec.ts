@@ -29,14 +29,15 @@ async function setupSession() {
           concept_type: 'vocabulary',
           cefr_level: 'A1',
           sequence: 1,
-          prompt: 'hello',
-          target: 'hola',
           exercises: [
             {
-              exercise_type: 'multiple_choice',
-              prompt: "Choose 'hello'",
-              correct_answer: 'hola',
-              distractors: ['adiós', 'gracias'],
+              ref: 'hola-t1',
+              exercise_type: 'translate',
+              data: {
+                prompt: ['hello'],
+                answers: [['hola']],
+                distractors: { semantic: ['adiós', 'gracias', 'por favor'] },
+              },
             },
           ],
         },
@@ -61,7 +62,7 @@ test.describe('Exercise runner', () => {
     await page.goto(`/learn/${courseId}`)
 
     // Wait for exercise to load
-    await expect(page.getByText("Choose 'hello'")).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('hello')).toBeVisible({ timeout: 10000 })
     await checkA11y()
 
     // Click the correct answer

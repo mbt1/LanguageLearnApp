@@ -29,14 +29,15 @@ async function setupUserWithCourse() {
           concept_type: 'vocabulary',
           cefr_level: 'A1',
           sequence: 1,
-          prompt: 'hello',
-          target: 'hola',
           exercises: [
             {
-              exercise_type: 'multiple_choice',
-              prompt: "Choose 'hello'",
-              correct_answer: 'hola',
-              distractors: ['adiós', 'gracias'],
+              ref: 'hola-t1',
+              exercise_type: 'translate',
+              data: {
+                prompt: ['hello'],
+                answers: [['hola']],
+                distractors: { semantic: ['adiós', 'gracias', 'por favor'] },
+              },
             },
           ],
         },
