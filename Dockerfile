@@ -66,7 +66,7 @@ COPY Caddyfile /etc/caddy/Caddyfile
 # ────────────────────────────────────────────────────────────────────────────
 # Stage 5: Backup service  (target: backup)
 # ────────────────────────────────────────────────────────────────────────────
-FROM alpine:3.20 AS backup
+FROM alpine:3.21 AS backup
 RUN apk add --no-cache postgresql17-client aws-cli bash
 COPY scripts/backup.sh /backup.sh
 COPY scripts/backup-entrypoint.sh /backup-entrypoint.sh
