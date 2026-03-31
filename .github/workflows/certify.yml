@@ -121,7 +121,7 @@ jobs:
         run: |
           echo "instance_ip=$(tofu output -raw instance_public_ip)" >> "$GITHUB_OUTPUT"
 
-      - name: Upload encrypted state
+      - name: Upload state
         uses: actions/upload-artifact@v4
         with:
           name: tofu-state-${{ github.run_id }}
