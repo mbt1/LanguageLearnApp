@@ -7,9 +7,6 @@ RUN rm -f /etc/apt/sources.list.d/yarn.list
 
 # ---- Add third-party apt repositories ----
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && wget -q "https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb" \
-    && dpkg -i packages-microsoft-prod.deb \
-    && rm packages-microsoft-prod.deb \
     && mkdir -p -m 755 /etc/apt/keyrings \
     && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg \
        | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
@@ -24,11 +21,20 @@ RUN apt-get update \
         librsvg2-bin \
         nodejs \
         postgresql-client \
-        powershell \
         gh \
         unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# ---- PowerShell (direct install, supports amd64 + arm64) ----
+ARG POWERSHELL_VERSION=7.4.6
+RUN ARCH=$(dpkg --print-architecture | sed 's/amd64/x64/;s/arm64/arm64/') \
+    && curl -fsSL "https://github.com/PowerShell/PowerShell/releases/download/v${POWERSHELL_VERSION}/powershell-${POWERSHELL_VERSION}-linux-${ARCH}.tar.gz" -o /tmp/ps.tar.gz \
+    && mkdir -p /opt/microsoft/powershell/7 \
+    && tar zxf /tmp/ps.tar.gz -C /opt/microsoft/powershell/7 \
+    && chmod +x /opt/microsoft/powershell/7/pwsh \
+    && ln -s /opt/microsoft/powershell/7/pwsh /usr/bin/pwsh \
+    && rm /tmp/ps.tar.gz
 
 # ---- AWS CLI v2 ----
 RUN ARCH=$(uname -m) \
