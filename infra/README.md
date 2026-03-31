@@ -4,6 +4,9 @@ This directory contains the OpenTofu configuration for the ephemeral test
 environment used by the `certify.yml` pipeline. The environment is spun up
 for each certification run and torn down immediately after tests complete.
 
+State is not encrypted — this environment is ephemeral (~10 minutes) and the
+state contains only public EC2 metadata and hardcoded test credentials.
+
 ## Prerequisites
 
 - An AWS account (free tier is sufficient for occasional use; t3.xlarge is
@@ -25,25 +28,13 @@ The script:
 2. Creates an IAM role (`languagelearn-certify`) with a trust policy scoped
    to the `certify.yml` workflow on the `main` branch of your repository
 3. Attaches a least-privilege policy (EC2 + SG create/terminate only)
-4. Generates a random state encryption key
-5. Writes three GitHub Actions secrets to your repository:
+4. Writes two GitHub Actions secrets to your repository:
    - `AWS_CERTIFY_ROLE_ARN` — the IAM role to assume
    - `AWS_REGION` — the region passed in
-   - `TF_STATE_ENCRYPTION_KEY` — AES-GCM key for OpenTofu state files
 
 After setup, the `certify.yml` pipeline can be triggered via
 **Actions → Certify → Run workflow** with an image SHA from a recent
 `Publish` run.
-
-## Rotating the state encryption key
-
-```powershell
-./infra/rotate-secrets.ps1 -GitHubRepo "your-org/LanguageLearnApp"
-```
-
-This generates a new key and updates the `TF_STATE_ENCRYPTION_KEY` secret.
-Old encrypted state artifacts (from previous runs) become unreadable, which
-is fine — they have no live resources attached to them.
 
 ## Costs
 

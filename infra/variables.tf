@@ -19,12 +19,6 @@ variable "image_owner" {
   type        = string
 }
 
-variable "state_encryption_key" {
-  description = "Passphrase for OpenTofu state encryption. Supplied via TF_VAR_state_encryption_key."
-  type        = string
-  sensitive   = true
-}
-
 variable "run_id" {
   description = "GitHub Actions run ID, used to uniquely name resources."
   type        = string

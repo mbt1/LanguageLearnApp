@@ -120,16 +120,10 @@ if ($ExistingPolicy) {
 aws iam attach-role-policy --role-name $RoleName --policy-arn $PolicyArn
 Write-Host "  Policy attached." -ForegroundColor Green
 
-# ── 4. State encryption key ───────────────────────────────────────────────────
-Write-Host "`n[4/5] Generating state encryption key..."
-$EncryptionKey = [System.Convert]::ToBase64String((1..32 | ForEach-Object { [byte](Get-Random -Maximum 256) }))
-Write-Host "  Key generated (not shown)." -ForegroundColor Green
-
-# ── 5. GitHub secrets ─────────────────────────────────────────────────────────
-Write-Host "`n[5/5] Writing GitHub Actions secrets to $GitHubRepo..."
+# ── 4. GitHub secrets ─────────────────────────────────────────────────────────
+Write-Host "`n[4/4] Writing GitHub Actions secrets to $GitHubRepo..."
 gh secret set AWS_CERTIFY_ROLE_ARN   --body $RoleArn      --repo $GitHubRepo
 gh secret set AWS_REGION             --body $AwsRegion    --repo $GitHubRepo
-gh secret set TF_STATE_ENCRYPTION_KEY --body $EncryptionKey --repo $GitHubRepo
 Write-Host "  Secrets written." -ForegroundColor Green
 
 Write-Host "`n=== Setup complete ===" -ForegroundColor Cyan

@@ -15,7 +15,6 @@
 # Required GitHub Actions secrets (created by infra/setup.ps1):
 #   AWS_CERTIFY_ROLE_ARN      — IAM role to assume via OIDC
 #   AWS_REGION                — AWS region
-#   TF_STATE_ENCRYPTION_KEY   — OpenTofu state encryption passphrase
 
 name: Certify
 
@@ -37,7 +36,6 @@ env:
   TF_VAR_image_sha: ${{ inputs.image_sha || github.event.workflow_run.head_sha || github.sha }}
   TF_VAR_image_owner:          ${{ github.repository_owner }}
   TF_VAR_run_id:               ${{ github.run_id }}
-  TF_VAR_state_encryption_key: ${{ secrets.TF_STATE_ENCRYPTION_KEY }}
 
 jobs:
   # ── Check: skip if this SHA is already :latest ───────────────────────────────

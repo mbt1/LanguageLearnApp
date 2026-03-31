@@ -8,19 +8,8 @@ terraform {
     }
   }
 
-  # State encryption — key supplied via TF_STATE_ENCRYPTION_KEY env var,
-  # set by setup.ps1 and stored as a GitHub Actions secret.
-  encryption {
-    key_provider "pbkdf2" "default" {
-      passphrase = var.state_encryption_key
-    }
-    method "aes_gcm" "default" {
-      keys = key_provider.pbkdf2.default
-    }
-    state {
-      method = method.aes_gcm.default
-    }
-  }
+  # State is not encrypted — this environment is ephemeral (lives ~10 min)
+  # and the state contains only public EC2 metadata + hardcoded test credentials.
 }
 
 provider "aws" {
