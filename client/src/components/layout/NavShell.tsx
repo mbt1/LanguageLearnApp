@@ -66,13 +66,12 @@ export function NavShell() {
         </div>
       </header>
 
-      {user && !user.email_verified && (
-        <div className="mx-auto max-w-4xl px-4 pt-4">
-          <VerifyEmailBanner />
-        </div>
-      )}
-
       <main className="mx-auto max-w-4xl px-4 py-6">
+        {user && !user.email_verified && (
+          <div className="pb-4">
+            <VerifyEmailBanner />
+          </div>
+        )}
         <Outlet />
       </main>
     </div>

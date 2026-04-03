@@ -6,7 +6,8 @@ import { test, expect } from './fixtures'
 const API_BASE = 'http://localhost:8000'
 
 async function setupSession() {
-  const email = `e2e-runner-${Date.now()}@example.com`
+  const ts = Date.now()
+  const email = `e2e-runner-${ts}@example.com`
   const resp = await fetch(`${API_BASE}/v1/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -19,8 +20,8 @@ async function setupSession() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({
-      slug: `e2e-runner-${Date.now()}`,
-      title: 'E2E Runner Course',
+      slug: `e2e-runner-${ts}`,
+      title: `E2E Runner Course ${ts}`,
       source_language: 'en',
       target_language: 'es',
       concepts: [
@@ -50,16 +51,17 @@ async function setupSession() {
 
 test.describe('Exercise runner', () => {
   test('completes a multiple choice exercise and shows feedback', async ({ page, checkA11y }) => {
-    const { email, courseId } = await setupSession()
+    const { email } = await setupSession()
 
     // Login
     await page.goto('/login')
     await page.getByLabel(/email/i).fill(email)
     await page.getByLabel(/password/i).fill('strongpassword')
-    await page.getByRole('button', { name: /log in/i }).click()
+    await page.getByRole('button', { name: /sign in/i }).click()
 
-    // Navigate to learn page
-    await page.goto(`/learn/${courseId}`)
+    // Wait for course list then navigate to learn page
+    await expect(page.getByRole('heading', { name: /your courses/i })).toBeVisible()
+    await page.getByRole('link', { name: /study/i }).first().click()
 
     // Wait for exercise to load
     await expect(page.getByText('hello')).toBeVisible({ timeout: 10000 })
@@ -68,9 +70,9 @@ test.describe('Exercise runner', () => {
     // Click the correct answer
     await page.getByRole('button', { name: 'hola' }).click()
 
-    // Feedback shown
-    await expect(page.getByText(/correct/i)).toBeVisible()
-    await expect(page.getByRole('button', { name: /next/i })).toBeVisible()
+    // Feedback panel shown
+    await expect(page.getByText('✓ Correct!')).toBeVisible()
+    await expect(page.getByText('Click or press Enter to continue')).toBeVisible()
     await checkA11y()
   })
 })

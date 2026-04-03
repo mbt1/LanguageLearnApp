@@ -27,9 +27,17 @@ export default defineConfig({
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
-    : {
-        command: 'pnpm dev',
-        url: 'http://localhost:5173',
-        reuseExistingServer: !process.env.CI,
-      },
+    : [
+        {
+          command: 'cd ../server && uv run uvicorn main:app --host 0.0.0.0 --port 8000',
+          url: 'http://localhost:8000/v1/health',
+          reuseExistingServer: !process.env.CI,
+          timeout: 30_000,
+        },
+        {
+          command: 'pnpm dev',
+          url: 'http://localhost:5173',
+          reuseExistingServer: !process.env.CI,
+        },
+      ],
 })

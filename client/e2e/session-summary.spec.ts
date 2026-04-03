@@ -6,7 +6,8 @@ import { test, expect } from '@playwright/test'
 const API_BASE = 'http://localhost:8000'
 
 async function setupSession() {
-  const email = `e2e-summary-${Date.now()}@example.com`
+  const ts = Date.now()
+  const email = `e2e-summary-${ts}@example.com`
   const resp = await fetch(`${API_BASE}/v1/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -19,8 +20,8 @@ async function setupSession() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({
-      slug: `e2e-summary-${Date.now()}`,
-      title: 'E2E Summary Course',
+      slug: `e2e-summary-${ts}`,
+      title: `E2E Summary Course ${ts}`,
       source_language: 'en',
       target_language: 'es',
       concepts: [
@@ -50,25 +51,26 @@ async function setupSession() {
 
 test.describe('Session summary', () => {
   test('shows session summary after completing all items', async ({ page }) => {
-    const { email, courseId } = await setupSession()
+    const { email } = await setupSession()
 
     // Login
     await page.goto('/login')
     await page.getByLabel(/email/i).fill(email)
     await page.getByLabel(/password/i).fill('strongpassword')
-    await page.getByRole('button', { name: /log in/i }).click()
+    await page.getByRole('button', { name: /sign in/i }).click()
 
-    // Navigate to learn page
-    await page.goto(`/learn/${courseId}`)
+    // Wait for course list then navigate to learn page
+    await expect(page.getByRole('heading', { name: /your courses/i })).toBeVisible()
+    await page.getByRole('link', { name: /study/i }).first().click()
 
     // Answer the exercise
     await page.getByRole('button', { name: 'hola' }).click({ timeout: 10000 })
 
-    // Click Next to advance past feedback
-    await page.getByRole('button', { name: /next/i }).click()
+    // Click feedback panel to advance
+    await page.getByRole('button', { name: /click to continue/i }).click()
 
     // Session summary shown
-    await expect(page.getByText(/session complete/i)).toBeVisible()
+    await expect(page.getByText('Session complete!')).toBeVisible()
     await expect(page.getByRole('button', { name: /back to courses/i })).toBeVisible()
   })
 })

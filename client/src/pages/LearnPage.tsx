@@ -133,6 +133,7 @@ export function LearnPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
+        <h1 className="sr-only">Exercise</h1>
         <p className="text-muted-foreground text-sm">{progress}</p>
         {state === 'exercise' && (
           <Button variant="ghost" size="sm" onClick={handleCancel}>

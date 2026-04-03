@@ -27,8 +27,7 @@ test.describe('Auth flow', () => {
     await page.getByRole('button', { name: /create account/i }).click()
 
     // Should be on dashboard (protected route)
-    await expect(page.getByText('LanguageLearn')).toBeVisible()
-    await expect(page.getByText(`Welcome, ${email}`)).toBeVisible()
+    await expect(page.getByText('Your Courses')).toBeVisible()
     await expect(page.getByText('Email not verified')).toBeVisible()
 
     // Logout
@@ -41,7 +40,7 @@ test.describe('Auth flow', () => {
     await page.getByRole('button', { name: /sign in/i }).click()
 
     // Should be on dashboard again
-    await expect(page.getByText(`Welcome, ${email}`)).toBeVisible()
+    await expect(page.getByText('Your Courses')).toBeVisible()
   })
 
   test('shows validation error for mismatched passwords', async ({ page }) => {

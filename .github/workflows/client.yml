@@ -99,6 +99,23 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: languagelearn
+          POSTGRES_PASSWORD: languagelearn
+          POSTGRES_DB: languagelearn
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://languagelearn:languagelearn@localhost:5432/languagelearn
+      JWT_SECRET: ci-e2e-test-secret-not-for-production
     steps:
       - uses: actions/checkout@v4
 
@@ -112,12 +129,34 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: '0.10.x'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Install root dependencies
         run: pnpm install
 
       - name: Install client dependencies
         run: pnpm install
         working-directory: client
+
+      - name: Install server dependencies
+        run: uv sync
+        working-directory: server
+
+      - name: Install pgroll
+        run: |
+          ARCH=$(dpkg --print-architecture)
+          curl -fsSL -o /usr/local/bin/pgroll \
+            "https://github.com/xataio/pgroll/releases/download/v0.16.1/pgroll.linux.${ARCH}"
+          chmod +x /usr/local/bin/pgroll
+
+      - name: Run DB migrations
+        run: bash scripts/db-setup.sh
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
