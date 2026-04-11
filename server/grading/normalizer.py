@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Text normalization for answer grading."""
+
 from __future__ import annotations
 
 import re

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for the text normalizer."""
+
 from __future__ import annotations
 
 from grading.normalizer import normalize

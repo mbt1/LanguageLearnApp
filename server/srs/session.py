@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Study session builder — pure Python, no DB imports."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -16,9 +17,9 @@ _THROTTLE_START_RATIO = 0.8
 @dataclass(frozen=True, slots=True)
 class SessionItem:
     concept_id: UUID
-    exercise_type: str          # translate / cloze / match
-    difficulty: int             # 10 / 20 / 30 / ...
-    presentation: str           # mc / arrange / typing
+    exercise_type: str  # translate / cloze / match
+    difficulty: int  # 10 / 20 / 30 / ...
+    presentation: str  # mc / arrange / typing
     is_review: bool
     concept_type: ConceptType
     cefr_level: CefrLevel
@@ -65,16 +66,18 @@ def build_session(
             stability=row.get("fsrs_stability"),
             peak_difficulty=row.get("peak_difficulty", 10),
         )
-        items.append(SessionItem(
-            concept_id=row["concept_id"],
-            exercise_type=difficulty_exercise_type(difficulty),
-            difficulty=difficulty,
-            presentation=difficulty_presentation(difficulty),
-            is_review=True,
-            concept_type=ConceptType(row["concept_type"]),
-            cefr_level=CefrLevel(row["cefr_level"]),
-            explanation=row.get("explanation"),
-        ))
+        items.append(
+            SessionItem(
+                concept_id=row["concept_id"],
+                exercise_type=difficulty_exercise_type(difficulty),
+                difficulty=difficulty,
+                presentation=difficulty_presentation(difficulty),
+                is_review=True,
+                concept_type=ConceptType(row["concept_type"]),
+                cefr_level=CefrLevel(row["cefr_level"]),
+                explanation=row.get("explanation"),
+            )
+        )
 
     # ── Phase 2: new concepts with throttling ─────────────
     slots_remaining = session_size - len(items)
@@ -85,15 +88,17 @@ def build_session(
         for concept in new_concepts[:concept_count]:
             if len(items) >= session_size:
                 break
-            items.append(SessionItem(
-                concept_id=concept["id"],
-                exercise_type=difficulty_exercise_type(10),
-                difficulty=10,
-                presentation=difficulty_presentation(10),
-                is_review=False,
-                concept_type=ConceptType(concept["concept_type"]),
-                cefr_level=CefrLevel(concept["cefr_level"]),
-                explanation=concept.get("explanation"),
-            ))
+            items.append(
+                SessionItem(
+                    concept_id=concept["id"],
+                    exercise_type=difficulty_exercise_type(10),
+                    difficulty=10,
+                    presentation=difficulty_presentation(10),
+                    is_review=False,
+                    concept_type=ConceptType(concept["concept_type"]),
+                    cefr_level=CefrLevel(concept["cefr_level"]),
+                    explanation=concept.get("explanation"),
+                )
+            )
 
     return items

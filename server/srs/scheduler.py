@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """FSRS scheduling wrapper — pure Python, no DB imports."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

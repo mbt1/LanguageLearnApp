@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Grading domain types — pure Python, no DB imports."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -25,5 +26,5 @@ class GradingRequest:
 @dataclass(frozen=True, slots=True)
 class GradingResult:
     verdict: Verdict
-    correct_answer: str           # normalized form shown to user
-    normalized_user_answer: str   # what was actually graded
+    correct_answer: str  # normalized form shown to user
+    normalized_user_answer: str  # what was actually graded

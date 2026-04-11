@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Integration tests for course import service (requires DB)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -92,9 +93,7 @@ async def test_import_simple_course(db_conn: AsyncConnection[Any]) -> None:
     assert course["slug"] == "test-course"
 
     # Verify concepts exist
-    concepts = await list_concepts_by_course(
-        db_conn, course_id=result.course_id
-    )
+    concepts = await list_concepts_by_course(db_conn, course_id=result.course_id)
     assert len(concepts) == 3
 
     # Find the como-estas concept and verify prerequisites
@@ -136,12 +135,8 @@ async def test_import_with_exercises(db_conn: AsyncConnection[Any]) -> None:
     result = await import_course(db_conn, data)
     assert result.exercises_created == 2
 
-    concepts = await list_concepts_by_course(
-        db_conn, course_id=result.course_id
-    )
-    exercises = await get_exercises_for_concept(
-        db_conn, concept_id=concepts[0]["id"]
-    )
+    concepts = await list_concepts_by_course(db_conn, course_id=result.course_id)
+    exercises = await get_exercises_for_concept(db_conn, concept_id=concepts[0]["id"])
     assert len(exercises) == 2
 
 

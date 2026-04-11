@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Integration tests for course and concept browsing endpoints."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -206,9 +207,7 @@ async def test_get_course_detail(client: httpx.AsyncClient) -> None:
 
 
 async def test_get_course_not_found(client: httpx.AsyncClient) -> None:
-    resp = await client.get(
-        "/v1/courses/00000000-0000-0000-0000-000000000000"
-    )
+    resp = await client.get("/v1/courses/00000000-0000-0000-0000-000000000000")
     assert resp.status_code == 404
 
 
@@ -231,9 +230,7 @@ async def test_list_concepts_filtered_by_cefr(
     imported = await _import_course(client)
     course_id = imported["course_id"]
 
-    resp = await client.get(
-        f"/v1/courses/{course_id}/concepts?cefr_level=A1"
-    )
+    resp = await client.get(f"/v1/courses/{course_id}/concepts?cefr_level=A1")
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) == 2
@@ -263,7 +260,5 @@ async def test_get_concept_detail(client: httpx.AsyncClient) -> None:
 
 
 async def test_get_concept_not_found(client: httpx.AsyncClient) -> None:
-    resp = await client.get(
-        "/v1/concepts/00000000-0000-0000-0000-000000000000"
-    )
+    resp = await client.get("/v1/concepts/00000000-0000-0000-0000-000000000000")
     assert resp.status_code == 404

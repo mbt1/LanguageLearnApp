@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Contract tests: auth endpoint responses match OpenAPI spec schemas."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -52,9 +53,7 @@ async def test_refresh_response_matches_spec(
     validate_response(openapi_spec, "/v1/auth/refresh", "post", 200, resp.json())
 
 
-async def test_logout_no_content(
-    client: httpx.AsyncClient, openapi_spec: dict[str, Any]
-) -> None:
+async def test_logout_no_content(client: httpx.AsyncClient, openapi_spec: dict[str, Any]) -> None:
     email = f"contract-logout-{datetime.now(UTC).timestamp()}@example.com"
     reg = await client.post(
         "/v1/auth/register",

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Course import service — validates and persists a CourseImport payload."""
+
 from __future__ import annotations
 
 import json
@@ -44,9 +45,7 @@ def load_course_folder(folder: Path) -> CourseImport:
         data: dict[str, Any] = json.loads(path.read_text())
 
         if "concepts" in data:
-            all_concepts.extend(
-                ConceptImport.model_validate(raw) for raw in data["concepts"]
-            )
+            all_concepts.extend(ConceptImport.model_validate(raw) for raw in data["concepts"])
         if "exercises" in data:
             all_standalone_exercises.extend(
                 ExerciseImport.model_validate(raw) for raw in data["exercises"]
@@ -196,9 +195,7 @@ def _topological_sort(data: CourseImport) -> list[str]:
                 in_degree[concept.ref] += 1
 
     # Seed queue with nodes that have no prerequisites
-    queue: deque[str] = deque(
-        ref for ref, deg in in_degree.items() if deg == 0
-    )
+    queue: deque[str] = deque(ref for ref, deg in in_degree.items() if deg == 0)
     order: list[str] = []
 
     while queue:
@@ -210,9 +207,7 @@ def _topological_sort(data: CourseImport) -> list[str]:
                 queue.append(dependent)
 
     if len(order) != len(data.concepts):
-        remaining = {
-            ref for ref, deg in in_degree.items() if deg > 0
-        }
+        remaining = {ref for ref, deg in in_degree.items() if deg > 0}
         msg = f"Circular dependency detected among: {remaining}"
         raise ValueError(msg)
 

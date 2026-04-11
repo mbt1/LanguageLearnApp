@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for the grading provider."""
+
 from __future__ import annotations
 
 from content.schemas import ExerciseType

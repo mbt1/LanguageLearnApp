@@ -33,9 +33,11 @@ class AuthConfig:
     rp_origin: str = field(
         default_factory=lambda: _env("WEBAUTHN_RP_ORIGIN", "http://localhost:5173")
     )
-    allowed_origins: list[str] = field(default_factory=lambda: [
-        _env("WEBAUTHN_RP_ORIGIN", "http://localhost:5173"),
-    ])
+    allowed_origins: list[str] = field(
+        default_factory=lambda: [
+            _env("WEBAUTHN_RP_ORIGIN", "http://localhost:5173"),
+        ]
+    )
 
 
 _config: AuthConfig | None = None

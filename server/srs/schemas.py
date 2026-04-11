@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Pydantic schemas for the SRS / study domain."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -92,9 +93,9 @@ class CefrProgressItem(BaseModel):
     cefr_level: CefrLevel
     total_concepts: int
     not_started: int
-    seen: int        # difficulty 10
-    familiar: int    # difficulty 20-30
-    practiced: int   # difficulty 40-50
+    seen: int  # difficulty 10
+    familiar: int  # difficulty 20-30
+    practiced: int  # difficulty 40-50
     proficient: int  # max difficulty, not yet mastered
     mastered: int
 
@@ -113,6 +114,7 @@ class AllProgressResponse(BaseModel):
 
 class ConceptProgressDetail(BaseModel):
     """Full SRS detail for a single concept (started or unstarted)."""
+
     concept_id: UUID
     ref: str
     concept_type: ConceptType

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Pydantic schemas for the content domain (courses, concepts, exercises)."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -110,6 +111,7 @@ class ConceptImport(BaseModel):
 
 class CourseImport(BaseModel):
     """Assembled course data (may come from a single JSON or a folder)."""
+
     slug: str
     title: str
     source_language: str

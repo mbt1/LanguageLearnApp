@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Shared fixtures for route integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator

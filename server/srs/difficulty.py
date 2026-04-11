@@ -10,6 +10,7 @@ Configuration is a sorted list of levels. Each level specifies:
   - presentation:   how the client should render (mc / arrange / typing)
   - min_stability:  minimum FSRS stability (days) to unlock this level
 """
+
 from __future__ import annotations
 
 from typing import TypedDict
@@ -23,11 +24,11 @@ class DifficultyEntry(TypedDict):
 
 
 DIFFICULTY_CONFIG: list[DifficultyEntry] = [
-    {"level": 10, "exercise_type": "translate", "presentation": "mc",      "min_stability": 0.0},
+    {"level": 10, "exercise_type": "translate", "presentation": "mc", "min_stability": 0.0},
     {"level": 20, "exercise_type": "translate", "presentation": "arrange", "min_stability": 1.0},
-    {"level": 30, "exercise_type": "cloze",     "presentation": "mc",      "min_stability": 3.0},
-    {"level": 40, "exercise_type": "cloze",     "presentation": "typing",  "min_stability": 10.0},
-    {"level": 50, "exercise_type": "translate",  "presentation": "typing",  "min_stability": 30.0},
+    {"level": 30, "exercise_type": "cloze", "presentation": "mc", "min_stability": 3.0},
+    {"level": 40, "exercise_type": "cloze", "presentation": "typing", "min_stability": 10.0},
+    {"level": 50, "exercise_type": "translate", "presentation": "typing", "min_stability": 30.0},
 ]
 
 MIN_DIFFICULTY = DIFFICULTY_CONFIG[0]["level"]
@@ -35,9 +36,7 @@ MAX_DIFFICULTY = DIFFICULTY_CONFIG[-1]["level"]
 LEVEL_STEP = 10
 
 # Pre-built lookup: level → config entry
-_LEVEL_MAP: dict[int, DifficultyEntry] = {
-    entry["level"]: entry for entry in DIFFICULTY_CONFIG
-}
+_LEVEL_MAP: dict[int, DifficultyEntry] = {entry["level"]: entry for entry in DIFFICULTY_CONFIG}
 
 
 def derive_difficulty(

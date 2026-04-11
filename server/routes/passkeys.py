@@ -80,9 +80,7 @@ async def passkey_registration_options(
     """Generate WebAuthn registration options for authenticated user."""
     config = get_config()
     existing = await list_passkeys_for_user(conn, user_id=current_user.user_id)
-    exclude_credentials = [
-        PublicKeyCredentialDescriptor(id=pk["credential_id"]) for pk in existing
-    ]
+    exclude_credentials = [PublicKeyCredentialDescriptor(id=pk["credential_id"]) for pk in existing]
     options = generate_registration_options(
         rp_id=config.rp_id,
         rp_name=config.rp_name,
@@ -160,9 +158,7 @@ async def passkey_authentication_options(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No passkeys registered for this email",
         )
-    allow_credentials = [
-        PublicKeyCredentialDescriptor(id=pk["credential_id"]) for pk in passkeys
-    ]
+    allow_credentials = [PublicKeyCredentialDescriptor(id=pk["credential_id"]) for pk in passkeys]
     options = generate_authentication_options(
         rp_id=config.rp_id,
         allow_credentials=allow_credentials,
@@ -193,9 +189,7 @@ async def passkey_authentication_verify(
 
     # Look up the credential in our DB
     credential_id_bytes = base64url_to_bytes(raw_id)
-    stored_passkey = await get_passkey_by_credential_id(
-        conn, credential_id=credential_id_bytes
-    )
+    stored_passkey = await get_passkey_by_credential_id(conn, credential_id=credential_id_bytes)
     if stored_passkey is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

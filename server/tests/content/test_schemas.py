@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for content domain Pydantic schemas."""
+
 from __future__ import annotations
 
 from uuid import uuid4

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for the SRS session builder."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta

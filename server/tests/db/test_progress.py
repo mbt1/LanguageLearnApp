@@ -29,23 +29,35 @@ async def user(db_conn: AsyncConnection) -> dict[str, Any]:
 @pytest.fixture
 async def course(db_conn: AsyncConnection) -> dict[str, Any]:
     return await create_course(
-        db_conn, slug="en-es", title="English to Spanish",
-        source_language="en", target_language="es",
+        db_conn,
+        slug="en-es",
+        title="English to Spanish",
+        source_language="en",
+        target_language="es",
     )
 
 
 @pytest.fixture
 async def concept(db_conn: AsyncConnection, course: dict[str, Any]) -> dict[str, Any]:
     return await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="hello"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=1,
+        ref="hello",
+    )
 
 
 async def test_upsert_progress_insert(
-    db_conn: AsyncConnection, user: dict, concept: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    concept: dict,
 ) -> None:
     progress = await upsert_progress(
-        db_conn, user_id=user["id"], concept_id=concept["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=concept["id"],
     )
     assert progress["peak_difficulty"] == 10
     assert progress["is_mastered"] is False
@@ -53,10 +65,14 @@ async def test_upsert_progress_insert(
 
 
 async def test_upsert_progress_update(
-    db_conn: AsyncConnection, user: dict, concept: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    concept: dict,
 ) -> None:
     await upsert_progress(
-        db_conn, user_id=user["id"], concept_id=concept["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=concept["id"],
     )
     now = datetime.datetime.now(tz=datetime.UTC)
     updated = await upsert_progress(
@@ -77,62 +93,94 @@ async def test_upsert_progress_update(
 
 
 async def test_upsert_progress_peak_never_decreases(
-    db_conn: AsyncConnection, user: dict, concept: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    concept: dict,
 ) -> None:
     """GREATEST() on conflict keeps the higher peak_difficulty."""
     await upsert_progress(
-        db_conn, user_id=user["id"], concept_id=concept["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=concept["id"],
         peak_difficulty=40,
     )
     updated = await upsert_progress(
-        db_conn, user_id=user["id"], concept_id=concept["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=concept["id"],
         peak_difficulty=20,
     )
     assert updated["peak_difficulty"] == 40
 
 
 async def test_get_progress(
-    db_conn: AsyncConnection, user: dict, concept: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    concept: dict,
 ) -> None:
     await upsert_progress(
-        db_conn, user_id=user["id"], concept_id=concept["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=concept["id"],
     )
     progress = await get_progress(
-        db_conn, user_id=user["id"], concept_id=concept["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=concept["id"],
     )
     assert progress is not None
     assert progress["peak_difficulty"] == 10
 
 
 async def test_get_progress_not_found(
-    db_conn: AsyncConnection, user: dict, concept: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    concept: dict,
 ) -> None:
     progress = await get_progress(
-        db_conn, user_id=user["id"], concept_id=concept["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=concept["id"],
     )
     assert progress is None
 
 
 async def test_list_due_reviews(
-    db_conn: AsyncConnection, user: dict, course: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    course: dict,
 ) -> None:
     now = datetime.datetime.now(tz=datetime.UTC)
     # Create two concepts — one due, one not
     c1 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="hello"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=1,
+        ref="hello",
+    )
     c2 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="goodbye"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=2,
+        ref="goodbye",
+    )
     # c1 is due (past)
     await upsert_progress(
-        db_conn, user_id=user["id"], concept_id=c1["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=c1["id"],
         fsrs_due=now - datetime.timedelta(hours=1),
         fsrs_state="review",
     )
     # c2 is not due (future)
     await upsert_progress(
-        db_conn, user_id=user["id"], concept_id=c2["id"],
+        db_conn,
+        user_id=user["id"],
+        concept_id=c2["id"],
         fsrs_due=now + datetime.timedelta(days=7),
         fsrs_state="review",
     )
@@ -144,15 +192,28 @@ async def test_list_due_reviews(
 
 # ── list_new_concepts ─────────────────────────────────────────
 
+
 async def test_list_new_concepts_returns_unstarted(
-    db_conn: AsyncConnection, user: dict, course: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    course: dict,
 ) -> None:
     c1 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="a"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=1,
+        ref="a",
+    )
     c2 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="b"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=2,
+        ref="b",
+    )
     # Start c1 but not c2
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"])
 
@@ -164,20 +225,36 @@ async def test_list_new_concepts_returns_unstarted(
 
 # ── list_all_active_progress ──────────────────────────────────
 
+
 async def test_list_all_active_progress_excludes_null_due(
-    db_conn: AsyncConnection, user: dict, course: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    course: dict,
 ) -> None:
     now = datetime.datetime.now(tz=datetime.UTC)
     c1 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="a"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=1,
+        ref="a",
+    )
     c2 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="b"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=2,
+        ref="b",
+    )
     # c1 has a due date, c2 does not
     await upsert_progress(
-        db_conn, user_id=user["id"], concept_id=c1["id"],
-        fsrs_due=now + datetime.timedelta(days=3), fsrs_state="review",
+        db_conn,
+        user_id=user["id"],
+        concept_id=c1["id"],
+        fsrs_due=now + datetime.timedelta(days=3),
+        fsrs_state="review",
     )
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c2["id"])
 
@@ -189,15 +266,28 @@ async def test_list_all_active_progress_excludes_null_due(
 
 # ── get_progress_summary ──────────────────────────────────────
 
+
 async def test_get_progress_summary(
-    db_conn: AsyncConnection, user: dict, course: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    course: dict,
 ) -> None:
     c1 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="a"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=1,
+        ref="a",
+    )
     c2 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="b"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=2,
+        ref="b",
+    )
     # c1 mastered, c2 not
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"], is_mastered=True)
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c2["id"], is_mastered=False)
@@ -213,21 +303,36 @@ async def test_get_progress_summary(
 
 # ── list_all_progress_detail ─────────────────────────────────
 
+
 async def test_list_all_progress_detail_includes_unstarted(
-    db_conn: AsyncConnection, user: dict, course: dict,
+    db_conn: AsyncConnection,
+    user: dict,
+    course: dict,
 ) -> None:
     """LEFT JOIN returns all concepts, including those without progress."""
     c1 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=1, ref="hello"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=1,
+        ref="hello",
+    )
     c2 = await create_concept(
-        db_conn, course_id=course["id"], concept_type="vocabulary",
-        cefr_level="A1", sequence=2, ref="goodbye"    )
+        db_conn,
+        course_id=course["id"],
+        concept_type="vocabulary",
+        cefr_level="A1",
+        sequence=2,
+        ref="goodbye",
+    )
     # Start c1 only
     await upsert_progress(db_conn, user_id=user["id"], concept_id=c1["id"])
 
     rows = await list_all_progress_detail(
-        db_conn, user_id=user["id"], course_id=course["id"],
+        db_conn,
+        user_id=user["id"],
+        course_id=course["id"],
     )
     assert len(rows) == 2
     by_id = {r["concept_id"]: r for r in rows}

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Graded exercise submission endpoint."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -51,7 +52,9 @@ async def submit_exercise(
         exercise = await get_exercise_by_id(conn, exercise_id=request.exercise_id)
     else:
         exercise = await get_exercise_by_type(
-            conn, concept_id=concept_id, exercise_type=request.exercise_type.value,
+            conn,
+            concept_id=concept_id,
+            exercise_type=request.exercise_type.value,
         )
 
     # Resolve correct answers from exercise JSONB data

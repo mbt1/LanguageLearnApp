@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Fixtures for contract tests that validate responses against OpenAPI schemas."""
+
 from __future__ import annotations
 
 import json

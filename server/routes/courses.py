@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Course and concept browsing / import endpoints."""
+
 from __future__ import annotations
 
 from collections import defaultdict

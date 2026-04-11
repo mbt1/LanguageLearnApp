@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Contract tests: passkey endpoint responses match OpenAPI spec schemas."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -29,9 +30,7 @@ async def test_passkey_registration_options_matches_spec(
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
-    validate_response(
-        openapi_spec, "/v1/auth/passkeys/register/options", "post", 200, resp.json()
-    )
+    validate_response(openapi_spec, "/v1/auth/passkeys/register/options", "post", 200, resp.json())
 
 
 async def test_list_passkeys_matches_spec(client: httpx.AsyncClient) -> None:

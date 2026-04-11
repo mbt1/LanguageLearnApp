@@ -43,12 +43,18 @@ async def test_get_course_not_found(db_conn: AsyncConnection) -> None:
 
 async def test_list_courses(db_conn: AsyncConnection) -> None:
     await create_course(
-        db_conn, slug="en-de", title="English to German",
-        source_language="en", target_language="de",
+        db_conn,
+        slug="en-de",
+        title="English to German",
+        source_language="en",
+        target_language="de",
     )
     await create_course(
-        db_conn, slug="en-ar", title="English to Arabic",
-        source_language="en", target_language="ar",
+        db_conn,
+        slug="en-ar",
+        title="English to Arabic",
+        source_language="en",
+        target_language="ar",
     )
     courses = await list_courses(db_conn)
     titles = [c["title"] for c in courses]

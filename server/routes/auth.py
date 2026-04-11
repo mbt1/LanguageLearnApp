@@ -130,9 +130,7 @@ async def register(
     # Email verification
     config = get_config()
     ev_token = generate_email_verification_token()
-    ev_expires = datetime.now(UTC) + timedelta(
-        hours=config.email_verification_expire_hours
-    )
+    ev_expires = datetime.now(UTC) + timedelta(hours=config.email_verification_expire_hours)
     await create_email_verification_token(
         conn, user_id=user["id"], token=ev_token, expires_at=ev_expires
     )
@@ -303,9 +301,7 @@ async def resend_verification(
         )
     config = get_config()
     ev_token = generate_email_verification_token()
-    ev_expires = datetime.now(UTC) + timedelta(
-        hours=config.email_verification_expire_hours
-    )
+    ev_expires = datetime.now(UTC) + timedelta(hours=config.email_verification_expire_hours)
     await create_email_verification_token(
         conn, user_id=current_user.user_id, token=ev_token, expires_at=ev_expires
     )

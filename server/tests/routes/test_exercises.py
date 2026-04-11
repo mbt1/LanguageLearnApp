@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Integration tests for the graded exercise submission endpoint."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime

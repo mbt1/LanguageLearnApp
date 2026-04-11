@@ -52,12 +52,8 @@ async def test_revoke_refresh_token(db_conn: AsyncConnection) -> None:
 async def test_revoke_all_user_tokens(db_conn: AsyncConnection) -> None:
     user = await _make_user(db_conn)
     expires = datetime.now(UTC) + timedelta(days=7)
-    await create_refresh_token(
-        db_conn, user_id=user["id"], token_hash="token1", expires_at=expires
-    )
-    await create_refresh_token(
-        db_conn, user_id=user["id"], token_hash="token2", expires_at=expires
-    )
+    await create_refresh_token(db_conn, user_id=user["id"], token_hash="token1", expires_at=expires)
+    await create_refresh_token(db_conn, user_id=user["id"], token_hash="token2", expires_at=expires)
     await revoke_all_user_refresh_tokens(db_conn, user_id=user["id"])
     t1 = await get_refresh_token(db_conn, token_hash="token1")
     t2 = await get_refresh_token(db_conn, token_hash="token2")

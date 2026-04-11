@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Integration tests for auth endpoints."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -216,7 +217,8 @@ async def test_resend_verification_requires_auth(client: httpx.AsyncClient) -> N
 
 
 async def test_register_logs_verification_email(
-    client: httpx.AsyncClient, caplog: Any,
+    client: httpx.AsyncClient,
+    caplog: Any,
 ) -> None:
     """Verification email URL must appear in logs (regression)."""
     import logging

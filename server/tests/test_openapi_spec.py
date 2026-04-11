@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests that the committed OpenAPI spec is valid and matches the server."""
+
 from __future__ import annotations
 
 import json

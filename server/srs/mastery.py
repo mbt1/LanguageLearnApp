@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Mastery calculation — pure Python, no DB imports."""
+
 from __future__ import annotations
 
 from srs.scheduler import MASTERY_STABILITY_THRESHOLD

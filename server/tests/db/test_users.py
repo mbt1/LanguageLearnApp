@@ -19,9 +19,7 @@ async def test_create_user(db_conn: AsyncConnection) -> None:
 
 
 async def test_create_user_with_password(db_conn: AsyncConnection) -> None:
-    user = await create_user(
-        db_conn, email="pw@example.com", password_hash="hashed_pw"
-    )
+    user = await create_user(db_conn, email="pw@example.com", password_hash="hashed_pw")
     assert user["password_hash"] == "hashed_pw"
 
 

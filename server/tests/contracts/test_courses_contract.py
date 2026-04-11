@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Contract tests: course endpoint responses match OpenAPI spec schemas."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -70,33 +71,25 @@ async def test_import_course_matches_spec(
 ) -> None:
     resp = await client.post("/v1/courses/import", json=_sample_course())
     assert resp.status_code == 201
-    validate_response(
-        openapi_spec, "/v1/courses/import", "post", 201, resp.json()
-    )
+    validate_response(openapi_spec, "/v1/courses/import", "post", 201, resp.json())
 
 
 async def test_get_course_detail_matches_spec(
     client: httpx.AsyncClient, openapi_spec: dict[str, Any]
 ) -> None:
     # Import a course first
-    import_resp = await client.post(
-        "/v1/courses/import", json=_sample_course()
-    )
+    import_resp = await client.post("/v1/courses/import", json=_sample_course())
     course_id = import_resp.json()["course_id"]
 
     resp = await client.get(f"/v1/courses/{course_id}")
     assert resp.status_code == 200
-    validate_response(
-        openapi_spec, "/v1/courses/{course_id}", "get", 200, resp.json()
-    )
+    validate_response(openapi_spec, "/v1/courses/{course_id}", "get", 200, resp.json())
 
 
 async def test_list_concepts_matches_spec(
     client: httpx.AsyncClient, openapi_spec: dict[str, Any]
 ) -> None:
-    import_resp = await client.post(
-        "/v1/courses/import", json=_sample_course()
-    )
+    import_resp = await client.post("/v1/courses/import", json=_sample_course())
     course_id = import_resp.json()["course_id"]
 
     resp = await client.get(f"/v1/courses/{course_id}/concepts")
@@ -113,9 +106,7 @@ async def test_list_concepts_matches_spec(
 async def test_get_concept_detail_matches_spec(
     client: httpx.AsyncClient, openapi_spec: dict[str, Any]
 ) -> None:
-    import_resp = await client.post(
-        "/v1/courses/import", json=_sample_course()
-    )
+    import_resp = await client.post("/v1/courses/import", json=_sample_course())
     course_id = import_resp.json()["course_id"]
 
     concepts_resp = await client.get(f"/v1/courses/{course_id}/concepts")

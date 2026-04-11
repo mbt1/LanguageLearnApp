@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for derived difficulty logic."""
+
 from __future__ import annotations
 
 from srs.difficulty import (

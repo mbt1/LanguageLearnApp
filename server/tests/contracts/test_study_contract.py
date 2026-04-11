@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Contract tests: study endpoint responses match OpenAPI spec schemas."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -55,7 +56,8 @@ def _mini_course() -> dict[str, Any]:
 
 
 async def test_study_session_matches_spec(
-    client: httpx.AsyncClient, openapi_spec: dict[str, Any],
+    client: httpx.AsyncClient,
+    openapi_spec: dict[str, Any],
 ) -> None:
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
@@ -71,7 +73,8 @@ async def test_study_session_matches_spec(
 
 
 async def test_study_review_matches_spec(
-    client: httpx.AsyncClient, openapi_spec: dict[str, Any],
+    client: httpx.AsyncClient,
+    openapi_spec: dict[str, Any],
 ) -> None:
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())
@@ -100,7 +103,8 @@ async def test_study_review_matches_spec(
 
 
 async def test_course_progress_matches_spec(
-    client: httpx.AsyncClient, openapi_spec: dict[str, Any],
+    client: httpx.AsyncClient,
+    openapi_spec: dict[str, Any],
 ) -> None:
     user = await _register(client)
     course_resp = await client.post("/v1/courses/import", json=_mini_course())

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Study session and review submission endpoints."""
+
 from __future__ import annotations
 
 import random
@@ -105,23 +106,31 @@ async def create_study_session(  # noqa: C901, PLR0912
                 )
             else:
                 difficulty = 10
-            items.append(SessionItem(
-                concept_id=cid,
-                exercise_type=difficulty_exercise_type(difficulty),
-                difficulty=difficulty,
-                presentation=difficulty_presentation(difficulty),
-                is_review=progress is not None,
-                concept_type=ConceptType(concept["concept_type"]),
-                cefr_level=CefrLevel(concept["cefr_level"]),
-                explanation=concept.get("explanation"),
-            ))
+            items.append(
+                SessionItem(
+                    concept_id=cid,
+                    exercise_type=difficulty_exercise_type(difficulty),
+                    difficulty=difficulty,
+                    presentation=difficulty_presentation(difficulty),
+                    is_review=progress is not None,
+                    concept_type=ConceptType(concept["concept_type"]),
+                    cefr_level=CefrLevel(concept["cefr_level"]),
+                    explanation=concept.get("explanation"),
+                )
+            )
     else:
         # ── Normal session: algorithmic selection ──
         due_reviews = await list_due_reviews(
-            conn, user_id=user_id, now=now, limit=request.session_size,
+            conn,
+            user_id=user_id,
+            now=now,
+            limit=request.session_size,
         )
         new_concepts = await list_new_concepts(
-            conn, user_id=user_id, course_id=course_id, limit=request.session_size,
+            conn,
+            user_id=user_id,
+            course_id=course_id,
+            limit=request.session_size,
         )
         all_active = await list_all_active_progress(conn, user_id=user_id, course_id=course_id)
 
@@ -161,7 +170,9 @@ async def create_study_session(  # noqa: C901, PLR0912
     # Refresh progress summary cache (new concepts change "not_started" counts)
     if new_items:
         await refresh_course_progress_summary(
-            conn, user_id=user_id, course_id=course_id,
+            conn,
+            user_id=user_id,
+            course_id=course_id,
         )
     await conn.commit()
 
@@ -191,7 +202,8 @@ def _row_to_progress_item(row: dict[str, Any]) -> CefrProgressItem:
 
 
 def _select_distractors(
-    distractor_pools: dict[str, list[str]], n: int = _NUM_DISTRACTORS,
+    distractor_pools: dict[str, list[str]],
+    n: int = _NUM_DISTRACTORS,
 ) -> list[str]:
     """Select N distractors from typed distractor pools.
 
@@ -374,15 +386,21 @@ async def get_course_progress(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
 
     rows = await read_progress_summary(
-        conn, user_id=current_user.user_id, course_id=course_id,
+        conn,
+        user_id=current_user.user_id,
+        course_id=course_id,
     )
     if not rows:
         await refresh_course_progress_summary(
-            conn, user_id=current_user.user_id, course_id=course_id,
+            conn,
+            user_id=current_user.user_id,
+            course_id=course_id,
         )
         await conn.commit()
         rows = await read_progress_summary(
-            conn, user_id=current_user.user_id, course_id=course_id,
+            conn,
+            user_id=current_user.user_id,
+            course_id=course_id,
         )
     levels = [_row_to_progress_item(row) for row in rows]
     return CourseProgressResponse(course_id=course_id, levels=levels)
@@ -403,7 +421,9 @@ async def get_all_progress(
         all_courses = await list_courses(conn)
         for c in all_courses:
             await refresh_course_progress_summary(
-                conn, user_id=current_user.user_id, course_id=c["id"],
+                conn,
+                user_id=current_user.user_id,
+                course_id=c["id"],
             )
         await conn.commit()
         rows = await read_all_progress_summary(conn, user_id=current_user.user_id)
@@ -436,7 +456,9 @@ async def get_review_schedule(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
 
     rows = await list_all_progress_detail(
-        conn, user_id=current_user.user_id, course_id=course_id,
+        conn,
+        user_id=current_user.user_id,
+        course_id=course_id,
     )
     items = [
         ConceptProgressDetail(

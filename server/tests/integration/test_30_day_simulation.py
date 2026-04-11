@@ -7,6 +7,7 @@ Simulates a user learning a small course over 30 days:
 - Verifies FSRS intervals grow, difficulty progresses,
   and session_size is honoured.
 """
+
 from __future__ import annotations
 
 import random
@@ -25,6 +26,7 @@ from main import app
 from tests.conftest import DATABASE_URL
 
 # ── Fixtures ─────────────────────────────────────────────────
+
 
 @pytest.fixture
 async def test_app_sim() -> AsyncGenerator[FastAPI, None]:
@@ -65,6 +67,7 @@ def _pick_rating(rng: random.Random) -> tuple[str, bool]:
 
 
 # ── Small test course ─────────────────────────────────────────
+
 
 def _sim_course() -> dict[str, Any]:
     """A 5-concept course with translate and cloze exercises."""
@@ -224,6 +227,7 @@ def _sim_course() -> dict[str, Any]:
 
 
 # ── Test ──────────────────────────────────────────────────────
+
 
 async def test_30_day_simulation(sim_client: httpx.AsyncClient) -> None:
     """Simulate 30 days of studying a small 5-concept course."""

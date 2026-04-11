@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for SRS scheduler wrapper around the fsrs library."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
