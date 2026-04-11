@@ -85,6 +85,16 @@ jobs:
         run: uv sync
         working-directory: server
 
+      - name: Install pgroll
+        run: |
+          ARCH=$(dpkg --print-architecture)
+          curl -fsSL -o /usr/local/bin/pgroll \
+            "https://github.com/xataio/pgroll/releases/download/v0.16.1/pgroll.linux.${ARCH}"
+          chmod +x /usr/local/bin/pgroll
+
+      - name: Run DB migrations
+        run: bash scripts/db-setup.sh
+
       - name: Run tests with coverage
         run: uv run pytest
         working-directory: server
