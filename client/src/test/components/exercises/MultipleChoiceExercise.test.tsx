@@ -54,11 +54,7 @@ describe('MultipleChoiceExercise', () => {
     const user = userEvent.setup()
 
     render(
-      <MultipleChoiceExercise
-        prompt="Translate"
-        options={['hola', 'adiós']}
-        onAnswer={vi.fn()}
-      />,
+      <MultipleChoiceExercise prompt="Translate" options={['hola', 'adiós']} onAnswer={vi.fn()} />,
     )
 
     await user.click(screen.getByRole('button', { name: 'hola' }))

@@ -69,7 +69,11 @@ describe('ReviewSchedulePage', () => {
   })
 
   it('shows loading state', () => {
-    vi.mocked(coursesApi.listCourses).mockReturnValue(new Promise(() => { /* pending */ }))
+    vi.mocked(coursesApi.listCourses).mockReturnValue(
+      new Promise(() => {
+        /* pending */
+      }),
+    )
 
     renderPage()
 
@@ -181,7 +185,7 @@ describe('ReviewSchedulePage', () => {
 
     await screen.findByText('hello')
     const dueCell = screen.getByText((_, el) => {
-      return el?.tagName === 'SPAN' && el.className.includes('text-orange-500') || false
+      return (el?.tagName === 'SPAN' && el.className.includes('text-orange-500')) || false
     })
     expect(dueCell).toBeInTheDocument()
   })
@@ -190,10 +194,7 @@ describe('ReviewSchedulePage', () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
     vi.mocked(studyApi.getReviewSchedule).mockResolvedValue({
       course_id: 'course-1',
-      items: [
-        startedConcept,
-        { ...unstartedConcept, cefr_level: 'B1' },
-      ],
+      items: [startedConcept, { ...unstartedConcept, cefr_level: 'B1' }],
     })
 
     renderPage()
@@ -204,9 +205,9 @@ describe('ReviewSchedulePage', () => {
     expect(screen.getByText('goodbye')).toBeInTheDocument()
 
     // Filter to A1 via the CEFR select
-    const cefrSelect = within(
-      screen.getByText('CEFR:').closest('label') as HTMLElement,
-    ).getByRole('combobox')
+    const cefrSelect = within(screen.getByText('CEFR:').closest('label') as HTMLElement).getByRole(
+      'combobox',
+    )
     fireEvent.change(cefrSelect, { target: { value: 'A1' } })
 
     expect(screen.getByText('hello')).toBeInTheDocument()

@@ -18,12 +18,18 @@ export function ExplanationPanel({ explanation, defaultOpen = false }: Explanati
 
   return (
     <div className="mt-4">
-      <Button variant="ghost" size="sm" onClick={() => { setOpen((o) => !o); }}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          setOpen((o) => !o)
+        }}
+      >
         {open ? 'Hide explanation' : 'Show explanation'}
       </Button>
       {open && (
         <div
-          className="prose prose-sm mt-2 rounded-md border bg-muted p-4 text-sm"
+          className="prose prose-sm bg-muted mt-2 rounded-md border p-4 text-sm"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(explanation) }}
         />
       )}

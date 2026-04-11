@@ -42,9 +42,7 @@ const mockResult = {
 }
 
 function renderPage(courseId = 'course-1', conceptId?: string) {
-  const path = conceptId
-    ? `/learn/${courseId}?conceptId=${conceptId}`
-    : `/learn/${courseId}`
+  const path = conceptId ? `/learn/${courseId}?conceptId=${conceptId}` : `/learn/${courseId}`
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
@@ -64,7 +62,11 @@ describe('LearnPage', () => {
   })
 
   it('shows loading state initially', () => {
-    vi.mocked(studyApi.studySession).mockReturnValue(new Promise(() => { /* pending */ }))
+    vi.mocked(studyApi.studySession).mockReturnValue(
+      new Promise(() => {
+        /* pending */
+      }),
+    )
     renderPage()
     expect(screen.getByText(/loading session/i)).toBeInTheDocument()
   })
@@ -78,7 +80,7 @@ describe('LearnPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText("hello")).toBeInTheDocument()
+    expect(await screen.findByText('hello')).toBeInTheDocument()
     // Options include target + distractors
     expect(screen.getByRole('button', { name: 'hola' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'adiós' })).toBeInTheDocument()
@@ -153,7 +155,7 @@ describe('LearnPage', () => {
 
     renderPage('course-1', 'concept-42')
 
-    await screen.findByText("hello")
+    await screen.findByText('hello')
     expect(studyApi.studySession).toHaveBeenCalledWith('course-1', 20, ['concept-42'])
   })
 
@@ -166,7 +168,7 @@ describe('LearnPage', () => {
 
     renderPage()
 
-    await screen.findByText("hello")
+    await screen.findByText('hello')
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
   })
 

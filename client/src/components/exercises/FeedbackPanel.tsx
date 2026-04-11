@@ -25,7 +25,9 @@ export function FeedbackPanel({
       }
     }
     window.addEventListener('keydown', handleKey)
-    return () => { window.removeEventListener('keydown', handleKey); }
+    return () => {
+      window.removeEventListener('keydown', handleKey)
+    }
   }, [onNext])
 
   return (
@@ -40,19 +42,14 @@ export function FeedbackPanel({
           : 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950'
       }`}
     >
-      <p className="text-lg font-semibold">
-        {correct ? '✓ Correct!' : '✗ Incorrect'}
-      </p>
+      <p className="text-lg font-semibold">{correct ? '✓ Correct!' : '✗ Incorrect'}</p>
       {!correct && (
         <p className="mt-1 text-sm">
-          Correct answer:{' '}
-          <span className="font-medium">{correctAnswer}</span>
+          Correct answer: <span className="font-medium">{correctAnswer}</span>
         </p>
       )}
       {!correct && normalizedUserAnswer && (
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your answer: {normalizedUserAnswer}
-        </p>
+        <p className="text-muted-foreground mt-1 text-sm">Your answer: {normalizedUserAnswer}</p>
       )}
       <p className="text-muted-foreground mt-2 text-xs">Click or press Enter to continue</p>
     </div>

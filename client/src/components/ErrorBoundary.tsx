@@ -33,7 +33,9 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="text-muted-foreground text-sm">{this.state.message}</p>
             <button
               className="text-primary text-sm underline"
-              onClick={() => { this.setState({ hasError: false, message: '' }); }}
+              onClick={() => {
+                this.setState({ hasError: false, message: '' })
+              }}
             >
               Try again
             </button>

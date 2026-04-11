@@ -4,1669 +4,1669 @@
  */
 
 export interface paths {
-    "/v1/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register
-         * @description Register a new user with email and password.
-         */
-        post: operations["register_v1_auth_register_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login
-         * @description Login with email and password.
-         */
-        post: operations["login_v1_auth_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh
-         * @description Refresh access token using refresh token cookie.
-         */
-        post: operations["refresh_v1_auth_refresh_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Logout
-         * @description Logout: revoke refresh token and clear cookie.
-         */
-        post: operations["logout_v1_auth_logout_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/verify-email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Verify Email
-         * @description Verify email address using token from verification link.
-         */
-        get: operations["verify_email_v1_auth_verify_email_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/resend-verification": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Resend Verification
-         * @description Resend email verification link.
-         */
-        post: operations["resend_verification_v1_auth_resend_verification_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/courses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Courses Endpoint */
-        get: operations["list_courses_endpoint_v1_courses_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/courses/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Import Course Endpoint */
-        post: operations["import_course_endpoint_v1_courses_import_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/courses/{course_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Course Detail */
-        get: operations["get_course_detail_v1_courses__course_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/courses/{course_id}/concepts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Concepts Endpoint */
-        get: operations["list_concepts_endpoint_v1_courses__course_id__concepts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/concepts/{concept_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Concept Detail */
-        get: operations["get_concept_detail_v1_concepts__concept_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/exercises/submit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Submit Exercise */
-        post: operations["submit_exercise_v1_exercises_submit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/passkeys/register/options": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Passkey Registration Options
-         * @description Generate WebAuthn registration options for authenticated user.
-         */
-        post: operations["passkey_registration_options_v1_auth_passkeys_register_options_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/passkeys/register/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Passkey Registration Verify
-         * @description Verify WebAuthn registration response and store credential.
-         */
-        post: operations["passkey_registration_verify_v1_auth_passkeys_register_verify_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/passkeys/authenticate/options": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Passkey Authentication Options
-         * @description Generate WebAuthn authentication options for a user (public endpoint).
-         */
-        post: operations["passkey_authentication_options_v1_auth_passkeys_authenticate_options_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/passkeys/authenticate/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Passkey Authentication Verify
-         * @description Verify WebAuthn authentication response and issue tokens.
-         */
-        post: operations["passkey_authentication_verify_v1_auth_passkeys_authenticate_verify_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/passkeys/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Passkeys
-         * @description List user's registered passkeys.
-         */
-        get: operations["list_passkeys_v1_auth_passkeys__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/passkeys/{passkey_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Remove Passkey
-         * @description Remove a passkey (must belong to current user).
-         */
-        delete: operations["remove_passkey_v1_auth_passkeys__passkey_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/study/session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create Study Session */
-        post: operations["create_study_session_v1_study_session_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/study/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Submit Review */
-        post: operations["submit_review_v1_study_review_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/progress/{course_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Course Progress */
-        get: operations["get_course_progress_v1_progress__course_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/progress": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get All Progress
-         * @description Return progress for every course from precalculated cache.
-         */
-        get: operations["get_all_progress_v1_progress_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/review-schedule/{course_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Review Schedule
-         * @description Return full SRS detail for all concepts in a course.
-         */
-        get: operations["get_review_schedule_v1_review_schedule__course_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health */
-        get: operations["health_v1_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  '/v1/auth/register': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Register
+     * @description Register a new user with email and password.
+     */
+    post: operations['register_v1_auth_register_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/login': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Login
+     * @description Login with email and password.
+     */
+    post: operations['login_v1_auth_login_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/refresh': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Refresh
+     * @description Refresh access token using refresh token cookie.
+     */
+    post: operations['refresh_v1_auth_refresh_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/logout': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Logout
+     * @description Logout: revoke refresh token and clear cookie.
+     */
+    post: operations['logout_v1_auth_logout_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/verify-email': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Verify Email
+     * @description Verify email address using token from verification link.
+     */
+    get: operations['verify_email_v1_auth_verify_email_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/resend-verification': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Resend Verification
+     * @description Resend email verification link.
+     */
+    post: operations['resend_verification_v1_auth_resend_verification_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/courses': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Courses Endpoint */
+    get: operations['list_courses_endpoint_v1_courses_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/courses/import': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Import Course Endpoint */
+    post: operations['import_course_endpoint_v1_courses_import_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/courses/{course_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Course Detail */
+    get: operations['get_course_detail_v1_courses__course_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/courses/{course_id}/concepts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Concepts Endpoint */
+    get: operations['list_concepts_endpoint_v1_courses__course_id__concepts_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/concepts/{concept_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Concept Detail */
+    get: operations['get_concept_detail_v1_concepts__concept_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/exercises/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Submit Exercise */
+    post: operations['submit_exercise_v1_exercises_submit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/passkeys/register/options': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Passkey Registration Options
+     * @description Generate WebAuthn registration options for authenticated user.
+     */
+    post: operations['passkey_registration_options_v1_auth_passkeys_register_options_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/passkeys/register/verify': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Passkey Registration Verify
+     * @description Verify WebAuthn registration response and store credential.
+     */
+    post: operations['passkey_registration_verify_v1_auth_passkeys_register_verify_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/passkeys/authenticate/options': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Passkey Authentication Options
+     * @description Generate WebAuthn authentication options for a user (public endpoint).
+     */
+    post: operations['passkey_authentication_options_v1_auth_passkeys_authenticate_options_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/passkeys/authenticate/verify': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Passkey Authentication Verify
+     * @description Verify WebAuthn authentication response and issue tokens.
+     */
+    post: operations['passkey_authentication_verify_v1_auth_passkeys_authenticate_verify_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/passkeys/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Passkeys
+     * @description List user's registered passkeys.
+     */
+    get: operations['list_passkeys_v1_auth_passkeys__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/passkeys/{passkey_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Remove Passkey
+     * @description Remove a passkey (must belong to current user).
+     */
+    delete: operations['remove_passkey_v1_auth_passkeys__passkey_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/study/session': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Create Study Session */
+    post: operations['create_study_session_v1_study_session_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/study/review': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Submit Review */
+    post: operations['submit_review_v1_study_review_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/progress/{course_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Course Progress */
+    get: operations['get_course_progress_v1_progress__course_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/progress': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get All Progress
+     * @description Return progress for every course from precalculated cache.
+     */
+    get: operations['get_all_progress_v1_progress_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/review-schedule/{course_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Review Schedule
+     * @description Return full SRS detail for all concepts in a course.
+     */
+    get: operations['get_review_schedule_v1_review_schedule__course_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/health': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Health */
+    get: operations['health_v1_health_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        /** AllProgressResponse */
-        AllProgressResponse: {
-            /** Courses */
-            courses: components["schemas"]["CourseProgressResponse"][];
-        };
-        /**
-         * CefrLevel
-         * @enum {string}
-         */
-        CefrLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
-        /** CefrProgressItem */
-        CefrProgressItem: {
-            cefr_level: components["schemas"]["CefrLevel"];
-            /** Total Concepts */
-            total_concepts: number;
-            /** Not Started */
-            not_started: number;
-            /** Seen */
-            seen: number;
-            /** Familiar */
-            familiar: number;
-            /** Practiced */
-            practiced: number;
-            /** Proficient */
-            proficient: number;
-            /** Mastered */
-            mastered: number;
-        };
-        /** ConceptDetail */
-        ConceptDetail: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Ref */
-            ref: string;
-            concept_type: components["schemas"]["ConceptType"];
-            cefr_level: components["schemas"]["CefrLevel"];
-            /** Sequence */
-            sequence: number;
-            /** Explanation */
-            explanation?: string | null;
-            /** Prerequisites */
-            prerequisites: components["schemas"]["PrerequisiteInfo"][];
-            /** Exercises */
-            exercises: components["schemas"]["ExerciseResponse"][];
-        };
-        /** ConceptImport */
-        ConceptImport: {
-            /** Ref */
-            ref: string;
-            concept_type: components["schemas"]["ConceptType"];
-            cefr_level: components["schemas"]["CefrLevel"];
-            /** Sequence */
-            sequence: number;
-            /** Explanation */
-            explanation?: string | null;
-            /** Prerequisites */
-            prerequisites?: string[] | null;
-            /** Exercises */
-            exercises?: components["schemas"]["ExerciseImport"][];
-        };
-        /**
-         * ConceptProgressDetail
-         * @description Full SRS detail for a single concept (started or unstarted).
-         */
-        ConceptProgressDetail: {
-            /**
-             * Concept Id
-             * Format: uuid
-             */
-            concept_id: string;
-            /** Ref */
-            ref: string;
-            concept_type: components["schemas"]["ConceptType"];
-            cefr_level: components["schemas"]["CefrLevel"];
-            /** Peak Difficulty */
-            peak_difficulty?: number | null;
-            /** Is Mastered */
-            is_mastered?: boolean | null;
-            /** Fsrs State */
-            fsrs_state?: string | null;
-            /** Fsrs Stability */
-            fsrs_stability?: number | null;
-            /** Fsrs Difficulty */
-            fsrs_difficulty?: number | null;
-            /** Fsrs Due */
-            fsrs_due?: string | null;
-            /** Fsrs Last Review */
-            fsrs_last_review?: string | null;
-        };
-        /** ConceptSummary */
-        ConceptSummary: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Ref */
-            ref: string;
-            concept_type: components["schemas"]["ConceptType"];
-            cefr_level: components["schemas"]["CefrLevel"];
-            /** Sequence */
-            sequence: number;
-        };
-        /**
-         * ConceptType
-         * @enum {string}
-         */
-        ConceptType: "vocabulary" | "grammar";
-        /** CourseDetail */
-        CourseDetail: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Slug */
-            slug: string;
-            /** Title */
-            title: string;
-            /** Source Language */
-            source_language: string;
-            /** Target Language */
-            target_language: string;
-            /** Created At */
-            created_at: string;
-            /** Concepts By Level */
-            concepts_by_level: {
-                [key: string]: components["schemas"]["ConceptSummary"][];
-            };
-        };
-        /**
-         * CourseImport
-         * @description Assembled course data (may come from a single JSON or a folder).
-         */
-        CourseImport: {
-            /** Slug */
-            slug: string;
-            /** Title */
-            title: string;
-            /** Source Language */
-            source_language: string;
-            /** Target Language */
-            target_language: string;
-            /** Concepts */
-            concepts: components["schemas"]["ConceptImport"][];
-            /** Standalone Exercises */
-            standalone_exercises?: components["schemas"]["ExerciseImport"][];
-        };
-        /** CourseImportResponse */
-        CourseImportResponse: {
-            /**
-             * Course Id
-             * Format: uuid
-             */
-            course_id: string;
-            /** Concepts Created */
-            concepts_created: number;
-            /** Exercises Created */
-            exercises_created: number;
-        };
-        /** CourseProgressResponse */
-        CourseProgressResponse: {
-            /**
-             * Course Id
-             * Format: uuid
-             */
-            course_id: string;
-            /** Levels */
-            levels: components["schemas"]["CefrProgressItem"][];
-        };
-        /** CourseResponse */
-        CourseResponse: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Slug */
-            slug: string;
-            /** Title */
-            title: string;
-            /** Source Language */
-            source_language: string;
-            /** Target Language */
-            target_language: string;
-            /** Created At */
-            created_at: string;
-        };
-        /**
-         * DependencySource
-         * @enum {string}
-         */
-        DependencySource: "manual" | "auto";
-        /** ExerciseImport */
-        ExerciseImport: {
-            /** Ref */
-            ref: string;
-            /** Exercise Type */
-            exercise_type: string;
-            /**
-             * Reverse
-             * @default false
-             */
-            reverse: boolean;
-            /** Data */
-            data?: {
-                [key: string]: unknown;
-            };
-            /** Concept Refs */
-            concept_refs?: string[] | null;
-        };
-        /** ExerciseResponse */
-        ExerciseResponse: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Exercise Type */
-            exercise_type: string;
-            /** Ref */
-            ref: string;
-            /** Data */
-            data: {
-                [key: string]: unknown;
-            };
-        };
-        /** ExerciseSubmitRequest */
-        ExerciseSubmitRequest: {
-            /**
-             * Concept Id
-             * Format: uuid
-             */
-            concept_id: string;
-            exercise_type: components["schemas"]["ExerciseType"];
-            /** Difficulty */
-            difficulty: number;
-            /** User Answer */
-            user_answer: string;
-            /** Exercise Id */
-            exercise_id?: string | null;
-            /** Review Duration Ms */
-            review_duration_ms?: number | null;
-        };
-        /** ExerciseSubmitResponse */
-        ExerciseSubmitResponse: {
-            /** Correct */
-            correct: boolean;
-            /** Correct Answer */
-            correct_answer: string;
-            /** Normalized User Answer */
-            normalized_user_answer: string;
-            /** Difficulty */
-            difficulty: number;
-            /** Peak Difficulty */
-            peak_difficulty: number;
-            /** Is Mastered */
-            is_mastered: boolean;
-            /** Fsrs Due */
-            fsrs_due: string | null;
-            /** Mastery Changed */
-            mastery_changed: boolean;
-        };
-        /**
-         * ExerciseType
-         * @enum {string}
-         */
-        ExerciseType: "translate" | "cloze" | "match";
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** LoginRequest */
-        LoginRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Password */
-            password: string;
-        };
-        /** LoginResponse */
-        LoginResponse: {
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /** Email */
-            email: string;
-            /** Email Verified */
-            email_verified: boolean;
-            /** Access Token */
-            access_token: string;
-        };
-        /** PasskeyAuthenticationOptionsRequest */
-        PasskeyAuthenticationOptionsRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-        };
-        /** PasskeyAuthenticationOptionsResponse */
-        PasskeyAuthenticationOptionsResponse: {
-            /** Options */
-            options: string;
-        };
-        /** PasskeyAuthenticationVerifyRequest */
-        PasskeyAuthenticationVerifyRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Credential */
-            credential: string;
-        };
-        /** PasskeyAuthenticationVerifyResponse */
-        PasskeyAuthenticationVerifyResponse: {
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /** Email */
-            email: string;
-            /** Email Verified */
-            email_verified: boolean;
-            /** Access Token */
-            access_token: string;
-        };
-        /** PasskeyListItem */
-        PasskeyListItem: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Name */
-            name: string | null;
-            /** Created At */
-            created_at: string;
-        };
-        /** PasskeyRegistrationOptionsResponse */
-        PasskeyRegistrationOptionsResponse: {
-            /** Options */
-            options: string;
-        };
-        /** PasskeyRegistrationVerifyRequest */
-        PasskeyRegistrationVerifyRequest: {
-            /** Credential */
-            credential: string;
-            /** Name */
-            name?: string | null;
-        };
-        /** PasskeyRegistrationVerifyResponse */
-        PasskeyRegistrationVerifyResponse: {
-            /** Message */
-            message: string;
-        };
-        /** PrerequisiteInfo */
-        PrerequisiteInfo: {
-            /**
-             * Concept Id
-             * Format: uuid
-             */
-            concept_id: string;
-            /** Ref */
-            ref: string;
-            cefr_level: components["schemas"]["CefrLevel"];
-            source: components["schemas"]["DependencySource"];
-        };
-        /** RefreshResponse */
-        RefreshResponse: {
-            /** Access Token */
-            access_token: string;
-        };
-        /** RegisterRequest */
-        RegisterRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Password */
-            password: string;
-            /** Display Name */
-            display_name?: string | null;
-        };
-        /** RegisterResponse */
-        RegisterResponse: {
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /** Email */
-            email: string;
-            /** Access Token */
-            access_token: string;
-            /** Message */
-            message: string;
-        };
-        /** ReviewRequest */
-        ReviewRequest: {
-            /**
-             * Concept Id
-             * Format: uuid
-             */
-            concept_id: string;
-            /** Rating */
-            rating: string;
-            exercise_type: components["schemas"]["ExerciseType"];
-            /** Difficulty */
-            difficulty: number;
-            /** Response */
-            response?: string | null;
-            /** Correct */
-            correct: boolean;
-            /** Review Duration Ms */
-            review_duration_ms?: number | null;
-        };
-        /** ReviewResponse */
-        ReviewResponse: {
-            /**
-             * Concept Id
-             * Format: uuid
-             */
-            concept_id: string;
-            /** Difficulty */
-            difficulty: number;
-            /** Peak Difficulty */
-            peak_difficulty: number;
-            /** Is Mastered */
-            is_mastered: boolean;
-            /** Fsrs Due */
-            fsrs_due: string | null;
-            /** Mastery Changed */
-            mastery_changed: boolean;
-        };
-        /** ReviewScheduleResponse */
-        ReviewScheduleResponse: {
-            /**
-             * Course Id
-             * Format: uuid
-             */
-            course_id: string;
-            /** Items */
-            items: components["schemas"]["ConceptProgressDetail"][];
-        };
-        /** StudySessionItem */
-        StudySessionItem: {
-            /**
-             * Concept Id
-             * Format: uuid
-             */
-            concept_id: string;
-            exercise_type: components["schemas"]["ExerciseType"];
-            /** Difficulty */
-            difficulty: number;
-            /** Presentation */
-            presentation: string;
-            /**
-             * Reverse
-             * @default false
-             */
-            reverse: boolean;
-            /** Is Review */
-            is_review: boolean;
-            concept_type: components["schemas"]["ConceptType"];
-            cefr_level: components["schemas"]["CefrLevel"];
-            /** Exercise Id */
-            exercise_id?: string | null;
-            /** Prompt */
-            prompt?: string[];
-            /** Correct Answers */
-            correct_answers?: string[];
-            /** Distractors */
-            distractors?: string[] | null;
-            /** Explanation */
-            explanation?: string | null;
-        };
-        /** StudySessionRequest */
-        StudySessionRequest: {
-            /**
-             * Course Id
-             * Format: uuid
-             */
-            course_id: string;
-            /**
-             * Session Size
-             * @default 20
-             */
-            session_size: number;
-            /** Concept Ids */
-            concept_ids?: string[] | null;
-        };
-        /** StudySessionResponse */
-        StudySessionResponse: {
-            /** Items */
-            items: components["schemas"]["StudySessionItem"][];
-            /** Total Due Reviews */
-            total_due_reviews: number;
-            /** New Concepts Added */
-            new_concepts_added: number;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
-        };
-        /** VerifyEmailResponse */
-        VerifyEmailResponse: {
-            /** Message */
-            message: string;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    /** AllProgressResponse */
+    AllProgressResponse: {
+      /** Courses */
+      courses: components['schemas']['CourseProgressResponse'][]
+    }
+    /**
+     * CefrLevel
+     * @enum {string}
+     */
+    CefrLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+    /** CefrProgressItem */
+    CefrProgressItem: {
+      cefr_level: components['schemas']['CefrLevel']
+      /** Total Concepts */
+      total_concepts: number
+      /** Not Started */
+      not_started: number
+      /** Seen */
+      seen: number
+      /** Familiar */
+      familiar: number
+      /** Practiced */
+      practiced: number
+      /** Proficient */
+      proficient: number
+      /** Mastered */
+      mastered: number
+    }
+    /** ConceptDetail */
+    ConceptDetail: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Ref */
+      ref: string
+      concept_type: components['schemas']['ConceptType']
+      cefr_level: components['schemas']['CefrLevel']
+      /** Sequence */
+      sequence: number
+      /** Explanation */
+      explanation?: string | null
+      /** Prerequisites */
+      prerequisites: components['schemas']['PrerequisiteInfo'][]
+      /** Exercises */
+      exercises: components['schemas']['ExerciseResponse'][]
+    }
+    /** ConceptImport */
+    ConceptImport: {
+      /** Ref */
+      ref: string
+      concept_type: components['schemas']['ConceptType']
+      cefr_level: components['schemas']['CefrLevel']
+      /** Sequence */
+      sequence: number
+      /** Explanation */
+      explanation?: string | null
+      /** Prerequisites */
+      prerequisites?: string[] | null
+      /** Exercises */
+      exercises?: components['schemas']['ExerciseImport'][]
+    }
+    /**
+     * ConceptProgressDetail
+     * @description Full SRS detail for a single concept (started or unstarted).
+     */
+    ConceptProgressDetail: {
+      /**
+       * Concept Id
+       * Format: uuid
+       */
+      concept_id: string
+      /** Ref */
+      ref: string
+      concept_type: components['schemas']['ConceptType']
+      cefr_level: components['schemas']['CefrLevel']
+      /** Peak Difficulty */
+      peak_difficulty?: number | null
+      /** Is Mastered */
+      is_mastered?: boolean | null
+      /** Fsrs State */
+      fsrs_state?: string | null
+      /** Fsrs Stability */
+      fsrs_stability?: number | null
+      /** Fsrs Difficulty */
+      fsrs_difficulty?: number | null
+      /** Fsrs Due */
+      fsrs_due?: string | null
+      /** Fsrs Last Review */
+      fsrs_last_review?: string | null
+    }
+    /** ConceptSummary */
+    ConceptSummary: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Ref */
+      ref: string
+      concept_type: components['schemas']['ConceptType']
+      cefr_level: components['schemas']['CefrLevel']
+      /** Sequence */
+      sequence: number
+    }
+    /**
+     * ConceptType
+     * @enum {string}
+     */
+    ConceptType: 'vocabulary' | 'grammar'
+    /** CourseDetail */
+    CourseDetail: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Slug */
+      slug: string
+      /** Title */
+      title: string
+      /** Source Language */
+      source_language: string
+      /** Target Language */
+      target_language: string
+      /** Created At */
+      created_at: string
+      /** Concepts By Level */
+      concepts_by_level: {
+        [key: string]: components['schemas']['ConceptSummary'][]
+      }
+    }
+    /**
+     * CourseImport
+     * @description Assembled course data (may come from a single JSON or a folder).
+     */
+    CourseImport: {
+      /** Slug */
+      slug: string
+      /** Title */
+      title: string
+      /** Source Language */
+      source_language: string
+      /** Target Language */
+      target_language: string
+      /** Concepts */
+      concepts: components['schemas']['ConceptImport'][]
+      /** Standalone Exercises */
+      standalone_exercises?: components['schemas']['ExerciseImport'][]
+    }
+    /** CourseImportResponse */
+    CourseImportResponse: {
+      /**
+       * Course Id
+       * Format: uuid
+       */
+      course_id: string
+      /** Concepts Created */
+      concepts_created: number
+      /** Exercises Created */
+      exercises_created: number
+    }
+    /** CourseProgressResponse */
+    CourseProgressResponse: {
+      /**
+       * Course Id
+       * Format: uuid
+       */
+      course_id: string
+      /** Levels */
+      levels: components['schemas']['CefrProgressItem'][]
+    }
+    /** CourseResponse */
+    CourseResponse: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Slug */
+      slug: string
+      /** Title */
+      title: string
+      /** Source Language */
+      source_language: string
+      /** Target Language */
+      target_language: string
+      /** Created At */
+      created_at: string
+    }
+    /**
+     * DependencySource
+     * @enum {string}
+     */
+    DependencySource: 'manual' | 'auto'
+    /** ExerciseImport */
+    ExerciseImport: {
+      /** Ref */
+      ref: string
+      /** Exercise Type */
+      exercise_type: string
+      /**
+       * Reverse
+       * @default false
+       */
+      reverse: boolean
+      /** Data */
+      data?: {
+        [key: string]: unknown
+      }
+      /** Concept Refs */
+      concept_refs?: string[] | null
+    }
+    /** ExerciseResponse */
+    ExerciseResponse: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Exercise Type */
+      exercise_type: string
+      /** Ref */
+      ref: string
+      /** Data */
+      data: {
+        [key: string]: unknown
+      }
+    }
+    /** ExerciseSubmitRequest */
+    ExerciseSubmitRequest: {
+      /**
+       * Concept Id
+       * Format: uuid
+       */
+      concept_id: string
+      exercise_type: components['schemas']['ExerciseType']
+      /** Difficulty */
+      difficulty: number
+      /** User Answer */
+      user_answer: string
+      /** Exercise Id */
+      exercise_id?: string | null
+      /** Review Duration Ms */
+      review_duration_ms?: number | null
+    }
+    /** ExerciseSubmitResponse */
+    ExerciseSubmitResponse: {
+      /** Correct */
+      correct: boolean
+      /** Correct Answer */
+      correct_answer: string
+      /** Normalized User Answer */
+      normalized_user_answer: string
+      /** Difficulty */
+      difficulty: number
+      /** Peak Difficulty */
+      peak_difficulty: number
+      /** Is Mastered */
+      is_mastered: boolean
+      /** Fsrs Due */
+      fsrs_due: string | null
+      /** Mastery Changed */
+      mastery_changed: boolean
+    }
+    /**
+     * ExerciseType
+     * @enum {string}
+     */
+    ExerciseType: 'translate' | 'cloze' | 'match'
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components['schemas']['ValidationError'][]
+    }
+    /** LoginRequest */
+    LoginRequest: {
+      /**
+       * Email
+       * Format: email
+       */
+      email: string
+      /** Password */
+      password: string
+    }
+    /** LoginResponse */
+    LoginResponse: {
+      /**
+       * User Id
+       * Format: uuid
+       */
+      user_id: string
+      /** Email */
+      email: string
+      /** Email Verified */
+      email_verified: boolean
+      /** Access Token */
+      access_token: string
+    }
+    /** PasskeyAuthenticationOptionsRequest */
+    PasskeyAuthenticationOptionsRequest: {
+      /**
+       * Email
+       * Format: email
+       */
+      email: string
+    }
+    /** PasskeyAuthenticationOptionsResponse */
+    PasskeyAuthenticationOptionsResponse: {
+      /** Options */
+      options: string
+    }
+    /** PasskeyAuthenticationVerifyRequest */
+    PasskeyAuthenticationVerifyRequest: {
+      /**
+       * Email
+       * Format: email
+       */
+      email: string
+      /** Credential */
+      credential: string
+    }
+    /** PasskeyAuthenticationVerifyResponse */
+    PasskeyAuthenticationVerifyResponse: {
+      /**
+       * User Id
+       * Format: uuid
+       */
+      user_id: string
+      /** Email */
+      email: string
+      /** Email Verified */
+      email_verified: boolean
+      /** Access Token */
+      access_token: string
+    }
+    /** PasskeyListItem */
+    PasskeyListItem: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Name */
+      name: string | null
+      /** Created At */
+      created_at: string
+    }
+    /** PasskeyRegistrationOptionsResponse */
+    PasskeyRegistrationOptionsResponse: {
+      /** Options */
+      options: string
+    }
+    /** PasskeyRegistrationVerifyRequest */
+    PasskeyRegistrationVerifyRequest: {
+      /** Credential */
+      credential: string
+      /** Name */
+      name?: string | null
+    }
+    /** PasskeyRegistrationVerifyResponse */
+    PasskeyRegistrationVerifyResponse: {
+      /** Message */
+      message: string
+    }
+    /** PrerequisiteInfo */
+    PrerequisiteInfo: {
+      /**
+       * Concept Id
+       * Format: uuid
+       */
+      concept_id: string
+      /** Ref */
+      ref: string
+      cefr_level: components['schemas']['CefrLevel']
+      source: components['schemas']['DependencySource']
+    }
+    /** RefreshResponse */
+    RefreshResponse: {
+      /** Access Token */
+      access_token: string
+    }
+    /** RegisterRequest */
+    RegisterRequest: {
+      /**
+       * Email
+       * Format: email
+       */
+      email: string
+      /** Password */
+      password: string
+      /** Display Name */
+      display_name?: string | null
+    }
+    /** RegisterResponse */
+    RegisterResponse: {
+      /**
+       * User Id
+       * Format: uuid
+       */
+      user_id: string
+      /** Email */
+      email: string
+      /** Access Token */
+      access_token: string
+      /** Message */
+      message: string
+    }
+    /** ReviewRequest */
+    ReviewRequest: {
+      /**
+       * Concept Id
+       * Format: uuid
+       */
+      concept_id: string
+      /** Rating */
+      rating: string
+      exercise_type: components['schemas']['ExerciseType']
+      /** Difficulty */
+      difficulty: number
+      /** Response */
+      response?: string | null
+      /** Correct */
+      correct: boolean
+      /** Review Duration Ms */
+      review_duration_ms?: number | null
+    }
+    /** ReviewResponse */
+    ReviewResponse: {
+      /**
+       * Concept Id
+       * Format: uuid
+       */
+      concept_id: string
+      /** Difficulty */
+      difficulty: number
+      /** Peak Difficulty */
+      peak_difficulty: number
+      /** Is Mastered */
+      is_mastered: boolean
+      /** Fsrs Due */
+      fsrs_due: string | null
+      /** Mastery Changed */
+      mastery_changed: boolean
+    }
+    /** ReviewScheduleResponse */
+    ReviewScheduleResponse: {
+      /**
+       * Course Id
+       * Format: uuid
+       */
+      course_id: string
+      /** Items */
+      items: components['schemas']['ConceptProgressDetail'][]
+    }
+    /** StudySessionItem */
+    StudySessionItem: {
+      /**
+       * Concept Id
+       * Format: uuid
+       */
+      concept_id: string
+      exercise_type: components['schemas']['ExerciseType']
+      /** Difficulty */
+      difficulty: number
+      /** Presentation */
+      presentation: string
+      /**
+       * Reverse
+       * @default false
+       */
+      reverse: boolean
+      /** Is Review */
+      is_review: boolean
+      concept_type: components['schemas']['ConceptType']
+      cefr_level: components['schemas']['CefrLevel']
+      /** Exercise Id */
+      exercise_id?: string | null
+      /** Prompt */
+      prompt?: string[]
+      /** Correct Answers */
+      correct_answers?: string[]
+      /** Distractors */
+      distractors?: string[] | null
+      /** Explanation */
+      explanation?: string | null
+    }
+    /** StudySessionRequest */
+    StudySessionRequest: {
+      /**
+       * Course Id
+       * Format: uuid
+       */
+      course_id: string
+      /**
+       * Session Size
+       * @default 20
+       */
+      session_size: number
+      /** Concept Ids */
+      concept_ids?: string[] | null
+    }
+    /** StudySessionResponse */
+    StudySessionResponse: {
+      /** Items */
+      items: components['schemas']['StudySessionItem'][]
+      /** Total Due Reviews */
+      total_due_reviews: number
+      /** New Concepts Added */
+      new_concepts_added: number
+    }
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
+      /** Input */
+      input?: unknown
+      /** Context */
+      ctx?: Record<string, never>
+    }
+    /** VerifyEmailResponse */
+    VerifyEmailResponse: {
+      /** Message */
+      message: string
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
+export type $defs = Record<string, never>
 export interface operations {
-    register_v1_auth_register_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RegisterResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    login_v1_auth_login_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoginResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    refresh_v1_auth_refresh_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RefreshResponse"];
-                };
-            };
-        };
-    };
-    logout_v1_auth_logout_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    verify_email_v1_auth_verify_email_get: {
-        parameters: {
-            query: {
-                token: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VerifyEmailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    resend_verification_v1_auth_resend_verification_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    list_courses_endpoint_v1_courses_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CourseResponse"][];
-                };
-            };
-        };
-    };
-    import_course_endpoint_v1_courses_import_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CourseImport"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CourseImportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_course_detail_v1_courses__course_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                course_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CourseDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_concepts_endpoint_v1_courses__course_id__concepts_get: {
-        parameters: {
-            query?: {
-                cefr_level?: components["schemas"]["CefrLevel"] | null;
-            };
-            header?: never;
-            path: {
-                course_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConceptSummary"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_concept_detail_v1_concepts__concept_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                concept_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConceptDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    submit_exercise_v1_exercises_submit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExerciseSubmitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExerciseSubmitResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    passkey_registration_options_v1_auth_passkeys_register_options_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PasskeyRegistrationOptionsResponse"];
-                };
-            };
-        };
-    };
-    passkey_registration_verify_v1_auth_passkeys_register_verify_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasskeyRegistrationVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PasskeyRegistrationVerifyResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    passkey_authentication_options_v1_auth_passkeys_authenticate_options_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasskeyAuthenticationOptionsRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PasskeyAuthenticationOptionsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    passkey_authentication_verify_v1_auth_passkeys_authenticate_verify_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasskeyAuthenticationVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PasskeyAuthenticationVerifyResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_passkeys_v1_auth_passkeys__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PasskeyListItem"][];
-                };
-            };
-        };
-    };
-    remove_passkey_v1_auth_passkeys__passkey_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                passkey_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_study_session_v1_study_session_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StudySessionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudySessionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    submit_review_v1_study_review_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReviewResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_course_progress_v1_progress__course_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                course_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CourseProgressResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_all_progress_v1_progress_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllProgressResponse"];
-                };
-            };
-        };
-    };
-    get_review_schedule_v1_review_schedule__course_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                course_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReviewScheduleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    health_v1_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
-                };
-            };
-        };
-    };
+  register_v1_auth_register_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegisterRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RegisterResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  login_v1_auth_login_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LoginResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  refresh_v1_auth_refresh_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RefreshResponse']
+        }
+      }
+    }
+  }
+  logout_v1_auth_logout_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  verify_email_v1_auth_verify_email_get: {
+    parameters: {
+      query: {
+        token: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['VerifyEmailResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  resend_verification_v1_auth_resend_verification_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  list_courses_endpoint_v1_courses_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CourseResponse'][]
+        }
+      }
+    }
+  }
+  import_course_endpoint_v1_courses_import_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CourseImport']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CourseImportResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_course_detail_v1_courses__course_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        course_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CourseDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_concepts_endpoint_v1_courses__course_id__concepts_get: {
+    parameters: {
+      query?: {
+        cefr_level?: components['schemas']['CefrLevel'] | null
+      }
+      header?: never
+      path: {
+        course_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ConceptSummary'][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_concept_detail_v1_concepts__concept_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        concept_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ConceptDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  submit_exercise_v1_exercises_submit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExerciseSubmitRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ExerciseSubmitResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  passkey_registration_options_v1_auth_passkeys_register_options_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PasskeyRegistrationOptionsResponse']
+        }
+      }
+    }
+  }
+  passkey_registration_verify_v1_auth_passkeys_register_verify_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasskeyRegistrationVerifyRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PasskeyRegistrationVerifyResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  passkey_authentication_options_v1_auth_passkeys_authenticate_options_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasskeyAuthenticationOptionsRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PasskeyAuthenticationOptionsResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  passkey_authentication_verify_v1_auth_passkeys_authenticate_verify_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasskeyAuthenticationVerifyRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PasskeyAuthenticationVerifyResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_passkeys_v1_auth_passkeys__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PasskeyListItem'][]
+        }
+      }
+    }
+  }
+  remove_passkey_v1_auth_passkeys__passkey_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        passkey_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  create_study_session_v1_study_session_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StudySessionRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StudySessionResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  submit_review_v1_study_review_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReviewRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ReviewResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_course_progress_v1_progress__course_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        course_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CourseProgressResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_all_progress_v1_progress_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AllProgressResponse']
+        }
+      }
+    }
+  }
+  get_review_schedule_v1_review_schedule__course_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        course_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ReviewScheduleResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  health_v1_health_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: string
+          }
+        }
+      }
+    }
+  }
 }

@@ -106,9 +106,7 @@ describe('SettingsPage', () => {
 
   it('shows review schedule toggle button', () => {
     renderPage()
-    expect(
-      screen.getByRole('button', { name: /show review schedule/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /show review schedule/i })).toBeInTheDocument()
   })
 
   it('toggles review schedule localStorage on click', () => {
@@ -126,8 +124,6 @@ describe('SettingsPage', () => {
   it('reads review schedule preference from localStorage', () => {
     localStorage.setItem('showReviewSchedule', 'true')
     renderPage()
-    expect(
-      screen.getByRole('button', { name: /hide review schedule/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /hide review schedule/i })).toBeInTheDocument()
   })
 })

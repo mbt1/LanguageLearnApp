@@ -28,9 +28,7 @@ export async function studySession(
   return resp
 }
 
-export async function submitExercise(
-  req: ExerciseSubmitRequest,
-): Promise<ExerciseSubmitResponse> {
+export async function submitExercise(req: ExerciseSubmitRequest): Promise<ExerciseSubmitResponse> {
   const resp = await apiRequest<ExerciseSubmitResponse>('/v1/exercises/submit', {
     method: 'POST',
     body: JSON.stringify(req),

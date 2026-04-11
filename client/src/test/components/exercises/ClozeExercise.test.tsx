@@ -9,9 +9,7 @@ import { ClozeExercise } from '@/components/exercises/ClozeExercise'
 
 describe('ClozeExercise', () => {
   it('renders the sentence parts around the input', () => {
-    render(
-      <ClozeExercise sentenceTemplate="Yo ___ una manzana." onAnswer={vi.fn()} />,
-    )
+    render(<ClozeExercise sentenceTemplate="Yo ___ una manzana." onAnswer={vi.fn()} />)
     expect(screen.getByText(/Yo/)).toBeInTheDocument()
     expect(screen.getByText(/una manzana\./)).toBeInTheDocument()
     expect(screen.getByRole('textbox')).toBeInTheDocument()

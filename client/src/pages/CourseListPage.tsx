@@ -24,7 +24,14 @@ function StageBar({ item }: { item: CefrProgressItem }) {
   if (total === 0) return null
 
   // Build segments with cumulative counts
-  const segments: { key: string; bg: string; text: string; label: string; pct: number; cumulative: number }[] = []
+  const segments: {
+    key: string
+    bg: string
+    text: string
+    label: string
+    pct: number
+    cumulative: number
+  }[] = []
   let cumulative = 0
   for (const { key, bg, label } of STAGES) {
     const count = item[key as keyof CefrProgressItem] as number
@@ -51,7 +58,7 @@ function StageBar({ item }: { item: CefrProgressItem }) {
           </div>
         ))}
       </div>
-      <span className="w-7 text-right text-xs text-muted-foreground">{total}</span>
+      <span className="text-muted-foreground w-7 text-right text-xs">{total}</span>
     </div>
   )
 }
@@ -89,9 +96,7 @@ function CourseCard({ course, levels }: CourseCardProps) {
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
-        {levels.length === 0 && (
-          <p className="text-muted-foreground text-sm">No progress yet.</p>
-        )}
+        {levels.length === 0 && <p className="text-muted-foreground text-sm">No progress yet.</p>}
         {levels.map((item) => (
           <StageBar key={item.cefr_level} item={item} />
         ))}
@@ -110,10 +115,7 @@ export function CourseListPage() {
 
     async function load() {
       try {
-        const [courseList, progress] = await Promise.all([
-          listCourses(),
-          getAllProgress(),
-        ])
+        const [courseList, progress] = await Promise.all([listCourses(), getAllProgress()])
         if (cancelled) return
         setCourses(courseList)
         setProgressMap(progress)

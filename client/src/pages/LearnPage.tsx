@@ -92,7 +92,7 @@ export function LearnPage() {
 
   // Memoize MC options so they don't reshuffle on exercise→feedback transition
   const item = session?.items[index] ?? null
-   
+
   const mcOptions = useMemo(() => {
     if (item?.presentation !== 'mc') return []
     const answer = item.correct_answers?.[0] ?? ''
@@ -120,9 +120,9 @@ export function LearnPage() {
 
   const isGrammar = item.concept_type === 'grammar'
   // Auto-open explanation for grammar concepts on first encounter in this session
-  const hasSeenConceptBefore = session?.items.slice(0, index).some(
-    (i) => i.concept_id === item.concept_id,
-  )
+  const hasSeenConceptBefore = session?.items
+    .slice(0, index)
+    .some((i) => i.concept_id === item.concept_id)
   const autoOpenExplanation = isGrammar && !hasSeenConceptBefore
 
   const promptText = item.prompt?.join('\n') ?? ''
@@ -148,7 +148,11 @@ export function LearnPage() {
           prompt={promptText}
           options={mcOptions}
           onAnswer={(a) => void handleAnswer(a)}
-          feedback={feedbackData ? { correct: feedbackData.correct, correctAnswer: feedbackData.correct_answer } : null}
+          feedback={
+            feedbackData
+              ? { correct: feedbackData.correct, correctAnswer: feedbackData.correct_answer }
+              : null
+          }
         />
       )}
       {item.presentation === 'arrange' && (

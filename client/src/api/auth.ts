@@ -77,9 +77,7 @@ export async function refreshToken(): Promise<AuthUser | null> {
 /* ── Email verification ────────────────────────────────────── */
 
 export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
-  return apiRequest<VerifyEmailResponse>(
-    `/v1/auth/verify-email?token=${encodeURIComponent(token)}`,
-  )
+  return apiRequest<VerifyEmailResponse>(`/v1/auth/verify-email?token=${encodeURIComponent(token)}`)
 }
 
 export async function resendVerification(): Promise<void> {

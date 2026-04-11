@@ -55,7 +55,18 @@ describe('CourseListPage', () => {
   it('shows course titles after loading', async () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
     vi.mocked(studyApi.getAllProgress).mockResolvedValue({
-      'course-1': [{ cefr_level: 'A1', total_concepts: 5, not_started: 3, seen: 1, familiar: 1, practiced: 0, proficient: 0, mastered: 0 }],
+      'course-1': [
+        {
+          cefr_level: 'A1',
+          total_concepts: 5,
+          not_started: 3,
+          seen: 1,
+          familiar: 1,
+          practiced: 0,
+          proficient: 0,
+          mastered: 0,
+        },
+      ],
     })
 
     renderPage()
@@ -67,8 +78,26 @@ describe('CourseListPage', () => {
     vi.mocked(coursesApi.listCourses).mockResolvedValue([mockCourse])
     vi.mocked(studyApi.getAllProgress).mockResolvedValue({
       'course-1': [
-        { cefr_level: 'A1', total_concepts: 10, not_started: 3, seen: 2, familiar: 1, practiced: 1, proficient: 1, mastered: 2 },
-        { cefr_level: 'A2', total_concepts: 5, not_started: 5, seen: 0, familiar: 0, practiced: 0, proficient: 0, mastered: 0 },
+        {
+          cefr_level: 'A1',
+          total_concepts: 10,
+          not_started: 3,
+          seen: 2,
+          familiar: 1,
+          practiced: 1,
+          proficient: 1,
+          mastered: 2,
+        },
+        {
+          cefr_level: 'A2',
+          total_concepts: 5,
+          not_started: 5,
+          seen: 0,
+          familiar: 0,
+          practiced: 0,
+          proficient: 0,
+          mastered: 0,
+        },
       ],
     })
 

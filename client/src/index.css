@@ -136,11 +136,11 @@ input:-webkit-autofill:focus {
 /* Password managers (e.g. 1Password) force a themed background on filled inputs.
    When the user overrides light/dark manually, the fill may mismatch the app theme.
    Ensure text contrast matches the forced background, not the app theme. */
-.dark input[data-com-onepassword-filled="light"] {
+.dark input[data-com-onepassword-filled='light'] {
   -webkit-text-fill-color: #000 !important;
   color: #000 !important;
 }
-:root:not(.dark) input[data-com-onepassword-filled="dark"] {
+:root:not(.dark) input[data-com-onepassword-filled='dark'] {
   -webkit-text-fill-color: #fff !important;
   color: #fff !important;
 }

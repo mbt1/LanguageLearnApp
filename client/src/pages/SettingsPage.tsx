@@ -68,7 +68,9 @@ export function SettingsPage() {
       document.documentElement.classList.toggle('dark', mql.matches)
     }
     mql.addEventListener('change', onChange)
-    return () => { mql.removeEventListener('change', onChange); }
+    return () => {
+      mql.removeEventListener('change', onChange)
+    }
   }, [theme])
 
   return (
@@ -91,7 +93,9 @@ export function SettingsPage() {
               max={100}
               step={5}
               value={sessionSize}
-              onChange={(e) => { setSessionSize(Number(e.target.value)); }}
+              onChange={(e) => {
+                setSessionSize(Number(e.target.value))
+              }}
               className="w-48"
               aria-label="Session size"
             />
@@ -115,7 +119,9 @@ export function SettingsPage() {
                 key={t}
                 variant={theme === t ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => { setTheme(t); }}
+                onClick={() => {
+                  setTheme(t)
+                }}
                 aria-pressed={theme === t}
               >
                 {t === 'auto' ? 'Auto' : t === 'light' ? 'Light' : 'Dark'}
@@ -129,15 +135,15 @@ export function SettingsPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Developer tools</CardTitle>
-          <p className="text-muted-foreground text-sm">
-            Advanced features for power users.
-          </p>
+          <p className="text-muted-foreground text-sm">Advanced features for power users.</p>
         </CardHeader>
         <CardContent>
           <Button
             variant="outline"
             aria-pressed={showReviewSchedule}
-            onClick={() => { setShowReviewSchedule((prev) => !prev); }}
+            onClick={() => {
+              setShowReviewSchedule((prev) => !prev)
+            }}
           >
             {showReviewSchedule ? 'Hide Review Schedule' : 'Show Review Schedule'}
           </Button>
@@ -153,9 +159,7 @@ export function SettingsPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Passkeys</CardTitle>
-          <p className="text-muted-foreground text-sm">
-            Manage your passwordless sign-in methods.
-          </p>
+          <p className="text-muted-foreground text-sm">Manage your passwordless sign-in methods.</p>
         </CardHeader>
         <CardContent>
           <PasskeyManager />

@@ -19,11 +19,13 @@ export function NavShell() {
       setShowReviewSchedule(localStorage.getItem('showReviewSchedule') === 'true')
     }
     window.addEventListener('settings-changed', onSettingsChange)
-    return () => { window.removeEventListener('settings-changed', onSettingsChange); }
+    return () => {
+      window.removeEventListener('settings-changed', onSettingsChange)
+    }
   }, [])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       <header className="border-b">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-4 px-4 py-3">
           <NavLink to="/" className="text-lg font-bold tracking-tight">
@@ -34,7 +36,9 @@ export function NavShell() {
               to="/"
               end
               className={({ isActive }) =>
-                isActive ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'
+                isActive
+                  ? 'text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
               }
             >
               Courses
@@ -42,7 +46,9 @@ export function NavShell() {
             <NavLink
               to="/settings"
               className={({ isActive }) =>
-                isActive ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'
+                isActive
+                  ? 'text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
               }
             >
               Settings
@@ -51,7 +57,9 @@ export function NavShell() {
               <NavLink
                 to="/review-schedule"
                 className={({ isActive }) =>
-                  isActive ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  isActive
+                    ? 'text-foreground font-medium'
+                    : 'text-muted-foreground hover:text-foreground'
                 }
               >
                 Schedule

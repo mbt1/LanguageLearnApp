@@ -48,11 +48,7 @@ function getStatus(item: ConceptProgressDetail): StatusFilter {
 function DueStatus({ due }: { due: string | null | undefined }) {
   if (!due) return <span className="text-muted-foreground">--</span>
   const isOverdue = new Date(due) <= new Date()
-  return (
-    <span className={isOverdue ? 'font-medium text-orange-500' : ''}>
-      {formatDate(due)}
-    </span>
-  )
+  return <span className={isOverdue ? 'font-medium text-orange-500' : ''}>{formatDate(due)}</span>
 }
 
 function SortHeader({
@@ -71,23 +67,29 @@ function SortHeader({
   const active = currentKey === sortKey
   return (
     <th
-      className="cursor-pointer select-none pb-2 pr-3 font-medium"
-      onClick={() => { onSort(sortKey); }}
+      className="cursor-pointer pr-3 pb-2 font-medium select-none"
+      onClick={() => {
+        onSort(sortKey)
+      }}
     >
       {label} {active ? (currentDir === 'asc' ? '\u25B2' : '\u25BC') : ''}
     </th>
   )
 }
 
-function compareItems(a: ConceptProgressDetail, b: ConceptProgressDetail, key: SortKey, dir: SortDir): number {
+function compareItems(
+  a: ConceptProgressDetail,
+  b: ConceptProgressDetail,
+  key: SortKey,
+  dir: SortDir,
+): number {
   let cmp = 0
   switch (key) {
     case 'ref':
       cmp = a.ref.localeCompare(b.ref)
       break
     case 'cefr_level':
-      cmp = CEFR_LEVELS.indexOf(a.cefr_level)
-           - CEFR_LEVELS.indexOf(b.cefr_level)
+      cmp = CEFR_LEVELS.indexOf(a.cefr_level) - CEFR_LEVELS.indexOf(b.cefr_level)
       break
     case 'stage':
       cmp = (a.peak_difficulty ?? -1) - (b.peak_difficulty ?? -1)
@@ -99,7 +101,12 @@ function compareItems(a: ConceptProgressDetail, b: ConceptProgressDetail, key: S
       break
     }
     case 'status': {
-      const order: Record<StatusFilter, number> = { not_started: 0, in_progress: 1, mastered: 2, all: 3 }
+      const order: Record<StatusFilter, number> = {
+        not_started: 0,
+        in_progress: 1,
+        mastered: 2,
+        all: 3,
+      }
       cmp = order[getStatus(a)] - order[getStatus(b)]
       break
     }
@@ -145,12 +152,16 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
           CEFR:
           <select
             value={cefrFilter}
-            onChange={(e) => { setCefrFilter(e.target.value); }}
+            onChange={(e) => {
+              setCefrFilter(e.target.value)
+            }}
             className="border-input bg-background rounded border px-2 py-1 text-sm"
           >
             <option value="all">All</option>
             {CEFR_LEVELS.map((l) => (
-              <option key={l} value={l}>{l}</option>
+              <option key={l} value={l}>
+                {l}
+              </option>
             ))}
           </select>
         </label>
@@ -158,7 +169,9 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
           Status:
           <select
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); }}
+            onChange={(e) => {
+              setStatusFilter(e.target.value as StatusFilter)
+            }}
             className="border-input bg-background rounded border px-2 py-1 text-sm"
           >
             <option value="all">All</option>
@@ -172,15 +185,45 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
         <table className="w-full text-sm">
           <thead>
             <tr className="text-muted-foreground border-b text-left">
-              <SortHeader label="Concept" sortKey="ref" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-              <SortHeader label="CEFR" sortKey="cefr_level" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-              <th className="pb-2 pr-3 font-medium">Type</th>
-              <SortHeader label="Level" sortKey="stage" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-              <SortHeader label="Status" sortKey="status" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-              <SortHeader label="Due" sortKey="due" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
-              <th className="pb-2 pr-3 font-medium">Stability</th>
-              <th className="pb-2 pr-3 font-medium">Difficulty</th>
-              <th className="pb-2 pr-3 font-medium">Last Review</th>
+              <SortHeader
+                label="Concept"
+                sortKey="ref"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+              />
+              <SortHeader
+                label="CEFR"
+                sortKey="cefr_level"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+              />
+              <th className="pr-3 pb-2 font-medium">Type</th>
+              <SortHeader
+                label="Level"
+                sortKey="stage"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+              />
+              <SortHeader
+                label="Status"
+                sortKey="status"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+              />
+              <SortHeader
+                label="Due"
+                sortKey="due"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onSort={handleSort}
+              />
+              <th className="pr-3 pb-2 font-medium">Stability</th>
+              <th className="pr-3 pb-2 font-medium">Difficulty</th>
+              <th className="pr-3 pb-2 font-medium">Last Review</th>
               <th className="pb-2 font-medium">Action</th>
             </tr>
           </thead>
@@ -194,9 +237,7 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
                     <Badge variant="outline">{item.cefr_level}</Badge>
                   </td>
                   <td className="py-2 pr-3">{item.concept_type}</td>
-                  <td className="py-2 pr-3">
-                    {isStarted ? item.peak_difficulty : '--'}
-                  </td>
+                  <td className="py-2 pr-3">{isStarted ? item.peak_difficulty : '--'}</td>
                   <td className="py-2 pr-3">
                     {!isStarted ? (
                       <Badge variant="outline">Not started</Badge>
@@ -206,17 +247,21 @@ function ScheduleTable({ items, courseId }: { items: ConceptProgressDetail[]; co
                       <Badge variant="secondary">In progress</Badge>
                     )}
                   </td>
-                  <td className="whitespace-nowrap py-2 pr-3">
+                  <td className="py-2 pr-3 whitespace-nowrap">
                     <DueStatus due={item.fsrs_due} />
                   </td>
                   <td className="py-2 pr-3">{formatNum(item.fsrs_stability)}</td>
                   <td className="py-2 pr-3">{formatNum(item.fsrs_difficulty)}</td>
-                  <td className="whitespace-nowrap py-2 pr-3">{formatDate(item.fsrs_last_review)}</td>
+                  <td className="py-2 pr-3 whitespace-nowrap">
+                    {formatDate(item.fsrs_last_review)}
+                  </td>
                   <td className="py-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => void navigate(`/learn/${courseId}?conceptId=${item.concept_id}`)}
+                      onClick={() =>
+                        void navigate(`/learn/${courseId}?conceptId=${item.concept_id}`)
+                      }
                     >
                       {isStarted ? 'Review' : 'Start'}
                     </Button>
@@ -274,9 +319,7 @@ export function ReviewSchedulePage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Review Schedule</h1>
-      <p className="text-muted-foreground text-sm">
-        Browse all concepts and their SRS progress.
-      </p>
+      <p className="text-muted-foreground text-sm">Browse all concepts and their SRS progress.</p>
       {schedules.map(({ course, items }) => {
         const started = items.filter((i) => i.peak_difficulty != null).length
         return (

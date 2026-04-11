@@ -7,13 +7,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
-const mockUseAuth =
-  vi.fn<
-    () => {
-      user: { user_id: string; email: string; email_verified: boolean } | null
-      isLoading: boolean
-    }
-  >()
+const mockUseAuth = vi.fn<
+  () => {
+    user: { user_id: string; email: string; email_verified: boolean } | null
+    isLoading: boolean
+  }
+>()
 
 vi.mock('@/auth/AuthContext', () => ({
   useAuth: () => mockUseAuth(),

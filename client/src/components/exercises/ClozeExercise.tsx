@@ -43,13 +43,15 @@ export function ClozeExercise({ sentenceTemplate, onAnswer, feedback }: ClozeExe
             <Input
               ref={inputRef}
               value={value}
-              onChange={(e) => { setValue(e.target.value); }}
+              onChange={(e) => {
+                setValue(e.target.value)
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') submit()
               }}
               aria-label="Fill in the blank"
               disabled={submitted}
-              className={`mx-2 inline-block min-w-16 max-w-48 ${inputColor}`}
+              className={`mx-2 inline-block max-w-48 min-w-16 ${inputColor}`}
               autoFocus
             />
             {after}

@@ -36,9 +36,7 @@ describe('VerifyEmailBanner', () => {
     render(<VerifyEmailBanner />)
     await userEvent.click(screen.getByRole('button', { name: /resend verification/i }))
 
-    expect(
-      await screen.findByText(/too many requests/i),
-    ).toBeInTheDocument()
+    expect(await screen.findByText(/too many requests/i)).toBeInTheDocument()
   })
 
   it('shows a generic error message for unexpected failures', async () => {
