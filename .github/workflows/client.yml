@@ -47,7 +47,7 @@ jobs:
       - name: Verify generated types are up to date
         run: |
           npx openapi-typescript api/v1/openapi.json -o /tmp/types.gen.d.ts
-          pnpm --filter client exec prettier --write /tmp/types.gen.d.ts
+          pnpm --filter client exec prettier --config .prettierrc --write /tmp/types.gen.d.ts
           diff client/src/api/types.gen.d.ts /tmp/types.gen.d.ts || {
             echo "ERROR: Generated types are out of date. Run: pwsh scripts/generate-types.ps1"
             exit 1
