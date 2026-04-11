@@ -6,18 +6,53 @@
 # pipeline and writes the required GitHub Actions secrets.
 #
 # Usage:
-#   ./infra/setup.ps1 -AwsRegion us-east-1 -GitHubRepo "your-org/LanguageLearnApp"
+#   ./infra/setup.ps1 [-AwsRegion us-east-1] [-GitHubRepo "your-org/LanguageLearnApp"]
+#
+# Both parameters are auto-detected if omitted:
+#   AwsRegion  — falls back to AWS_DEFAULT_REGION / aws configure get region
+#   GitHubRepo — falls back to the git remote origin URL
 
 param(
-    [Parameter(Mandatory)]
     [string]$AwsRegion,
 
-    [Parameter(Mandatory)]
-    [string]$GitHubRepo   # e.g. "my-org/LanguageLearnApp"
+    [string]$GitHubRepo   # e.g. "my-org/LanguageLearnApp" — auto-detected if omitted
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+# Auto-detect region from AWS CLI config if not supplied
+if (-not $AwsRegion) {
+    $AwsRegion = $env:AWS_DEFAULT_REGION
+    if (-not $AwsRegion) {
+        $AwsRegion = $env:AWS_REGION
+    }
+    if (-not $AwsRegion) {
+        $AwsRegion = aws configure get region 2>$null
+    }
+    if (-not $AwsRegion) {
+        throw "No AWS region found. Pass -AwsRegion, or set AWS_DEFAULT_REGION / aws configure get region."
+    }
+    Write-Host "Auto-detected AWS region: $AwsRegion" -ForegroundColor Cyan
+}
+
+# Auto-detect repo from git remote if not supplied
+if (-not $GitHubRepo) {
+    $ScriptDir = Split-Path -Parent $PSCommandPath
+    $RepoRoot  = Split-Path -Parent $ScriptDir
+    Push-Location $RepoRoot
+    try {
+        $RemoteUrl = git remote get-url origin 2>$null
+        if (-not $RemoteUrl) {
+            throw "No git remote 'origin' found. Please pass -GitHubRepo explicitly."
+        }
+        # Handle both HTTPS and SSH remote URLs
+        $GitHubRepo = $RemoteUrl -replace '\.git$', '' -replace '^https://github\.com/', '' -replace '^git@github\.com:', ''
+        Write-Host "Auto-detected repo: $GitHubRepo" -ForegroundColor Cyan
+    } finally {
+        Pop-Location
+    }
+}
 
 $GitHubOrg  = $GitHubRepo.Split('/')[0]
 $RepoName   = $GitHubRepo.Split('/')[1]
