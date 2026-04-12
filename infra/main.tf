@@ -3,10 +3,50 @@ locals {
   image_prefix  = "ghcr.io/${var.image_owner}/languagelearn"
 }
 
+# ── VPC (ephemeral, torn down after tests) ───────────────────────────────────
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/24"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = { Name = "${local.name_prefix}-vpc" }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = { Name = "${local.name_prefix}-igw" }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.0.0/24"
+  map_public_ip_on_launch = true
+
+  tags = { Name = "${local.name_prefix}-subnet" }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = { Name = "${local.name_prefix}-rt" }
+}
+
+resource "aws_route_table_association" "test" {
+  subnet_id      = aws_subnet.test.id
+  route_table_id = aws_route_table.test.id
+}
+
 # ── Security group ────────────────────────────────────────────────────────────
 resource "aws_security_group" "test" {
   name        = "${local.name_prefix}-sg"
   description = "Test environment: HTTP inbound, all outbound"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     description = "HTTP"
@@ -44,9 +84,11 @@ data "aws_ami" "al2023" {
 
 # ── EC2 instance ──────────────────────────────────────────────────────────────
 resource "aws_instance" "test" {
-  ami                    = data.aws_ami.al2023.id
-  instance_type          = var.instance_type
-  vpc_security_group_ids = [aws_security_group.test.id]
+  ami                         = data.aws_ami.al2023.id
+  instance_type               = var.instance_type
+  subnet_id                   = aws_subnet.test.id
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  associate_public_ip_address = true
 
   # No SSH key — access is not needed; the pipeline tests via HTTP only.
 

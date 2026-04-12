@@ -157,12 +157,29 @@ $Policy = @{
         @{
             Effect   = 'Allow'
             Action   = @(
+                # EC2 instances
                 'ec2:RunInstances', 'ec2:TerminateInstances', 'ec2:DescribeInstances',
-                'ec2:DescribeInstanceStatus', 'ec2:DescribeImages', 'ec2:DescribeVpcs',
-                'ec2:DescribeSubnets', 'ec2:CreateSecurityGroup', 'ec2:DeleteSecurityGroup',
+                'ec2:DescribeInstanceStatus', 'ec2:DescribeImages',
+                # VPC and networking
+                'ec2:CreateVpc', 'ec2:DeleteVpc', 'ec2:DescribeVpcs', 'ec2:ModifyVpcAttribute',
+                'ec2:DescribeVpcAttribute',
+                'ec2:CreateSubnet', 'ec2:DeleteSubnet', 'ec2:DescribeSubnets',
+                'ec2:CreateInternetGateway', 'ec2:DeleteInternetGateway',
+                'ec2:AttachInternetGateway', 'ec2:DetachInternetGateway',
+                'ec2:DescribeInternetGateways',
+                'ec2:CreateRouteTable', 'ec2:DeleteRouteTable', 'ec2:DescribeRouteTables',
+                'ec2:CreateRoute', 'ec2:DeleteRoute',
+                'ec2:AssociateRouteTable', 'ec2:DisassociateRouteTable',
+                # Security groups
+                'ec2:CreateSecurityGroup', 'ec2:DeleteSecurityGroup',
                 'ec2:AuthorizeSecurityGroupIngress', 'ec2:AuthorizeSecurityGroupEgress',
-                'ec2:RevokeSecurityGroupEgress', 'ec2:DescribeSecurityGroups',
-                'ec2:CreateTags', 'ec2:DescribeTags'
+                'ec2:RevokeSecurityGroupIngress', 'ec2:RevokeSecurityGroupEgress',
+                'ec2:DescribeSecurityGroups',
+                # Tagging
+                'ec2:CreateTags', 'ec2:DescribeTags',
+                # Network interfaces (needed for instance in VPC)
+                'ec2:CreateNetworkInterface', 'ec2:DeleteNetworkInterface',
+                'ec2:DescribeNetworkInterfaces'
             )
             Resource = '*'
         }
