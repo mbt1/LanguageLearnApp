@@ -21,6 +21,20 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Helper: run a native command and throw on non-zero exit code.
+# PowerShell's $ErrorActionPreference does NOT catch native command failures.
+function Invoke-NativeCommand {
+    param([string]$Description, [scriptblock]$Command)
+    $output = & $Command 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $stderr = ($output | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] }) -join "`n"
+        $msg = if ($stderr) { $stderr } else { $output -join "`n" }
+        throw "[Step: $Description] Command failed (exit code $LASTEXITCODE):`n$msg"
+    }
+    # Return only stdout (filter out ErrorRecords)
+    return ($output | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] })
+}
+
 # Auto-detect region from AWS CLI config if not supplied
 if (-not $AwsRegion) {
     $AwsRegion = $env:AWS_DEFAULT_REGION
@@ -67,23 +81,36 @@ Write-Host "`n[1/5] Creating GitHub Actions OIDC provider..."
 $OidcUrl  = 'https://token.actions.githubusercontent.com'
 $Thumbprint = '6938fd4d98bab03faadb97b34396831e3780aea1'  # GitHub's OIDC thumbprint
 
-$ExistingProviders = aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[].Arn' --output text
+$ExistingProviders = Invoke-NativeCommand 'List OIDC providers' {
+    aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[].Arn' --output text
+}
 if ($ExistingProviders -match 'token\.actions\.githubusercontent\.com') {
     Write-Host "  OIDC provider already exists, skipping." -ForegroundColor Yellow
-    $OidcArn = ($ExistingProviders -split '\s+' | Where-Object { $_ -match 'token\.actions' })[0]
+    $OidcArn = [string](@($ExistingProviders -split '\s+' | Where-Object { $_ -match 'token\.actions' })[0]).Trim()
 } else {
-    $OidcArn = aws iam create-open-id-connect-provider `
-        --url $OidcUrl `
-        --client-id-list 'sts.amazonaws.com' `
-        --thumbprint-list $Thumbprint `
-        --query 'OpenIDConnectProviderArn' --output text
+    $OidcArn = Invoke-NativeCommand 'Create OIDC provider' {
+        aws iam create-open-id-connect-provider `
+            --url $OidcUrl `
+            --client-id-list 'sts.amazonaws.com' `
+            --thumbprint-list $Thumbprint `
+            --query 'OpenIDConnectProviderArn' --output text
+    }
+    $OidcArn = $OidcArn.Trim()
     Write-Host "  Created: $OidcArn" -ForegroundColor Green
 }
+
+# Validate the ARN looks correct before proceeding
+if ($OidcArn -notmatch '^arn:aws:iam::\d+:oidc-provider/') {
+    throw "OIDC ARN looks malformed: '$OidcArn'. Expected format: arn:aws:iam::<account>:oidc-provider/..."
+}
+Write-Host "  Using OIDC ARN: $OidcArn"
 
 # ── 2. IAM role ───────────────────────────────────────────────────────────────
 Write-Host "`n[2/5] Creating IAM role '$RoleName'..."
 
-$AccountId = aws sts get-caller-identity --query Account --output text
+$AccountId = (Invoke-NativeCommand 'Get caller identity' {
+    aws sts get-caller-identity --query Account --output text
+}).Trim()
 
 $TrustPolicy = @{
     Version   = '2012-10-17'
@@ -106,14 +133,18 @@ $TrustPolicy = @{
 $ExistingRole = aws iam get-role --role-name $RoleName --query 'Role.Arn' --output text 2>$null
 if ($ExistingRole) {
     Write-Host "  Role already exists: $ExistingRole — updating trust policy..." -ForegroundColor Yellow
-    aws iam update-assume-role-policy --role-name $RoleName --policy-document $TrustPolicy
+    Invoke-NativeCommand 'Update trust policy' {
+        aws iam update-assume-role-policy --role-name $RoleName --policy-document $TrustPolicy
+    }
     Write-Host "  Trust policy updated." -ForegroundColor Green
     $RoleArn = $ExistingRole
 } else {
-    $RoleArn = aws iam create-role `
-        --role-name $RoleName `
-        --assume-role-policy-document $TrustPolicy `
-        --query 'Role.Arn' --output text
+    $RoleArn = (Invoke-NativeCommand 'Create IAM role' {
+        aws iam create-role `
+            --role-name $RoleName `
+            --assume-role-policy-document $TrustPolicy `
+            --query 'Role.Arn' --output text
+    }).Trim()
     Write-Host "  Created: $RoleArn" -ForegroundColor Green
 }
 
@@ -142,27 +173,37 @@ $PolicyArn = "arn:aws:iam::${AccountId}:policy/${PolicyName}"
 $ExistingPolicy = aws iam get-policy --policy-arn $PolicyArn --query 'Policy.Arn' --output text 2>$null
 if ($ExistingPolicy) {
     # Update existing policy
-    $VersionId = aws iam create-policy-version `
-        --policy-arn $PolicyArn `
-        --policy-document $Policy `
-        --set-as-default `
-        --query 'PolicyVersion.VersionId' --output text
+    $VersionId = (Invoke-NativeCommand 'Update IAM policy' {
+        aws iam create-policy-version `
+            --policy-arn $PolicyArn `
+            --policy-document $Policy `
+            --set-as-default `
+            --query 'PolicyVersion.VersionId' --output text
+    }).Trim()
     Write-Host "  Updated policy, version $VersionId" -ForegroundColor Yellow
 } else {
-    $PolicyArn = aws iam create-policy `
-        --policy-name $PolicyName `
-        --policy-document $Policy `
-        --query 'Policy.Arn' --output text
+    $PolicyArn = (Invoke-NativeCommand 'Create IAM policy' {
+        aws iam create-policy `
+            --policy-name $PolicyName `
+            --policy-document $Policy `
+            --query 'Policy.Arn' --output text
+    }).Trim()
     Write-Host "  Created: $PolicyArn" -ForegroundColor Green
 }
 
-aws iam attach-role-policy --role-name $RoleName --policy-arn $PolicyArn
+Invoke-NativeCommand 'Attach role policy' {
+    aws iam attach-role-policy --role-name $RoleName --policy-arn $PolicyArn
+}
 Write-Host "  Policy attached." -ForegroundColor Green
 
 # ── 4. GitHub secrets ─────────────────────────────────────────────────────────
 Write-Host "`n[4/4] Writing GitHub Actions secrets to $GitHubRepo..."
-gh secret set AWS_CERTIFY_ROLE_ARN   --body $RoleArn      --repo $GitHubRepo
-gh secret set AWS_REGION             --body $AwsRegion    --repo $GitHubRepo
+Invoke-NativeCommand 'Set AWS_CERTIFY_ROLE_ARN secret' {
+    gh secret set AWS_CERTIFY_ROLE_ARN --body $RoleArn --repo $GitHubRepo
+}
+Invoke-NativeCommand 'Set AWS_REGION secret' {
+    gh secret set AWS_REGION --body $AwsRegion --repo $GitHubRepo
+}
 Write-Host "  Secrets written." -ForegroundColor Green
 
 Write-Host "`n=== Setup complete ===" -ForegroundColor Cyan
