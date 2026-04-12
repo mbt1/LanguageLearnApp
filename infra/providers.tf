@@ -14,4 +14,11 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+
+  default_tags {
+    tags = {
+      LanguageLearnApp_Ephemeral              = "true"
+      "LanguageLearnApp_Ephemeral_${var.run_id}" = "true"
+    }
+  }
 }
