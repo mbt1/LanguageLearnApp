@@ -94,8 +94,10 @@ $TrustPolicy = @{
         Condition = @{
             StringEquals = @{
                 'token.actions.githubusercontent.com:aud' = 'sts.amazonaws.com'
-                # Scoped to certify.yml on main only
-                'token.actions.githubusercontent.com:sub' = "repo:${GitHubOrg}/${RepoName}:workflow_ref:${GitHubOrg}/${RepoName}/.github/workflows/certify.yml@refs/heads/main"
+            }
+            StringLike = @{
+                # Allow both workflow_run and workflow_dispatch triggers on main
+                'token.actions.githubusercontent.com:sub' = "repo:${GitHubOrg}/${RepoName}:ref:refs/heads/main"
             }
         }
     })
@@ -103,7 +105,9 @@ $TrustPolicy = @{
 
 $ExistingRole = aws iam get-role --role-name $RoleName --query 'Role.Arn' --output text 2>$null
 if ($ExistingRole) {
-    Write-Host "  Role already exists: $ExistingRole" -ForegroundColor Yellow
+    Write-Host "  Role already exists: $ExistingRole — updating trust policy..." -ForegroundColor Yellow
+    aws iam update-assume-role-policy --role-name $RoleName --policy-document $TrustPolicy
+    Write-Host "  Trust policy updated." -ForegroundColor Green
     $RoleArn = $ExistingRole
 } else {
     $RoleArn = aws iam create-role `
