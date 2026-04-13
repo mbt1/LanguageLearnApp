@@ -189,6 +189,18 @@ $Policy = @{
 $PolicyArn = "arn:aws:iam::${AccountId}:policy/${PolicyName}"
 $ExistingPolicy = aws iam get-policy --policy-arn $PolicyArn --query 'Policy.Arn' --output text 2>$null
 if ($ExistingPolicy) {
+    # Delete oldest non-default version if at the 5-version limit
+    $versions = (Invoke-NativeCommand 'List policy versions' {
+        aws iam list-policy-versions --policy-arn $PolicyArn --query 'Versions[?IsDefaultVersion==`false`].VersionId' --output json
+    }) | ConvertFrom-Json
+    if ($versions.Count -ge 4) {
+        $oldest = $versions[-1]
+        Write-Host "  Deleting oldest policy version $oldest (5-version limit)..." -ForegroundColor Yellow
+        Invoke-NativeCommand 'Delete old policy version' {
+            aws iam delete-policy-version --policy-arn $PolicyArn --version-id $oldest
+        }
+    }
+
     # Update existing policy
     $VersionId = (Invoke-NativeCommand 'Update IAM policy' {
         aws iam create-policy-version `
